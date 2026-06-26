@@ -13,6 +13,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
+import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as InterestsRouteImport } from './routes/interests'
 import { Route as ExploreRouteImport } from './routes/explore'
@@ -40,6 +41,11 @@ const ProfileRoute = ProfileRouteImport.update({
 const OnboardingRoute = OnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NotificationsRoute = NotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -88,6 +94,7 @@ export interface FileRoutesByFullPath {
   '/explore': typeof ExploreRouteWithChildren
   '/interests': typeof InterestsRoute
   '/login': typeof LoginRoute
+  '/notifications': typeof NotificationsRoute
   '/onboarding': typeof OnboardingRoute
   '/profile': typeof ProfileRouteWithChildren
   '/register': typeof RegisterRoute
@@ -102,6 +109,7 @@ export interface FileRoutesByTo {
   '/explore': typeof ExploreRouteWithChildren
   '/interests': typeof InterestsRoute
   '/login': typeof LoginRoute
+  '/notifications': typeof NotificationsRoute
   '/onboarding': typeof OnboardingRoute
   '/profile': typeof ProfileRouteWithChildren
   '/register': typeof RegisterRoute
@@ -117,6 +125,7 @@ export interface FileRoutesById {
   '/explore': typeof ExploreRouteWithChildren
   '/interests': typeof InterestsRoute
   '/login': typeof LoginRoute
+  '/notifications': typeof NotificationsRoute
   '/onboarding': typeof OnboardingRoute
   '/profile': typeof ProfileRouteWithChildren
   '/register': typeof RegisterRoute
@@ -133,6 +142,7 @@ export interface FileRouteTypes {
     | '/explore'
     | '/interests'
     | '/login'
+    | '/notifications'
     | '/onboarding'
     | '/profile'
     | '/register'
@@ -147,6 +157,7 @@ export interface FileRouteTypes {
     | '/explore'
     | '/interests'
     | '/login'
+    | '/notifications'
     | '/onboarding'
     | '/profile'
     | '/register'
@@ -161,6 +172,7 @@ export interface FileRouteTypes {
     | '/explore'
     | '/interests'
     | '/login'
+    | '/notifications'
     | '/onboarding'
     | '/profile'
     | '/register'
@@ -176,6 +188,7 @@ export interface RootRouteChildren {
   ExploreRoute: typeof ExploreRouteWithChildren
   InterestsRoute: typeof InterestsRoute
   LoginRoute: typeof LoginRoute
+  NotificationsRoute: typeof NotificationsRoute
   OnboardingRoute: typeof OnboardingRoute
   ProfileRoute: typeof ProfileRouteWithChildren
   RegisterRoute: typeof RegisterRoute
@@ -212,6 +225,13 @@ declare module '@tanstack/react-router' {
       path: '/onboarding'
       fullPath: '/onboarding'
       preLoaderRoute: typeof OnboardingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/notifications': {
+      id: '/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof NotificationsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -300,6 +320,7 @@ const rootRouteChildren: RootRouteChildren = {
   ExploreRoute: ExploreRouteWithChildren,
   InterestsRoute: InterestsRoute,
   LoginRoute: LoginRoute,
+  NotificationsRoute: NotificationsRoute,
   OnboardingRoute: OnboardingRoute,
   ProfileRoute: ProfileRouteWithChildren,
   RegisterRoute: RegisterRoute,
