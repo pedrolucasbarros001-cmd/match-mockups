@@ -23,6 +23,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as MyListingsIndexRouteImport } from './routes/my-listings.index'
 import { Route as ChatsIndexRouteImport } from './routes/chats.index'
 import { Route as ProfileScoreRouteImport } from './routes/profile.score'
+import { Route as MyListingsNewRouteImport } from './routes/my-listings.new'
 import { Route as ExploreIdRouteImport } from './routes/explore.$id'
 import { Route as ChatsIdRouteImport } from './routes/chats.$id'
 
@@ -96,6 +97,11 @@ const ProfileScoreRoute = ProfileScoreRouteImport.update({
   path: '/score',
   getParentRoute: () => ProfileRoute,
 } as any)
+const MyListingsNewRoute = MyListingsNewRouteImport.update({
+  id: '/my-listings/new',
+  path: '/my-listings/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ExploreIdRoute = ExploreIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -121,6 +127,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof SettingsRoute
   '/chats/$id': typeof ChatsIdRoute
   '/explore/$id': typeof ExploreIdRoute
+  '/my-listings/new': typeof MyListingsNewRoute
   '/profile/score': typeof ProfileScoreRoute
   '/chats/': typeof ChatsIndexRoute
   '/my-listings/': typeof MyListingsIndexRoute
@@ -139,6 +146,7 @@ export interface FileRoutesByTo {
   '/settings': typeof SettingsRoute
   '/chats/$id': typeof ChatsIdRoute
   '/explore/$id': typeof ExploreIdRoute
+  '/my-listings/new': typeof MyListingsNewRoute
   '/profile/score': typeof ProfileScoreRoute
   '/chats': typeof ChatsIndexRoute
   '/my-listings': typeof MyListingsIndexRoute
@@ -158,6 +166,7 @@ export interface FileRoutesById {
   '/settings': typeof SettingsRoute
   '/chats/$id': typeof ChatsIdRoute
   '/explore/$id': typeof ExploreIdRoute
+  '/my-listings/new': typeof MyListingsNewRoute
   '/profile/score': typeof ProfileScoreRoute
   '/chats/': typeof ChatsIndexRoute
   '/my-listings/': typeof MyListingsIndexRoute
@@ -178,6 +187,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/chats/$id'
     | '/explore/$id'
+    | '/my-listings/new'
     | '/profile/score'
     | '/chats/'
     | '/my-listings/'
@@ -196,6 +206,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/chats/$id'
     | '/explore/$id'
+    | '/my-listings/new'
     | '/profile/score'
     | '/chats'
     | '/my-listings'
@@ -214,6 +225,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/chats/$id'
     | '/explore/$id'
+    | '/my-listings/new'
     | '/profile/score'
     | '/chats/'
     | '/my-listings/'
@@ -232,6 +244,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   SettingsRoute: typeof SettingsRoute
   ChatsIdRoute: typeof ChatsIdRoute
+  MyListingsNewRoute: typeof MyListingsNewRoute
   ChatsIndexRoute: typeof ChatsIndexRoute
   MyListingsIndexRoute: typeof MyListingsIndexRoute
 }
@@ -336,6 +349,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProfileScoreRouteImport
       parentRoute: typeof ProfileRoute
     }
+    '/my-listings/new': {
+      id: '/my-listings/new'
+      path: '/my-listings/new'
+      fullPath: '/my-listings/new'
+      preLoaderRoute: typeof MyListingsNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/explore/$id': {
       id: '/explore/$id'
       path: '/$id'
@@ -388,6 +408,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   SettingsRoute: SettingsRoute,
   ChatsIdRoute: ChatsIdRoute,
+  MyListingsNewRoute: MyListingsNewRoute,
   ChatsIndexRoute: ChatsIndexRoute,
   MyListingsIndexRoute: MyListingsIndexRoute,
 }
