@@ -18,6 +18,7 @@ import { Route as InterestsRouteImport } from './routes/interests'
 import { Route as ExploreRouteImport } from './routes/explore'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ChatsIndexRouteImport } from './routes/chats.index'
+import { Route as ProfileScoreRouteImport } from './routes/profile.score'
 import { Route as ExploreIdRouteImport } from './routes/explore.$id'
 import { Route as ChatsIdRouteImport } from './routes/chats.$id'
 
@@ -66,6 +67,11 @@ const ChatsIndexRoute = ChatsIndexRouteImport.update({
   path: '/chats/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProfileScoreRoute = ProfileScoreRouteImport.update({
+  id: '/score',
+  path: '/score',
+  getParentRoute: () => ProfileRoute,
+} as any)
 const ExploreIdRoute = ExploreIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -83,11 +89,12 @@ export interface FileRoutesByFullPath {
   '/interests': typeof InterestsRoute
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
-  '/profile': typeof ProfileRoute
+  '/profile': typeof ProfileRouteWithChildren
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/chats/$id': typeof ChatsIdRoute
   '/explore/$id': typeof ExploreIdRoute
+  '/profile/score': typeof ProfileScoreRoute
   '/chats/': typeof ChatsIndexRoute
 }
 export interface FileRoutesByTo {
@@ -96,11 +103,12 @@ export interface FileRoutesByTo {
   '/interests': typeof InterestsRoute
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
-  '/profile': typeof ProfileRoute
+  '/profile': typeof ProfileRouteWithChildren
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/chats/$id': typeof ChatsIdRoute
   '/explore/$id': typeof ExploreIdRoute
+  '/profile/score': typeof ProfileScoreRoute
   '/chats': typeof ChatsIndexRoute
 }
 export interface FileRoutesById {
@@ -110,11 +118,12 @@ export interface FileRoutesById {
   '/interests': typeof InterestsRoute
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
-  '/profile': typeof ProfileRoute
+  '/profile': typeof ProfileRouteWithChildren
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/chats/$id': typeof ChatsIdRoute
   '/explore/$id': typeof ExploreIdRoute
+  '/profile/score': typeof ProfileScoreRoute
   '/chats/': typeof ChatsIndexRoute
 }
 export interface FileRouteTypes {
@@ -130,6 +139,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/chats/$id'
     | '/explore/$id'
+    | '/profile/score'
     | '/chats/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -143,6 +153,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/chats/$id'
     | '/explore/$id'
+    | '/profile/score'
     | '/chats'
   id:
     | '__root__'
@@ -156,6 +167,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/chats/$id'
     | '/explore/$id'
+    | '/profile/score'
     | '/chats/'
   fileRoutesById: FileRoutesById
 }
@@ -165,7 +177,7 @@ export interface RootRouteChildren {
   InterestsRoute: typeof InterestsRoute
   LoginRoute: typeof LoginRoute
   OnboardingRoute: typeof OnboardingRoute
-  ProfileRoute: typeof ProfileRoute
+  ProfileRoute: typeof ProfileRouteWithChildren
   RegisterRoute: typeof RegisterRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   ChatsIdRoute: typeof ChatsIdRoute
@@ -237,6 +249,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ChatsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/profile/score': {
+      id: '/profile/score'
+      path: '/score'
+      fullPath: '/profile/score'
+      preLoaderRoute: typeof ProfileScoreRouteImport
+      parentRoute: typeof ProfileRoute
+    }
     '/explore/$id': {
       id: '/explore/$id'
       path: '/$id'
@@ -265,13 +284,24 @@ const ExploreRouteChildren: ExploreRouteChildren = {
 const ExploreRouteWithChildren =
   ExploreRoute._addFileChildren(ExploreRouteChildren)
 
+interface ProfileRouteChildren {
+  ProfileScoreRoute: typeof ProfileScoreRoute
+}
+
+const ProfileRouteChildren: ProfileRouteChildren = {
+  ProfileScoreRoute: ProfileScoreRoute,
+}
+
+const ProfileRouteWithChildren =
+  ProfileRoute._addFileChildren(ProfileRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ExploreRoute: ExploreRouteWithChildren,
   InterestsRoute: InterestsRoute,
   LoginRoute: LoginRoute,
   OnboardingRoute: OnboardingRoute,
-  ProfileRoute: ProfileRoute,
+  ProfileRoute: ProfileRouteWithChildren,
   RegisterRoute: RegisterRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   ChatsIdRoute: ChatsIdRoute,
