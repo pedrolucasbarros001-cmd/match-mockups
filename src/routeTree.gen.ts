@@ -9,38 +9,338 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as RegisterRouteImport } from './routes/register'
+import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as OnboardingRouteImport } from './routes/onboarding'
+import { Route as NotificationsRouteImport } from './routes/notifications'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as InterestsRouteImport } from './routes/interests'
+import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as MyListingsIndexRouteImport } from './routes/my-listings.index'
+import { Route as ExploreIndexRouteImport } from './routes/explore.index'
+import { Route as ChatsIndexRouteImport } from './routes/chats.index'
+import { Route as CandidatesIndexRouteImport } from './routes/candidates.index'
+import { Route as ProfileScoreRouteImport } from './routes/profile.score'
+import { Route as MyListingsNewRouteImport } from './routes/my-listings.new'
+import { Route as ExploreIdRouteImport } from './routes/explore.$id'
+import { Route as ChatsIdRouteImport } from './routes/chats.$id'
+import { Route as CandidatesRequestIdRouteImport } from './routes/candidates.$requestId'
 
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RegisterRoute = RegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OnboardingRoute = OnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NotificationsRoute = NotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InterestsRoute = InterestsRouteImport.update({
+  id: '/interests',
+  path: '/interests',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MyListingsIndexRoute = MyListingsIndexRouteImport.update({
+  id: '/my-listings/',
+  path: '/my-listings/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExploreIndexRoute = ExploreIndexRouteImport.update({
+  id: '/explore/',
+  path: '/explore/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ChatsIndexRoute = ChatsIndexRouteImport.update({
+  id: '/chats/',
+  path: '/chats/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CandidatesIndexRoute = CandidatesIndexRouteImport.update({
+  id: '/candidates/',
+  path: '/candidates/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileScoreRoute = ProfileScoreRouteImport.update({
+  id: '/score',
+  path: '/score',
+  getParentRoute: () => ProfileRoute,
+} as any)
+const MyListingsNewRoute = MyListingsNewRouteImport.update({
+  id: '/my-listings/new',
+  path: '/my-listings/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExploreIdRoute = ExploreIdRouteImport.update({
+  id: '/explore/$id',
+  path: '/explore/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ChatsIdRoute = ChatsIdRouteImport.update({
+  id: '/chats/$id',
+  path: '/chats/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CandidatesRequestIdRoute = CandidatesRequestIdRouteImport.update({
+  id: '/candidates/$requestId',
+  path: '/candidates/$requestId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/dashboard': typeof DashboardRoute
+  '/interests': typeof InterestsRoute
+  '/login': typeof LoginRoute
+  '/notifications': typeof NotificationsRoute
+  '/onboarding': typeof OnboardingRoute
+  '/profile': typeof ProfileRouteWithChildren
+  '/register': typeof RegisterRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/settings': typeof SettingsRoute
+  '/candidates/$requestId': typeof CandidatesRequestIdRoute
+  '/chats/$id': typeof ChatsIdRoute
+  '/explore/$id': typeof ExploreIdRoute
+  '/my-listings/new': typeof MyListingsNewRoute
+  '/profile/score': typeof ProfileScoreRoute
+  '/candidates/': typeof CandidatesIndexRoute
+  '/chats/': typeof ChatsIndexRoute
+  '/explore/': typeof ExploreIndexRoute
+  '/my-listings/': typeof MyListingsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/dashboard': typeof DashboardRoute
+  '/interests': typeof InterestsRoute
+  '/login': typeof LoginRoute
+  '/notifications': typeof NotificationsRoute
+  '/onboarding': typeof OnboardingRoute
+  '/profile': typeof ProfileRouteWithChildren
+  '/register': typeof RegisterRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/settings': typeof SettingsRoute
+  '/candidates/$requestId': typeof CandidatesRequestIdRoute
+  '/chats/$id': typeof ChatsIdRoute
+  '/explore/$id': typeof ExploreIdRoute
+  '/my-listings/new': typeof MyListingsNewRoute
+  '/profile/score': typeof ProfileScoreRoute
+  '/candidates': typeof CandidatesIndexRoute
+  '/chats': typeof ChatsIndexRoute
+  '/explore': typeof ExploreIndexRoute
+  '/my-listings': typeof MyListingsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/dashboard': typeof DashboardRoute
+  '/interests': typeof InterestsRoute
+  '/login': typeof LoginRoute
+  '/notifications': typeof NotificationsRoute
+  '/onboarding': typeof OnboardingRoute
+  '/profile': typeof ProfileRouteWithChildren
+  '/register': typeof RegisterRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/settings': typeof SettingsRoute
+  '/candidates/$requestId': typeof CandidatesRequestIdRoute
+  '/chats/$id': typeof ChatsIdRoute
+  '/explore/$id': typeof ExploreIdRoute
+  '/my-listings/new': typeof MyListingsNewRoute
+  '/profile/score': typeof ProfileScoreRoute
+  '/candidates/': typeof CandidatesIndexRoute
+  '/chats/': typeof ChatsIndexRoute
+  '/explore/': typeof ExploreIndexRoute
+  '/my-listings/': typeof MyListingsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/dashboard'
+    | '/interests'
+    | '/login'
+    | '/notifications'
+    | '/onboarding'
+    | '/profile'
+    | '/register'
+    | '/reset-password'
+    | '/settings'
+    | '/candidates/$requestId'
+    | '/chats/$id'
+    | '/explore/$id'
+    | '/my-listings/new'
+    | '/profile/score'
+    | '/candidates/'
+    | '/chats/'
+    | '/explore/'
+    | '/my-listings/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/dashboard'
+    | '/interests'
+    | '/login'
+    | '/notifications'
+    | '/onboarding'
+    | '/profile'
+    | '/register'
+    | '/reset-password'
+    | '/settings'
+    | '/candidates/$requestId'
+    | '/chats/$id'
+    | '/explore/$id'
+    | '/my-listings/new'
+    | '/profile/score'
+    | '/candidates'
+    | '/chats'
+    | '/explore'
+    | '/my-listings'
+  id:
+    | '__root__'
+    | '/'
+    | '/dashboard'
+    | '/interests'
+    | '/login'
+    | '/notifications'
+    | '/onboarding'
+    | '/profile'
+    | '/register'
+    | '/reset-password'
+    | '/settings'
+    | '/candidates/$requestId'
+    | '/chats/$id'
+    | '/explore/$id'
+    | '/my-listings/new'
+    | '/profile/score'
+    | '/candidates/'
+    | '/chats/'
+    | '/explore/'
+    | '/my-listings/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  DashboardRoute: typeof DashboardRoute
+  InterestsRoute: typeof InterestsRoute
+  LoginRoute: typeof LoginRoute
+  NotificationsRoute: typeof NotificationsRoute
+  OnboardingRoute: typeof OnboardingRoute
+  ProfileRoute: typeof ProfileRouteWithChildren
+  RegisterRoute: typeof RegisterRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
+  SettingsRoute: typeof SettingsRoute
+  CandidatesRequestIdRoute: typeof CandidatesRequestIdRoute
+  ChatsIdRoute: typeof ChatsIdRoute
+  ExploreIdRoute: typeof ExploreIdRoute
+  MyListingsNewRoute: typeof MyListingsNewRoute
+  CandidatesIndexRoute: typeof CandidatesIndexRoute
+  ChatsIndexRoute: typeof ChatsIndexRoute
+  ExploreIndexRoute: typeof ExploreIndexRoute
+  MyListingsIndexRoute: typeof MyListingsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/register': {
+      id: '/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/onboarding': {
+      id: '/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof OnboardingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/notifications': {
+      id: '/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof NotificationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/interests': {
+      id: '/interests'
+      path: '/interests'
+      fullPath: '/interests'
+      preLoaderRoute: typeof InterestsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,22 +348,103 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/my-listings/': {
+      id: '/my-listings/'
+      path: '/my-listings'
+      fullPath: '/my-listings/'
+      preLoaderRoute: typeof MyListingsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/explore/': {
+      id: '/explore/'
+      path: '/explore'
+      fullPath: '/explore/'
+      preLoaderRoute: typeof ExploreIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/chats/': {
+      id: '/chats/'
+      path: '/chats'
+      fullPath: '/chats/'
+      preLoaderRoute: typeof ChatsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/candidates/': {
+      id: '/candidates/'
+      path: '/candidates'
+      fullPath: '/candidates/'
+      preLoaderRoute: typeof CandidatesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile/score': {
+      id: '/profile/score'
+      path: '/score'
+      fullPath: '/profile/score'
+      preLoaderRoute: typeof ProfileScoreRouteImport
+      parentRoute: typeof ProfileRoute
+    }
+    '/my-listings/new': {
+      id: '/my-listings/new'
+      path: '/my-listings/new'
+      fullPath: '/my-listings/new'
+      preLoaderRoute: typeof MyListingsNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/explore/$id': {
+      id: '/explore/$id'
+      path: '/explore/$id'
+      fullPath: '/explore/$id'
+      preLoaderRoute: typeof ExploreIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/chats/$id': {
+      id: '/chats/$id'
+      path: '/chats/$id'
+      fullPath: '/chats/$id'
+      preLoaderRoute: typeof ChatsIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/candidates/$requestId': {
+      id: '/candidates/$requestId'
+      path: '/candidates/$requestId'
+      fullPath: '/candidates/$requestId'
+      preLoaderRoute: typeof CandidatesRequestIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
+interface ProfileRouteChildren {
+  ProfileScoreRoute: typeof ProfileScoreRoute
+}
+
+const ProfileRouteChildren: ProfileRouteChildren = {
+  ProfileScoreRoute: ProfileScoreRoute,
+}
+
+const ProfileRouteWithChildren =
+  ProfileRoute._addFileChildren(ProfileRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  DashboardRoute: DashboardRoute,
+  InterestsRoute: InterestsRoute,
+  LoginRoute: LoginRoute,
+  NotificationsRoute: NotificationsRoute,
+  OnboardingRoute: OnboardingRoute,
+  ProfileRoute: ProfileRouteWithChildren,
+  RegisterRoute: RegisterRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
+  SettingsRoute: SettingsRoute,
+  CandidatesRequestIdRoute: CandidatesRequestIdRoute,
+  ChatsIdRoute: ChatsIdRoute,
+  ExploreIdRoute: ExploreIdRoute,
+  MyListingsNewRoute: MyListingsNewRoute,
+  CandidatesIndexRoute: CandidatesIndexRoute,
+  ChatsIndexRoute: ChatsIndexRoute,
+  ExploreIndexRoute: ExploreIndexRoute,
+  MyListingsIndexRoute: MyListingsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
