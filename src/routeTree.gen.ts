@@ -27,6 +27,7 @@ import { Route as ProfileScoreRouteImport } from './routes/profile.score'
 import { Route as MyListingsNewRouteImport } from './routes/my-listings.new'
 import { Route as ExploreIdRouteImport } from './routes/explore.$id'
 import { Route as ChatsIdRouteImport } from './routes/chats.$id'
+import { Route as CandidatesRequestIdRouteImport } from './routes/candidates.$requestId'
 
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
@@ -118,6 +119,11 @@ const ChatsIdRoute = ChatsIdRouteImport.update({
   path: '/chats/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CandidatesRequestIdRoute = CandidatesRequestIdRouteImport.update({
+  id: '/candidates/$requestId',
+  path: '/candidates/$requestId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -131,6 +137,7 @@ export interface FileRoutesByFullPath {
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
+  '/candidates/$requestId': typeof CandidatesRequestIdRoute
   '/chats/$id': typeof ChatsIdRoute
   '/explore/$id': typeof ExploreIdRoute
   '/my-listings/new': typeof MyListingsNewRoute
@@ -151,6 +158,7 @@ export interface FileRoutesByTo {
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
+  '/candidates/$requestId': typeof CandidatesRequestIdRoute
   '/chats/$id': typeof ChatsIdRoute
   '/explore/$id': typeof ExploreIdRoute
   '/my-listings/new': typeof MyListingsNewRoute
@@ -172,6 +180,7 @@ export interface FileRoutesById {
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
+  '/candidates/$requestId': typeof CandidatesRequestIdRoute
   '/chats/$id': typeof ChatsIdRoute
   '/explore/$id': typeof ExploreIdRoute
   '/my-listings/new': typeof MyListingsNewRoute
@@ -194,6 +203,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/reset-password'
     | '/settings'
+    | '/candidates/$requestId'
     | '/chats/$id'
     | '/explore/$id'
     | '/my-listings/new'
@@ -214,6 +224,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/reset-password'
     | '/settings'
+    | '/candidates/$requestId'
     | '/chats/$id'
     | '/explore/$id'
     | '/my-listings/new'
@@ -234,6 +245,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/reset-password'
     | '/settings'
+    | '/candidates/$requestId'
     | '/chats/$id'
     | '/explore/$id'
     | '/my-listings/new'
@@ -255,6 +267,7 @@ export interface RootRouteChildren {
   RegisterRoute: typeof RegisterRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SettingsRoute: typeof SettingsRoute
+  CandidatesRequestIdRoute: typeof CandidatesRequestIdRoute
   ChatsIdRoute: typeof ChatsIdRoute
   MyListingsNewRoute: typeof MyListingsNewRoute
   CandidatesIndexRoute: typeof CandidatesIndexRoute
@@ -390,6 +403,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ChatsIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/candidates/$requestId': {
+      id: '/candidates/$requestId'
+      path: '/candidates/$requestId'
+      fullPath: '/candidates/$requestId'
+      preLoaderRoute: typeof CandidatesRequestIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -427,6 +447,7 @@ const rootRouteChildren: RootRouteChildren = {
   RegisterRoute: RegisterRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SettingsRoute: SettingsRoute,
+  CandidatesRequestIdRoute: CandidatesRequestIdRoute,
   ChatsIdRoute: ChatsIdRoute,
   MyListingsNewRoute: MyListingsNewRoute,
   CandidatesIndexRoute: CandidatesIndexRoute,
