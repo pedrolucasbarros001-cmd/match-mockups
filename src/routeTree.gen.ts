@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ProfileRouteImport } from './routes/profile'
@@ -23,6 +24,11 @@ import { Route as ProfileScoreRouteImport } from './routes/profile.score'
 import { Route as ExploreIdRouteImport } from './routes/explore.$id'
 import { Route as ChatsIdRouteImport } from './routes/chats.$id'
 
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
@@ -99,6 +105,7 @@ export interface FileRoutesByFullPath {
   '/profile': typeof ProfileRouteWithChildren
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/settings': typeof SettingsRoute
   '/chats/$id': typeof ChatsIdRoute
   '/explore/$id': typeof ExploreIdRoute
   '/profile/score': typeof ProfileScoreRoute
@@ -114,6 +121,7 @@ export interface FileRoutesByTo {
   '/profile': typeof ProfileRouteWithChildren
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/settings': typeof SettingsRoute
   '/chats/$id': typeof ChatsIdRoute
   '/explore/$id': typeof ExploreIdRoute
   '/profile/score': typeof ProfileScoreRoute
@@ -130,6 +138,7 @@ export interface FileRoutesById {
   '/profile': typeof ProfileRouteWithChildren
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/settings': typeof SettingsRoute
   '/chats/$id': typeof ChatsIdRoute
   '/explore/$id': typeof ExploreIdRoute
   '/profile/score': typeof ProfileScoreRoute
@@ -147,6 +156,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/register'
     | '/reset-password'
+    | '/settings'
     | '/chats/$id'
     | '/explore/$id'
     | '/profile/score'
@@ -162,6 +172,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/register'
     | '/reset-password'
+    | '/settings'
     | '/chats/$id'
     | '/explore/$id'
     | '/profile/score'
@@ -177,6 +188,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/register'
     | '/reset-password'
+    | '/settings'
     | '/chats/$id'
     | '/explore/$id'
     | '/profile/score'
@@ -193,12 +205,20 @@ export interface RootRouteChildren {
   ProfileRoute: typeof ProfileRouteWithChildren
   RegisterRoute: typeof RegisterRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  SettingsRoute: typeof SettingsRoute
   ChatsIdRoute: typeof ChatsIdRoute
   ChatsIndexRoute: typeof ChatsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/reset-password': {
       id: '/reset-password'
       path: '/reset-password'
@@ -325,6 +345,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProfileRoute: ProfileRouteWithChildren,
   RegisterRoute: RegisterRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  SettingsRoute: SettingsRoute,
   ChatsIdRoute: ChatsIdRoute,
   ChatsIndexRoute: ChatsIndexRoute,
 }
