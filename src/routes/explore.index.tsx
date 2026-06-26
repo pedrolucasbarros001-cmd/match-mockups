@@ -6,7 +6,7 @@ import { listings, type Listing } from "@/lib/mock-data";
 import { AppShell, ScoreBadge } from "@/components/AppShell";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/explore")({
+export const Route = createFileRoute("/explore/")({
   head: () => ({ meta: [{ title: "Explorar — HomeMatch" }] }),
   component: ExplorePage,
 });

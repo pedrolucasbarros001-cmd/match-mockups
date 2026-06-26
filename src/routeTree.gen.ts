@@ -17,10 +17,10 @@ import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as InterestsRouteImport } from './routes/interests'
-import { Route as ExploreRouteImport } from './routes/explore'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as MyListingsIndexRouteImport } from './routes/my-listings.index'
+import { Route as ExploreIndexRouteImport } from './routes/explore.index'
 import { Route as ChatsIndexRouteImport } from './routes/chats.index'
 import { Route as CandidatesIndexRouteImport } from './routes/candidates.index'
 import { Route as ProfileScoreRouteImport } from './routes/profile.score'
@@ -69,11 +69,6 @@ const InterestsRoute = InterestsRouteImport.update({
   path: '/interests',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ExploreRoute = ExploreRouteImport.update({
-  id: '/explore',
-  path: '/explore',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -87,6 +82,11 @@ const IndexRoute = IndexRouteImport.update({
 const MyListingsIndexRoute = MyListingsIndexRouteImport.update({
   id: '/my-listings/',
   path: '/my-listings/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExploreIndexRoute = ExploreIndexRouteImport.update({
+  id: '/explore/',
+  path: '/explore/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ChatsIndexRoute = ChatsIndexRouteImport.update({
@@ -110,9 +110,9 @@ const MyListingsNewRoute = MyListingsNewRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const ExploreIdRoute = ExploreIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => ExploreRoute,
+  id: '/explore/$id',
+  path: '/explore/$id',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ChatsIdRoute = ChatsIdRouteImport.update({
   id: '/chats/$id',
@@ -128,7 +128,6 @@ const CandidatesRequestIdRoute = CandidatesRequestIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRoute
-  '/explore': typeof ExploreRouteWithChildren
   '/interests': typeof InterestsRoute
   '/login': typeof LoginRoute
   '/notifications': typeof NotificationsRoute
@@ -144,12 +143,12 @@ export interface FileRoutesByFullPath {
   '/profile/score': typeof ProfileScoreRoute
   '/candidates/': typeof CandidatesIndexRoute
   '/chats/': typeof ChatsIndexRoute
+  '/explore/': typeof ExploreIndexRoute
   '/my-listings/': typeof MyListingsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRoute
-  '/explore': typeof ExploreRouteWithChildren
   '/interests': typeof InterestsRoute
   '/login': typeof LoginRoute
   '/notifications': typeof NotificationsRoute
@@ -165,13 +164,13 @@ export interface FileRoutesByTo {
   '/profile/score': typeof ProfileScoreRoute
   '/candidates': typeof CandidatesIndexRoute
   '/chats': typeof ChatsIndexRoute
+  '/explore': typeof ExploreIndexRoute
   '/my-listings': typeof MyListingsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRoute
-  '/explore': typeof ExploreRouteWithChildren
   '/interests': typeof InterestsRoute
   '/login': typeof LoginRoute
   '/notifications': typeof NotificationsRoute
@@ -187,6 +186,7 @@ export interface FileRoutesById {
   '/profile/score': typeof ProfileScoreRoute
   '/candidates/': typeof CandidatesIndexRoute
   '/chats/': typeof ChatsIndexRoute
+  '/explore/': typeof ExploreIndexRoute
   '/my-listings/': typeof MyListingsIndexRoute
 }
 export interface FileRouteTypes {
@@ -194,7 +194,6 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/dashboard'
-    | '/explore'
     | '/interests'
     | '/login'
     | '/notifications'
@@ -210,12 +209,12 @@ export interface FileRouteTypes {
     | '/profile/score'
     | '/candidates/'
     | '/chats/'
+    | '/explore/'
     | '/my-listings/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/dashboard'
-    | '/explore'
     | '/interests'
     | '/login'
     | '/notifications'
@@ -231,12 +230,12 @@ export interface FileRouteTypes {
     | '/profile/score'
     | '/candidates'
     | '/chats'
+    | '/explore'
     | '/my-listings'
   id:
     | '__root__'
     | '/'
     | '/dashboard'
-    | '/explore'
     | '/interests'
     | '/login'
     | '/notifications'
@@ -252,13 +251,13 @@ export interface FileRouteTypes {
     | '/profile/score'
     | '/candidates/'
     | '/chats/'
+    | '/explore/'
     | '/my-listings/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   DashboardRoute: typeof DashboardRoute
-  ExploreRoute: typeof ExploreRouteWithChildren
   InterestsRoute: typeof InterestsRoute
   LoginRoute: typeof LoginRoute
   NotificationsRoute: typeof NotificationsRoute
@@ -269,9 +268,11 @@ export interface RootRouteChildren {
   SettingsRoute: typeof SettingsRoute
   CandidatesRequestIdRoute: typeof CandidatesRequestIdRoute
   ChatsIdRoute: typeof ChatsIdRoute
+  ExploreIdRoute: typeof ExploreIdRoute
   MyListingsNewRoute: typeof MyListingsNewRoute
   CandidatesIndexRoute: typeof CandidatesIndexRoute
   ChatsIndexRoute: typeof ChatsIndexRoute
+  ExploreIndexRoute: typeof ExploreIndexRoute
   MyListingsIndexRoute: typeof MyListingsIndexRoute
 }
 
@@ -333,13 +334,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof InterestsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/explore': {
-      id: '/explore'
-      path: '/explore'
-      fullPath: '/explore'
-      preLoaderRoute: typeof ExploreRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/dashboard': {
       id: '/dashboard'
       path: '/dashboard'
@@ -359,6 +353,13 @@ declare module '@tanstack/react-router' {
       path: '/my-listings'
       fullPath: '/my-listings/'
       preLoaderRoute: typeof MyListingsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/explore/': {
+      id: '/explore/'
+      path: '/explore'
+      fullPath: '/explore/'
+      preLoaderRoute: typeof ExploreIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/chats/': {
@@ -391,10 +392,10 @@ declare module '@tanstack/react-router' {
     }
     '/explore/$id': {
       id: '/explore/$id'
-      path: '/$id'
+      path: '/explore/$id'
       fullPath: '/explore/$id'
       preLoaderRoute: typeof ExploreIdRouteImport
-      parentRoute: typeof ExploreRoute
+      parentRoute: typeof rootRouteImport
     }
     '/chats/$id': {
       id: '/chats/$id'
@@ -413,17 +414,6 @@ declare module '@tanstack/react-router' {
   }
 }
 
-interface ExploreRouteChildren {
-  ExploreIdRoute: typeof ExploreIdRoute
-}
-
-const ExploreRouteChildren: ExploreRouteChildren = {
-  ExploreIdRoute: ExploreIdRoute,
-}
-
-const ExploreRouteWithChildren =
-  ExploreRoute._addFileChildren(ExploreRouteChildren)
-
 interface ProfileRouteChildren {
   ProfileScoreRoute: typeof ProfileScoreRoute
 }
@@ -438,7 +428,6 @@ const ProfileRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   DashboardRoute: DashboardRoute,
-  ExploreRoute: ExploreRouteWithChildren,
   InterestsRoute: InterestsRoute,
   LoginRoute: LoginRoute,
   NotificationsRoute: NotificationsRoute,
@@ -449,9 +438,11 @@ const rootRouteChildren: RootRouteChildren = {
   SettingsRoute: SettingsRoute,
   CandidatesRequestIdRoute: CandidatesRequestIdRoute,
   ChatsIdRoute: ChatsIdRoute,
+  ExploreIdRoute: ExploreIdRoute,
   MyListingsNewRoute: MyListingsNewRoute,
   CandidatesIndexRoute: CandidatesIndexRoute,
   ChatsIndexRoute: ChatsIndexRoute,
+  ExploreIndexRoute: ExploreIndexRoute,
   MyListingsIndexRoute: MyListingsIndexRoute,
 }
 export const routeTree = rootRouteImport
