@@ -22,6 +22,7 @@ import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as MyListingsIndexRouteImport } from './routes/my-listings.index'
 import { Route as ChatsIndexRouteImport } from './routes/chats.index'
+import { Route as CandidatesIndexRouteImport } from './routes/candidates.index'
 import { Route as ProfileScoreRouteImport } from './routes/profile.score'
 import { Route as MyListingsNewRouteImport } from './routes/my-listings.new'
 import { Route as ExploreIdRouteImport } from './routes/explore.$id'
@@ -92,6 +93,11 @@ const ChatsIndexRoute = ChatsIndexRouteImport.update({
   path: '/chats/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CandidatesIndexRoute = CandidatesIndexRouteImport.update({
+  id: '/candidates/',
+  path: '/candidates/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProfileScoreRoute = ProfileScoreRouteImport.update({
   id: '/score',
   path: '/score',
@@ -129,6 +135,7 @@ export interface FileRoutesByFullPath {
   '/explore/$id': typeof ExploreIdRoute
   '/my-listings/new': typeof MyListingsNewRoute
   '/profile/score': typeof ProfileScoreRoute
+  '/candidates/': typeof CandidatesIndexRoute
   '/chats/': typeof ChatsIndexRoute
   '/my-listings/': typeof MyListingsIndexRoute
 }
@@ -148,6 +155,7 @@ export interface FileRoutesByTo {
   '/explore/$id': typeof ExploreIdRoute
   '/my-listings/new': typeof MyListingsNewRoute
   '/profile/score': typeof ProfileScoreRoute
+  '/candidates': typeof CandidatesIndexRoute
   '/chats': typeof ChatsIndexRoute
   '/my-listings': typeof MyListingsIndexRoute
 }
@@ -168,6 +176,7 @@ export interface FileRoutesById {
   '/explore/$id': typeof ExploreIdRoute
   '/my-listings/new': typeof MyListingsNewRoute
   '/profile/score': typeof ProfileScoreRoute
+  '/candidates/': typeof CandidatesIndexRoute
   '/chats/': typeof ChatsIndexRoute
   '/my-listings/': typeof MyListingsIndexRoute
 }
@@ -189,6 +198,7 @@ export interface FileRouteTypes {
     | '/explore/$id'
     | '/my-listings/new'
     | '/profile/score'
+    | '/candidates/'
     | '/chats/'
     | '/my-listings/'
   fileRoutesByTo: FileRoutesByTo
@@ -208,6 +218,7 @@ export interface FileRouteTypes {
     | '/explore/$id'
     | '/my-listings/new'
     | '/profile/score'
+    | '/candidates'
     | '/chats'
     | '/my-listings'
   id:
@@ -227,6 +238,7 @@ export interface FileRouteTypes {
     | '/explore/$id'
     | '/my-listings/new'
     | '/profile/score'
+    | '/candidates/'
     | '/chats/'
     | '/my-listings/'
   fileRoutesById: FileRoutesById
@@ -245,6 +257,7 @@ export interface RootRouteChildren {
   SettingsRoute: typeof SettingsRoute
   ChatsIdRoute: typeof ChatsIdRoute
   MyListingsNewRoute: typeof MyListingsNewRoute
+  CandidatesIndexRoute: typeof CandidatesIndexRoute
   ChatsIndexRoute: typeof ChatsIndexRoute
   MyListingsIndexRoute: typeof MyListingsIndexRoute
 }
@@ -342,6 +355,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ChatsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/candidates/': {
+      id: '/candidates/'
+      path: '/candidates'
+      fullPath: '/candidates/'
+      preLoaderRoute: typeof CandidatesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/profile/score': {
       id: '/profile/score'
       path: '/score'
@@ -409,6 +429,7 @@ const rootRouteChildren: RootRouteChildren = {
   SettingsRoute: SettingsRoute,
   ChatsIdRoute: ChatsIdRoute,
   MyListingsNewRoute: MyListingsNewRoute,
+  CandidatesIndexRoute: CandidatesIndexRoute,
   ChatsIndexRoute: ChatsIndexRoute,
   MyListingsIndexRoute: MyListingsIndexRoute,
 }
