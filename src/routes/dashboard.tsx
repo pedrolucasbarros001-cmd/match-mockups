@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { listings, me } from "@/lib/mock-data";
 import { AppShell, PageHeader, ScoreBadge } from "@/components/AppShell";
-import { Plus, ChevronRight } from "lucide-react";
+import { Plus, ChevronRight, Inbox, DoorOpen, Calendar } from "lucide-react";
 
 export const Route = createFileRoute("/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard — HomeMatch" }] }),
@@ -30,6 +30,12 @@ function Dashboard() {
           </div>
           <ChevronRight className="size-5 text-muted-foreground" />
         </Link>
+
+        <div className="mt-4 grid grid-cols-3 gap-2">
+          <Shortcut to="/inbox" Icon={Inbox} label="Inbox" n={2} />
+          <Shortcut to="/rooms" Icon={DoorOpen} label="Quartos" n={5} />
+          <Shortcut to="/visits-manager" Icon={Calendar} label="Visitas" n={3} />
+        </div>
 
         <h2 className="mt-6 mb-2 font-display text-base font-bold">Para fazer agora</h2>
         <div className="overflow-hidden rounded-2xl border border-border bg-surface">
@@ -85,5 +91,17 @@ function TodoRow({ text, last }: { text: string; last?: boolean }) {
       <span className="text-sm font-medium">· {text}</span>
       <ChevronRight className="size-4 text-muted-foreground" />
     </button>
+  );
+}
+
+function Shortcut({ to, Icon, label, n }: { to: string; Icon: typeof Inbox; label: string; n: number }) {
+  return (
+    <Link to={to} className="flex flex-col items-start gap-1 rounded-2xl border border-border bg-surface p-3">
+      <div className="flex w-full items-center justify-between">
+        <div className="grid size-9 place-items-center rounded-pill bg-primary-soft text-primary"><Icon className="size-4" /></div>
+        <span className="font-num text-sm font-bold">{n}</span>
+      </div>
+      <span className="text-xs font-semibold">{label}</span>
+    </Link>
   );
 }
