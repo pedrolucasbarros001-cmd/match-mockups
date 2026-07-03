@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { PageHeader } from "@/components/AppShell";
 import { Bell, Globe, Lock, FileText, Trash2, HelpCircle, ChevronRight } from "lucide-react";
 
-type NavTarget = "/legal/terms" | "/legal/privacy" | "/help";
+
 
 export const Route = createFileRoute("/settings")({
   head: () => ({ meta: [{ title: "Definições — HomeMatch" }] }),
