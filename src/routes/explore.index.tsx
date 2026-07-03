@@ -1,7 +1,7 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { motion, useMotionValue, useTransform, AnimatePresence, type PanInfo } from "motion/react";
-import { Heart, X, Info, SlidersHorizontal, MapPin, PawPrint, Cigarette, BedDouble, RotateCcw } from "lucide-react";
+import { Heart, X, Info, SlidersHorizontal, MapPin, PawPrint, Cigarette, BedDouble, RotateCcw, Map as MapIcon, Sparkles } from "lucide-react";
 import { listings, type Listing } from "@/lib/mock-data";
 import { AppShell, ScoreBadge } from "@/components/AppShell";
 import { cn } from "@/lib/utils";
@@ -42,6 +42,12 @@ function ExplorePage() {
               <RotateCcw className="size-4" />
             </button>
           )}
+          <Link to="/para-ti" className="grid size-10 place-items-center rounded-pill border border-border bg-surface" aria-label="Para ti">
+            <Sparkles className="size-4 text-primary" />
+          </Link>
+          <Link to="/explore/mapa" className="grid size-10 place-items-center rounded-pill border border-border bg-surface" aria-label="Mapa">
+            <MapIcon className="size-4" />
+          </Link>
           <button onClick={() => setShowFilters(true)} className="grid size-10 place-items-center rounded-pill border border-border bg-surface">
             <SlidersHorizontal className="size-4" />
           </button>
