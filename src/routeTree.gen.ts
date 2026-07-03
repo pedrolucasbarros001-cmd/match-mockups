@@ -9,15 +9,23 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as VisitsManagerRouteImport } from './routes/visits-manager'
+import { Route as VisitsRouteImport } from './routes/visits'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as RoomsRouteImport } from './routes/rooms'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as ParaTiRouteImport } from './routes/para-ti'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as InterestsRouteImport } from './routes/interests'
+import { Route as InboxRouteImport } from './routes/inbox'
+import { Route as HelpRouteImport } from './routes/help'
+import { Route as FavoritesRouteImport } from './routes/favorites'
 import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as AccountRouteImport } from './routes/account'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as MyListingsIndexRouteImport } from './routes/my-listings.index'
 import { Route as ExploreIndexRouteImport } from './routes/explore.index'
@@ -25,13 +33,31 @@ import { Route as ChatsIndexRouteImport } from './routes/chats.index'
 import { Route as CandidatesIndexRouteImport } from './routes/candidates.index'
 import { Route as ProfileScoreRouteImport } from './routes/profile.score'
 import { Route as MyListingsNewRouteImport } from './routes/my-listings.new'
+import { Route as LegalTermsRouteImport } from './routes/legal.terms'
+import { Route as LegalPrivacyRouteImport } from './routes/legal.privacy'
+import { Route as ExploreMapaRouteImport } from './routes/explore.mapa'
 import { Route as ExploreIdRouteImport } from './routes/explore.$id'
 import { Route as ChatsIdRouteImport } from './routes/chats.$id'
 import { Route as CandidatesRequestIdRouteImport } from './routes/candidates.$requestId'
 
+const VisitsManagerRoute = VisitsManagerRouteImport.update({
+  id: '/visits-manager',
+  path: '/visits-manager',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VisitsRoute = VisitsRouteImport.update({
+  id: '/visits',
+  path: '/visits',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RoomsRoute = RoomsRouteImport.update({
+  id: '/rooms',
+  path: '/rooms',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -47,6 +73,11 @@ const RegisterRoute = RegisterRouteImport.update({
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ParaTiRoute = ParaTiRouteImport.update({
+  id: '/para-ti',
+  path: '/para-ti',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OnboardingRoute = OnboardingRouteImport.update({
@@ -69,9 +100,29 @@ const InterestsRoute = InterestsRouteImport.update({
   path: '/interests',
   getParentRoute: () => rootRouteImport,
 } as any)
+const InboxRoute = InboxRouteImport.update({
+  id: '/inbox',
+  path: '/inbox',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HelpRoute = HelpRouteImport.update({
+  id: '/help',
+  path: '/help',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FavoritesRoute = FavoritesRouteImport.update({
+  id: '/favorites',
+  path: '/favorites',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AccountRoute = AccountRouteImport.update({
+  id: '/account',
+  path: '/account',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -109,6 +160,21 @@ const MyListingsNewRoute = MyListingsNewRouteImport.update({
   path: '/my-listings/new',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LegalTermsRoute = LegalTermsRouteImport.update({
+  id: '/legal/terms',
+  path: '/legal/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LegalPrivacyRoute = LegalPrivacyRouteImport.update({
+  id: '/legal/privacy',
+  path: '/legal/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExploreMapaRoute = ExploreMapaRouteImport.update({
+  id: '/explore/mapa',
+  path: '/explore/mapa',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ExploreIdRoute = ExploreIdRouteImport.update({
   id: '/explore/$id',
   path: '/explore/$id',
@@ -127,18 +193,29 @@ const CandidatesRequestIdRoute = CandidatesRequestIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/account': typeof AccountRoute
   '/dashboard': typeof DashboardRoute
+  '/favorites': typeof FavoritesRoute
+  '/help': typeof HelpRoute
+  '/inbox': typeof InboxRoute
   '/interests': typeof InterestsRoute
   '/login': typeof LoginRoute
   '/notifications': typeof NotificationsRoute
   '/onboarding': typeof OnboardingRoute
+  '/para-ti': typeof ParaTiRoute
   '/profile': typeof ProfileRouteWithChildren
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/rooms': typeof RoomsRoute
   '/settings': typeof SettingsRoute
+  '/visits': typeof VisitsRoute
+  '/visits-manager': typeof VisitsManagerRoute
   '/candidates/$requestId': typeof CandidatesRequestIdRoute
   '/chats/$id': typeof ChatsIdRoute
   '/explore/$id': typeof ExploreIdRoute
+  '/explore/mapa': typeof ExploreMapaRoute
+  '/legal/privacy': typeof LegalPrivacyRoute
+  '/legal/terms': typeof LegalTermsRoute
   '/my-listings/new': typeof MyListingsNewRoute
   '/profile/score': typeof ProfileScoreRoute
   '/candidates/': typeof CandidatesIndexRoute
@@ -148,18 +225,29 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/account': typeof AccountRoute
   '/dashboard': typeof DashboardRoute
+  '/favorites': typeof FavoritesRoute
+  '/help': typeof HelpRoute
+  '/inbox': typeof InboxRoute
   '/interests': typeof InterestsRoute
   '/login': typeof LoginRoute
   '/notifications': typeof NotificationsRoute
   '/onboarding': typeof OnboardingRoute
+  '/para-ti': typeof ParaTiRoute
   '/profile': typeof ProfileRouteWithChildren
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/rooms': typeof RoomsRoute
   '/settings': typeof SettingsRoute
+  '/visits': typeof VisitsRoute
+  '/visits-manager': typeof VisitsManagerRoute
   '/candidates/$requestId': typeof CandidatesRequestIdRoute
   '/chats/$id': typeof ChatsIdRoute
   '/explore/$id': typeof ExploreIdRoute
+  '/explore/mapa': typeof ExploreMapaRoute
+  '/legal/privacy': typeof LegalPrivacyRoute
+  '/legal/terms': typeof LegalTermsRoute
   '/my-listings/new': typeof MyListingsNewRoute
   '/profile/score': typeof ProfileScoreRoute
   '/candidates': typeof CandidatesIndexRoute
@@ -170,18 +258,29 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/account': typeof AccountRoute
   '/dashboard': typeof DashboardRoute
+  '/favorites': typeof FavoritesRoute
+  '/help': typeof HelpRoute
+  '/inbox': typeof InboxRoute
   '/interests': typeof InterestsRoute
   '/login': typeof LoginRoute
   '/notifications': typeof NotificationsRoute
   '/onboarding': typeof OnboardingRoute
+  '/para-ti': typeof ParaTiRoute
   '/profile': typeof ProfileRouteWithChildren
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/rooms': typeof RoomsRoute
   '/settings': typeof SettingsRoute
+  '/visits': typeof VisitsRoute
+  '/visits-manager': typeof VisitsManagerRoute
   '/candidates/$requestId': typeof CandidatesRequestIdRoute
   '/chats/$id': typeof ChatsIdRoute
   '/explore/$id': typeof ExploreIdRoute
+  '/explore/mapa': typeof ExploreMapaRoute
+  '/legal/privacy': typeof LegalPrivacyRoute
+  '/legal/terms': typeof LegalTermsRoute
   '/my-listings/new': typeof MyListingsNewRoute
   '/profile/score': typeof ProfileScoreRoute
   '/candidates/': typeof CandidatesIndexRoute
@@ -193,18 +292,29 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/account'
     | '/dashboard'
+    | '/favorites'
+    | '/help'
+    | '/inbox'
     | '/interests'
     | '/login'
     | '/notifications'
     | '/onboarding'
+    | '/para-ti'
     | '/profile'
     | '/register'
     | '/reset-password'
+    | '/rooms'
     | '/settings'
+    | '/visits'
+    | '/visits-manager'
     | '/candidates/$requestId'
     | '/chats/$id'
     | '/explore/$id'
+    | '/explore/mapa'
+    | '/legal/privacy'
+    | '/legal/terms'
     | '/my-listings/new'
     | '/profile/score'
     | '/candidates/'
@@ -214,18 +324,29 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/account'
     | '/dashboard'
+    | '/favorites'
+    | '/help'
+    | '/inbox'
     | '/interests'
     | '/login'
     | '/notifications'
     | '/onboarding'
+    | '/para-ti'
     | '/profile'
     | '/register'
     | '/reset-password'
+    | '/rooms'
     | '/settings'
+    | '/visits'
+    | '/visits-manager'
     | '/candidates/$requestId'
     | '/chats/$id'
     | '/explore/$id'
+    | '/explore/mapa'
+    | '/legal/privacy'
+    | '/legal/terms'
     | '/my-listings/new'
     | '/profile/score'
     | '/candidates'
@@ -235,18 +356,29 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/account'
     | '/dashboard'
+    | '/favorites'
+    | '/help'
+    | '/inbox'
     | '/interests'
     | '/login'
     | '/notifications'
     | '/onboarding'
+    | '/para-ti'
     | '/profile'
     | '/register'
     | '/reset-password'
+    | '/rooms'
     | '/settings'
+    | '/visits'
+    | '/visits-manager'
     | '/candidates/$requestId'
     | '/chats/$id'
     | '/explore/$id'
+    | '/explore/mapa'
+    | '/legal/privacy'
+    | '/legal/terms'
     | '/my-listings/new'
     | '/profile/score'
     | '/candidates/'
@@ -257,18 +389,29 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AccountRoute: typeof AccountRoute
   DashboardRoute: typeof DashboardRoute
+  FavoritesRoute: typeof FavoritesRoute
+  HelpRoute: typeof HelpRoute
+  InboxRoute: typeof InboxRoute
   InterestsRoute: typeof InterestsRoute
   LoginRoute: typeof LoginRoute
   NotificationsRoute: typeof NotificationsRoute
   OnboardingRoute: typeof OnboardingRoute
+  ParaTiRoute: typeof ParaTiRoute
   ProfileRoute: typeof ProfileRouteWithChildren
   RegisterRoute: typeof RegisterRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  RoomsRoute: typeof RoomsRoute
   SettingsRoute: typeof SettingsRoute
+  VisitsRoute: typeof VisitsRoute
+  VisitsManagerRoute: typeof VisitsManagerRoute
   CandidatesRequestIdRoute: typeof CandidatesRequestIdRoute
   ChatsIdRoute: typeof ChatsIdRoute
   ExploreIdRoute: typeof ExploreIdRoute
+  ExploreMapaRoute: typeof ExploreMapaRoute
+  LegalPrivacyRoute: typeof LegalPrivacyRoute
+  LegalTermsRoute: typeof LegalTermsRoute
   MyListingsNewRoute: typeof MyListingsNewRoute
   CandidatesIndexRoute: typeof CandidatesIndexRoute
   ChatsIndexRoute: typeof ChatsIndexRoute
@@ -278,11 +421,32 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/visits-manager': {
+      id: '/visits-manager'
+      path: '/visits-manager'
+      fullPath: '/visits-manager'
+      preLoaderRoute: typeof VisitsManagerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/visits': {
+      id: '/visits'
+      path: '/visits'
+      fullPath: '/visits'
+      preLoaderRoute: typeof VisitsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/settings': {
       id: '/settings'
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rooms': {
+      id: '/rooms'
+      path: '/rooms'
+      fullPath: '/rooms'
+      preLoaderRoute: typeof RoomsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reset-password': {
@@ -304,6 +468,13 @@ declare module '@tanstack/react-router' {
       path: '/profile'
       fullPath: '/profile'
       preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/para-ti': {
+      id: '/para-ti'
+      path: '/para-ti'
+      fullPath: '/para-ti'
+      preLoaderRoute: typeof ParaTiRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/onboarding': {
@@ -334,11 +505,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof InterestsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/inbox': {
+      id: '/inbox'
+      path: '/inbox'
+      fullPath: '/inbox'
+      preLoaderRoute: typeof InboxRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/help': {
+      id: '/help'
+      path: '/help'
+      fullPath: '/help'
+      preLoaderRoute: typeof HelpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/favorites': {
+      id: '/favorites'
+      path: '/favorites'
+      fullPath: '/favorites'
+      preLoaderRoute: typeof FavoritesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dashboard': {
       id: '/dashboard'
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/account': {
+      id: '/account'
+      path: '/account'
+      fullPath: '/account'
+      preLoaderRoute: typeof AccountRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -390,6 +589,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MyListingsNewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/legal/terms': {
+      id: '/legal/terms'
+      path: '/legal/terms'
+      fullPath: '/legal/terms'
+      preLoaderRoute: typeof LegalTermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/legal/privacy': {
+      id: '/legal/privacy'
+      path: '/legal/privacy'
+      fullPath: '/legal/privacy'
+      preLoaderRoute: typeof LegalPrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/explore/mapa': {
+      id: '/explore/mapa'
+      path: '/explore/mapa'
+      fullPath: '/explore/mapa'
+      preLoaderRoute: typeof ExploreMapaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/explore/$id': {
       id: '/explore/$id'
       path: '/explore/$id'
@@ -427,18 +647,29 @@ const ProfileRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AccountRoute: AccountRoute,
   DashboardRoute: DashboardRoute,
+  FavoritesRoute: FavoritesRoute,
+  HelpRoute: HelpRoute,
+  InboxRoute: InboxRoute,
   InterestsRoute: InterestsRoute,
   LoginRoute: LoginRoute,
   NotificationsRoute: NotificationsRoute,
   OnboardingRoute: OnboardingRoute,
+  ParaTiRoute: ParaTiRoute,
   ProfileRoute: ProfileRouteWithChildren,
   RegisterRoute: RegisterRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  RoomsRoute: RoomsRoute,
   SettingsRoute: SettingsRoute,
+  VisitsRoute: VisitsRoute,
+  VisitsManagerRoute: VisitsManagerRoute,
   CandidatesRequestIdRoute: CandidatesRequestIdRoute,
   ChatsIdRoute: ChatsIdRoute,
   ExploreIdRoute: ExploreIdRoute,
+  ExploreMapaRoute: ExploreMapaRoute,
+  LegalPrivacyRoute: LegalPrivacyRoute,
+  LegalTermsRoute: LegalTermsRoute,
   MyListingsNewRoute: MyListingsNewRoute,
   CandidatesIndexRoute: CandidatesIndexRoute,
   ChatsIndexRoute: ChatsIndexRoute,

@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { me } from "@/lib/mock-data";
 import { AppShell, PageHeader, ScoreBadge } from "@/components/AppShell";
-import { ChevronRight, Settings, Shield, Heart, LogOut, Edit3 } from "lucide-react";
+import { ChevronRight, Settings, Shield, Heart, LogOut, Edit3, Calendar, Crown, DoorOpen, Inbox } from "lucide-react";
 
 export const Route = createFileRoute("/profile")({
   head: () => ({ meta: [{ title: "Perfil — HomeMatch" }] }),
@@ -42,8 +42,20 @@ function ProfilePage() {
         </Link>
 
         <div className="mt-3 overflow-hidden rounded-2xl border border-border bg-surface">
-          <Row icon={<Shield className="size-5" />} label="Verificações" />
-          <Row icon={<Heart className="size-5" />} label="Imóveis guardados" />
+          <Row icon={<Shield className="size-5" />} label="Verificações" onClick={() => nav({ to: "/profile/score" })} />
+          <Row icon={<Heart className="size-5" />} label="Favoritos" onClick={() => nav({ to: "/favorites" })} />
+          <Row icon={<Calendar className="size-5" />} label="As minhas visitas" onClick={() => nav({ to: "/visits" })} />
+        </div>
+
+        <div className="mt-3 mb-2 px-1 text-xs font-bold uppercase tracking-wide text-muted-foreground">Área senhorio</div>
+        <div className="overflow-hidden rounded-2xl border border-border bg-surface">
+          <Row icon={<Inbox className="size-5" />} label="Inbox" onClick={() => nav({ to: "/inbox" })} />
+          <Row icon={<DoorOpen className="size-5" />} label="Quartos" onClick={() => nav({ to: "/rooms" })} />
+          <Row icon={<Calendar className="size-5" />} label="Gerir visitas" onClick={() => nav({ to: "/visits-manager" })} />
+          <Row icon={<Crown className="size-5" />} label="Conta e plano" onClick={() => nav({ to: "/account" })} />
+        </div>
+
+        <div className="mt-3 overflow-hidden rounded-2xl border border-border bg-surface">
           <Row icon={<Settings className="size-5" />} label="Definições" onClick={() => nav({ to: "/settings" })} />
           <Row icon={<LogOut className="size-5" />} label="Terminar sessão" onClick={() => nav({ to: "/login" })} destructive last />
         </div>
