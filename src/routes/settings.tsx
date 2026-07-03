@@ -2,6 +2,8 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { PageHeader } from "@/components/AppShell";
 import { Bell, Globe, Lock, FileText, Trash2, HelpCircle, ChevronRight } from "lucide-react";
 
+
+
 export const Route = createFileRoute("/settings")({
   head: () => ({ meta: [{ title: "Definições — HomeMatch" }] }),
   component: SettingsPage,
@@ -19,9 +21,9 @@ function SettingsPage() {
           <Item icon={<Globe className="size-5" />} label="Idioma" hint="Português" />
         </Group>
         <Group title="Sobre">
-          <Item icon={<FileText className="size-5" />} label="Termos de Uso" />
-          <Item icon={<FileText className="size-5" />} label="Política de Privacidade" />
-          <Item icon={<HelpCircle className="size-5" />} label="Ajuda" />
+          <Item icon={<FileText className="size-5" />} label="Termos de Uso" onClick={() => nav({ to: "/legal/terms" })} />
+          <Item icon={<FileText className="size-5" />} label="Política de Privacidade" onClick={() => nav({ to: "/legal/privacy" })} />
+          <Item icon={<HelpCircle className="size-5" />} label="Ajuda" onClick={() => nav({ to: "/help" })} />
         </Group>
         <Group title="Zona perigosa">
           <Item icon={<Trash2 className="size-5" />} label="Eliminar conta" destructive

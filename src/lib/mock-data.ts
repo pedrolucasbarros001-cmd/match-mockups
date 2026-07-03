@@ -233,3 +233,46 @@ export function scoreColor(score: number): string {
   if (score >= 40) return "score-amber";
   return "score-red";
 }
+
+export type Room = { id: string; listingId: string; name: string; price: number; status: "available" | "reserved" | "occupied"; tenant?: string };
+export const rooms: Room[] = [
+  { id: "r1", listingId: "1", name: "Suite A", price: 450, status: "available" },
+  { id: "r2", listingId: "1", name: "Quarto B", price: 380, status: "reserved", tenant: "Ana P." },
+  { id: "r3", listingId: "1", name: "Quarto C", price: 360, status: "occupied", tenant: "Rui M." },
+  { id: "r4", listingId: "4", name: "Suite Master", price: 500, status: "available" },
+  { id: "r5", listingId: "4", name: "Quarto Duplo", price: 380, status: "available" },
+];
+
+export type Visit = { id: string; listingId: string; who: string; whoAvatar: string; date: string; time: string; status: "pending" | "confirmed" | "done" | "cancelled" };
+export const visits: Visit[] = [
+  { id: "v1", listingId: "3", who: "Ana P.", whoAvatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=70", date: "Sáb, 6 Jul", time: "10:00", status: "confirmed" },
+  { id: "v2", listingId: "1", who: "João M.", whoAvatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=70", date: "Dom, 7 Jul", time: "15:30", status: "pending" },
+  { id: "v3", listingId: "2", who: "Marta R.", whoAvatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=200&q=70", date: "Ter, 2 Jul", time: "18:00", status: "done" },
+];
+
+export const favoriteIds = ["2", "4", "5"];
+
+export const mapPins = [
+  { id: "1", x: 30, y: 42 },
+  { id: "2", x: 52, y: 55 },
+  { id: "3", x: 44, y: 38 },
+  { id: "4", x: 68, y: 62 },
+  { id: "5", x: 40, y: 72 },
+];
+
+export const recommendationSections = [
+  { title: "Match do dia", subtitle: "O mais alinhado contigo hoje", ids: ["3"] },
+  { title: "Novos perto de ti", subtitle: "A menos de 1 km", ids: ["1", "2", "5"] },
+  { title: "Baseado nos teus gostos", subtitle: "Com jardim ou varanda", ids: ["4", "2"] },
+];
+
+export const landlordAccount = {
+  fiscalName: "Tiago Costa",
+  nif: "•••• ••789",
+  address: "Rua da Sé, 12 · Bragança",
+  plan: "Free" as const,
+  planLimit: "1 anúncio ativo",
+  invoices: [
+    { id: "f1", date: "01 Jun 2026", label: "Plano Free", amount: 0 },
+  ],
+};
