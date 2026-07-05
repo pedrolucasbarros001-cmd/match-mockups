@@ -2,8 +2,8 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { motion, useMotionValue, useTransform, AnimatePresence, type PanInfo } from "motion/react";
 import { Heart, X, Info, SlidersHorizontal, MapPin, PawPrint, Cigarette, BedDouble, RotateCcw, Map as MapIcon, Sparkles } from "lucide-react";
-import { listings, type Listing } from "@/lib/mock-data";
-import { AppShell, ScoreBadge } from "@/components/AppShell";
+import { listings, compatibilityReasons, type Listing } from "@/lib/mock-data";
+import { AppShell, CompatibilityReasons } from "@/components/AppShell";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/explore/")({
@@ -214,10 +214,13 @@ function CardInner({ listing, photoIdx, setPhotoIdx, onTapInfo }: {
           {!listing.smoke && <span className="inline-flex items-center gap-1"><Cigarette className="size-3.5" /> Sem fumo</span>}
         </div>
 
+        <div className="mt-3">
+          <CompatibilityReasons reasons={compatibilityReasons(listing)} dark />
+        </div>
+
         <div className="mt-3 flex items-center gap-2">
           <img src={listing.owner.avatar} alt="" className="size-6 rounded-pill border border-white/30 object-cover" />
           <span className="text-sm font-semibold">{listing.owner.name}</span>
-          <ScoreBadge score={listing.owner.score} />
         </div>
       </button>
     </div>
