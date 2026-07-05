@@ -15,7 +15,7 @@ const CAT = {
   match: { label: "Match", Icon: Heart, color: "bg-primary/15 text-primary" },
   conversation: { label: "Conversa", Icon: MessageCircle, color: "bg-success/15 text-success" },
   visit: { label: "Visita", Icon: Calendar, color: "bg-warning/15 text-warning" },
-  availability: { label: "Disponibilidade", Icon: Home, color: "bg-info/15 text-info" },
+  availability: { label: "Disponibilidade", Icon: Home, color: "bg-primary/10 text-primary" },
   marketplace: { label: "Marketplace", Icon: Store, color: "bg-muted text-foreground/70" },
   system: { label: "Sistema", Icon: Cog, color: "bg-muted text-muted-foreground" },
 } as const;
