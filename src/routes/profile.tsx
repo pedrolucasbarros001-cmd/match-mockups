@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { me } from "@/lib/mock-data";
 import { AppShell, PageHeader, ScoreBadge } from "@/components/AppShell";
-import { ChevronRight, Settings, Shield, Heart, LogOut, Edit3, Calendar, Crown, DoorOpen, Inbox } from "lucide-react";
+import { ChevronRight, Settings, Shield, Heart, LogOut, Edit3, Calendar, Crown, Sliders } from "lucide-react";
 
 export const Route = createFileRoute("/profile")({
   head: () => ({ meta: [{ title: "Perfil — HomeMatch" }] }),
@@ -18,49 +18,61 @@ function ProfilePage() {
         </Link>
       } />
       <div className="px-4 pt-5">
-        <div className="flex items-center gap-4">
-          <img src={me.avatar} className="size-20 rounded-pill object-cover" alt="" />
+        {/* Identidade */}
+        <div className="mb-2 px-1 text-xs font-bold uppercase tracking-wide text-muted-foreground">Identidade</div>
+        <div className="flex items-center gap-4 rounded-2xl border border-border bg-surface p-4">
+          <img src={me.avatar} className="size-16 rounded-pill object-cover" alt="" />
           <div className="min-w-0 flex-1">
-            <div className="truncate font-display text-xl font-bold">{me.name}</div>
-            <div className="truncate text-sm text-muted-foreground">{me.email}</div>
-            <div className="mt-2 flex items-center gap-2">
-              <ScoreBadge score={me.score} />
-              <span className="text-xs text-muted-foreground">Trust Score</span>
-            </div>
+            <div className="truncate font-display text-lg font-bold">{me.name}</div>
+            <div className="truncate text-xs text-muted-foreground">{me.email}</div>
+            <div className="truncate text-xs text-muted-foreground">{me.bio}</div>
           </div>
-          <button className="grid size-10 place-items-center rounded-pill border border-border">
-            <Edit3 className="size-4" />
-          </button>
+          <button className="grid size-10 place-items-center rounded-pill border border-border"><Edit3 className="size-4" /></button>
         </div>
 
-        <Link to="/profile/score" className="mt-6 flex items-center justify-between rounded-2xl border border-border bg-surface p-4">
-          <div>
-            <div className="font-display text-base font-bold">Melhorar o teu score</div>
-            <div className="mt-0.5 text-xs text-muted-foreground">Faltam alguns passos para chegares aos 100.</div>
+        <Link to="/profile/score" className="mt-3 flex items-center justify-between rounded-2xl border border-border bg-surface p-4">
+          <div className="flex items-center gap-3">
+            <ScoreBadge score={me.score} />
+            <div>
+              <div className="font-display text-sm font-bold">Completar perfil</div>
+              <div className="text-xs text-muted-foreground">Progresso interno de confiança.</div>
+            </div>
           </div>
           <ChevronRight className="size-5 text-muted-foreground" />
         </Link>
 
-        <div className="mt-3 overflow-hidden rounded-2xl border border-border bg-surface">
+        {/* Contexto */}
+        <div className="mt-6 mb-2 px-1 text-xs font-bold uppercase tracking-wide text-muted-foreground">O que procuro agora</div>
+        <Link to="/preferences" className="flex items-center justify-between rounded-2xl border border-border bg-surface p-4">
+          <div className="flex items-center gap-3">
+            <div className="grid size-10 place-items-center rounded-pill bg-primary-soft text-primary"><Sliders className="size-5" /></div>
+            <div>
+              <div className="font-display text-sm font-bold">Preferências</div>
+              <div className="text-xs text-muted-foreground">Cidade, orçamento, tipo, data de entrada.</div>
+            </div>
+          </div>
+          <ChevronRight className="size-5 text-muted-foreground" />
+        </Link>
+
+        <div className="mt-6 mb-2 px-1 text-xs font-bold uppercase tracking-wide text-muted-foreground">Atividade</div>
+        <div className="overflow-hidden rounded-2xl border border-border bg-surface">
           <Row icon={<Shield className="size-5" />} label="Verificações" onClick={() => nav({ to: "/profile/score" })} />
           <Row icon={<Heart className="size-5" />} label="Favoritos" onClick={() => nav({ to: "/favorites" })} />
-          <Row icon={<Calendar className="size-5" />} label="As minhas visitas" onClick={() => nav({ to: "/visits" })} />
+          <Row icon={<Calendar className="size-5" />} label="As minhas visitas" onClick={() => nav({ to: "/visits" })} last />
         </div>
 
-        <div className="mt-3 mb-2 px-1 text-xs font-bold uppercase tracking-wide text-muted-foreground">Área senhorio</div>
+        <div className="mt-6 mb-2 px-1 text-xs font-bold uppercase tracking-wide text-muted-foreground">Área senhorio</div>
         <div className="overflow-hidden rounded-2xl border border-border bg-surface">
-          <Row icon={<Inbox className="size-5" />} label="Inbox" onClick={() => nav({ to: "/inbox" })} />
-          <Row icon={<DoorOpen className="size-5" />} label="Quartos" onClick={() => nav({ to: "/rooms" })} />
           <Row icon={<Calendar className="size-5" />} label="Gerir visitas" onClick={() => nav({ to: "/visits-manager" })} />
-          <Row icon={<Crown className="size-5" />} label="Conta e plano" onClick={() => nav({ to: "/account" })} />
+          <Row icon={<Crown className="size-5" />} label="Conta e plano" onClick={() => nav({ to: "/account" })} last />
         </div>
 
-        <div className="mt-3 overflow-hidden rounded-2xl border border-border bg-surface">
+        <div className="mt-6 overflow-hidden rounded-2xl border border-border bg-surface">
           <Row icon={<Settings className="size-5" />} label="Definições" onClick={() => nav({ to: "/settings" })} />
           <Row icon={<LogOut className="size-5" />} label="Terminar sessão" onClick={() => nav({ to: "/login" })} destructive last />
         </div>
 
-        <div className="mt-8 text-center text-xs text-muted-foreground">HomeMatch v1.0 · Junho 2026</div>
+        <div className="mt-8 text-center text-xs text-muted-foreground">HomeMatch v1.0 · Julho 2026</div>
       </div>
     </AppShell>
   );

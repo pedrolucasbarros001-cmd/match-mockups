@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { chats, listings } from "@/lib/mock-data";
+import { chats, listings, matches, nextActionFor } from "@/lib/mock-data";
 import { AppShell, PageHeader } from "@/components/AppShell";
 
 export const Route = createFileRoute("/chats/")({
@@ -14,6 +14,8 @@ function ChatsList() {
       <ul className="divide-y divide-border">
         {chats.map((c) => {
           const l = listings.find((x) => x.id === c.listingId)!;
+          const m = matches.find((x) => x.chatId === c.id);
+          const action = m ? nextActionFor(m.state) : null;
           return (
             <li key={c.id}>
               <Link to="/chats/$id" params={{ id: c.id }} className="flex items-center gap-3 px-4 py-3 active:bg-muted">
@@ -24,7 +26,9 @@ function ChatsList() {
                     <span className="font-num text-xs text-muted-foreground">{c.lastAt}</span>
                   </div>
                   <div className="truncate text-sm text-muted-foreground">{c.lastMessage}</div>
-                  <div className="mt-0.5 truncate text-xs text-muted-foreground/80">sobre · {l.title}</div>
+                  {action && (
+                    <div className="mt-0.5 truncate text-[11px] font-semibold text-primary">Próximo: {action}</div>
+                  )}
                 </div>
                 {c.unread > 0 && (
                   <span className="grid size-6 place-items-center rounded-pill bg-primary font-num text-xs font-bold text-primary-foreground">
@@ -38,7 +42,7 @@ function ChatsList() {
       </ul>
       {chats.length === 0 && (
         <div className="p-12 text-center text-sm text-muted-foreground">
-          Ainda sem conversas. Dá likes para começar.
+          Ainda sem conversas. Dá interesse para começar.
         </div>
       )}
     </AppShell>
