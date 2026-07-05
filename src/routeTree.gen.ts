@@ -11,14 +11,18 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as VisitsManagerRouteImport } from './routes/visits-manager'
 import { Route as VisitsRouteImport } from './routes/visits'
+import { Route as SplashRouteImport } from './routes/splash'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as RoomsRouteImport } from './routes/rooms'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RegisterRouteImport } from './routes/register'
+import { Route as PublishRouteImport } from './routes/publish'
 import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as PreferencesRouteImport } from './routes/preferences'
 import { Route as ParaTiRouteImport } from './routes/para-ti'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as NotificationsRouteImport } from './routes/notifications'
+import { Route as MatchesRouteImport } from './routes/matches'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as InterestsRouteImport } from './routes/interests'
 import { Route as InboxRouteImport } from './routes/inbox'
@@ -35,6 +39,7 @@ import { Route as ProfileScoreRouteImport } from './routes/profile.score'
 import { Route as MyListingsNewRouteImport } from './routes/my-listings.new'
 import { Route as LegalTermsRouteImport } from './routes/legal.terms'
 import { Route as LegalPrivacyRouteImport } from './routes/legal.privacy'
+import { Route as FeedbackMatchIdRouteImport } from './routes/feedback.$matchId'
 import { Route as ExploreMapaRouteImport } from './routes/explore.mapa'
 import { Route as ExploreIdRouteImport } from './routes/explore.$id'
 import { Route as ChatsIdRouteImport } from './routes/chats.$id'
@@ -48,6 +53,11 @@ const VisitsManagerRoute = VisitsManagerRouteImport.update({
 const VisitsRoute = VisitsRouteImport.update({
   id: '/visits',
   path: '/visits',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SplashRoute = SplashRouteImport.update({
+  id: '/splash',
+  path: '/splash',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SettingsRoute = SettingsRouteImport.update({
@@ -70,9 +80,19 @@ const RegisterRoute = RegisterRouteImport.update({
   path: '/register',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PublishRoute = PublishRouteImport.update({
+  id: '/publish',
+  path: '/publish',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PreferencesRoute = PreferencesRouteImport.update({
+  id: '/preferences',
+  path: '/preferences',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ParaTiRoute = ParaTiRouteImport.update({
@@ -88,6 +108,11 @@ const OnboardingRoute = OnboardingRouteImport.update({
 const NotificationsRoute = NotificationsRouteImport.update({
   id: '/notifications',
   path: '/notifications',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MatchesRoute = MatchesRouteImport.update({
+  id: '/matches',
+  path: '/matches',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -170,6 +195,11 @@ const LegalPrivacyRoute = LegalPrivacyRouteImport.update({
   path: '/legal/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FeedbackMatchIdRoute = FeedbackMatchIdRouteImport.update({
+  id: '/feedback/$matchId',
+  path: '/feedback/$matchId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ExploreMapaRoute = ExploreMapaRouteImport.update({
   id: '/explore/mapa',
   path: '/explore/mapa',
@@ -200,20 +230,25 @@ export interface FileRoutesByFullPath {
   '/inbox': typeof InboxRoute
   '/interests': typeof InterestsRoute
   '/login': typeof LoginRoute
+  '/matches': typeof MatchesRoute
   '/notifications': typeof NotificationsRoute
   '/onboarding': typeof OnboardingRoute
   '/para-ti': typeof ParaTiRoute
+  '/preferences': typeof PreferencesRoute
   '/profile': typeof ProfileRouteWithChildren
+  '/publish': typeof PublishRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/rooms': typeof RoomsRoute
   '/settings': typeof SettingsRoute
+  '/splash': typeof SplashRoute
   '/visits': typeof VisitsRoute
   '/visits-manager': typeof VisitsManagerRoute
   '/candidates/$requestId': typeof CandidatesRequestIdRoute
   '/chats/$id': typeof ChatsIdRoute
   '/explore/$id': typeof ExploreIdRoute
   '/explore/mapa': typeof ExploreMapaRoute
+  '/feedback/$matchId': typeof FeedbackMatchIdRoute
   '/legal/privacy': typeof LegalPrivacyRoute
   '/legal/terms': typeof LegalTermsRoute
   '/my-listings/new': typeof MyListingsNewRoute
@@ -232,20 +267,25 @@ export interface FileRoutesByTo {
   '/inbox': typeof InboxRoute
   '/interests': typeof InterestsRoute
   '/login': typeof LoginRoute
+  '/matches': typeof MatchesRoute
   '/notifications': typeof NotificationsRoute
   '/onboarding': typeof OnboardingRoute
   '/para-ti': typeof ParaTiRoute
+  '/preferences': typeof PreferencesRoute
   '/profile': typeof ProfileRouteWithChildren
+  '/publish': typeof PublishRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/rooms': typeof RoomsRoute
   '/settings': typeof SettingsRoute
+  '/splash': typeof SplashRoute
   '/visits': typeof VisitsRoute
   '/visits-manager': typeof VisitsManagerRoute
   '/candidates/$requestId': typeof CandidatesRequestIdRoute
   '/chats/$id': typeof ChatsIdRoute
   '/explore/$id': typeof ExploreIdRoute
   '/explore/mapa': typeof ExploreMapaRoute
+  '/feedback/$matchId': typeof FeedbackMatchIdRoute
   '/legal/privacy': typeof LegalPrivacyRoute
   '/legal/terms': typeof LegalTermsRoute
   '/my-listings/new': typeof MyListingsNewRoute
@@ -265,20 +305,25 @@ export interface FileRoutesById {
   '/inbox': typeof InboxRoute
   '/interests': typeof InterestsRoute
   '/login': typeof LoginRoute
+  '/matches': typeof MatchesRoute
   '/notifications': typeof NotificationsRoute
   '/onboarding': typeof OnboardingRoute
   '/para-ti': typeof ParaTiRoute
+  '/preferences': typeof PreferencesRoute
   '/profile': typeof ProfileRouteWithChildren
+  '/publish': typeof PublishRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/rooms': typeof RoomsRoute
   '/settings': typeof SettingsRoute
+  '/splash': typeof SplashRoute
   '/visits': typeof VisitsRoute
   '/visits-manager': typeof VisitsManagerRoute
   '/candidates/$requestId': typeof CandidatesRequestIdRoute
   '/chats/$id': typeof ChatsIdRoute
   '/explore/$id': typeof ExploreIdRoute
   '/explore/mapa': typeof ExploreMapaRoute
+  '/feedback/$matchId': typeof FeedbackMatchIdRoute
   '/legal/privacy': typeof LegalPrivacyRoute
   '/legal/terms': typeof LegalTermsRoute
   '/my-listings/new': typeof MyListingsNewRoute
@@ -299,20 +344,25 @@ export interface FileRouteTypes {
     | '/inbox'
     | '/interests'
     | '/login'
+    | '/matches'
     | '/notifications'
     | '/onboarding'
     | '/para-ti'
+    | '/preferences'
     | '/profile'
+    | '/publish'
     | '/register'
     | '/reset-password'
     | '/rooms'
     | '/settings'
+    | '/splash'
     | '/visits'
     | '/visits-manager'
     | '/candidates/$requestId'
     | '/chats/$id'
     | '/explore/$id'
     | '/explore/mapa'
+    | '/feedback/$matchId'
     | '/legal/privacy'
     | '/legal/terms'
     | '/my-listings/new'
@@ -331,20 +381,25 @@ export interface FileRouteTypes {
     | '/inbox'
     | '/interests'
     | '/login'
+    | '/matches'
     | '/notifications'
     | '/onboarding'
     | '/para-ti'
+    | '/preferences'
     | '/profile'
+    | '/publish'
     | '/register'
     | '/reset-password'
     | '/rooms'
     | '/settings'
+    | '/splash'
     | '/visits'
     | '/visits-manager'
     | '/candidates/$requestId'
     | '/chats/$id'
     | '/explore/$id'
     | '/explore/mapa'
+    | '/feedback/$matchId'
     | '/legal/privacy'
     | '/legal/terms'
     | '/my-listings/new'
@@ -363,20 +418,25 @@ export interface FileRouteTypes {
     | '/inbox'
     | '/interests'
     | '/login'
+    | '/matches'
     | '/notifications'
     | '/onboarding'
     | '/para-ti'
+    | '/preferences'
     | '/profile'
+    | '/publish'
     | '/register'
     | '/reset-password'
     | '/rooms'
     | '/settings'
+    | '/splash'
     | '/visits'
     | '/visits-manager'
     | '/candidates/$requestId'
     | '/chats/$id'
     | '/explore/$id'
     | '/explore/mapa'
+    | '/feedback/$matchId'
     | '/legal/privacy'
     | '/legal/terms'
     | '/my-listings/new'
@@ -396,20 +456,25 @@ export interface RootRouteChildren {
   InboxRoute: typeof InboxRoute
   InterestsRoute: typeof InterestsRoute
   LoginRoute: typeof LoginRoute
+  MatchesRoute: typeof MatchesRoute
   NotificationsRoute: typeof NotificationsRoute
   OnboardingRoute: typeof OnboardingRoute
   ParaTiRoute: typeof ParaTiRoute
+  PreferencesRoute: typeof PreferencesRoute
   ProfileRoute: typeof ProfileRouteWithChildren
+  PublishRoute: typeof PublishRoute
   RegisterRoute: typeof RegisterRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   RoomsRoute: typeof RoomsRoute
   SettingsRoute: typeof SettingsRoute
+  SplashRoute: typeof SplashRoute
   VisitsRoute: typeof VisitsRoute
   VisitsManagerRoute: typeof VisitsManagerRoute
   CandidatesRequestIdRoute: typeof CandidatesRequestIdRoute
   ChatsIdRoute: typeof ChatsIdRoute
   ExploreIdRoute: typeof ExploreIdRoute
   ExploreMapaRoute: typeof ExploreMapaRoute
+  FeedbackMatchIdRoute: typeof FeedbackMatchIdRoute
   LegalPrivacyRoute: typeof LegalPrivacyRoute
   LegalTermsRoute: typeof LegalTermsRoute
   MyListingsNewRoute: typeof MyListingsNewRoute
@@ -433,6 +498,13 @@ declare module '@tanstack/react-router' {
       path: '/visits'
       fullPath: '/visits'
       preLoaderRoute: typeof VisitsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/splash': {
+      id: '/splash'
+      path: '/splash'
+      fullPath: '/splash'
+      preLoaderRoute: typeof SplashRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/settings': {
@@ -463,11 +535,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RegisterRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/publish': {
+      id: '/publish'
+      path: '/publish'
+      fullPath: '/publish'
+      preLoaderRoute: typeof PublishRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/profile': {
       id: '/profile'
       path: '/profile'
       fullPath: '/profile'
       preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/preferences': {
+      id: '/preferences'
+      path: '/preferences'
+      fullPath: '/preferences'
+      preLoaderRoute: typeof PreferencesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/para-ti': {
@@ -489,6 +575,13 @@ declare module '@tanstack/react-router' {
       path: '/notifications'
       fullPath: '/notifications'
       preLoaderRoute: typeof NotificationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/matches': {
+      id: '/matches'
+      path: '/matches'
+      fullPath: '/matches'
+      preLoaderRoute: typeof MatchesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -603,6 +696,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LegalPrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/feedback/$matchId': {
+      id: '/feedback/$matchId'
+      path: '/feedback/$matchId'
+      fullPath: '/feedback/$matchId'
+      preLoaderRoute: typeof FeedbackMatchIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/explore/mapa': {
       id: '/explore/mapa'
       path: '/explore/mapa'
@@ -654,20 +754,25 @@ const rootRouteChildren: RootRouteChildren = {
   InboxRoute: InboxRoute,
   InterestsRoute: InterestsRoute,
   LoginRoute: LoginRoute,
+  MatchesRoute: MatchesRoute,
   NotificationsRoute: NotificationsRoute,
   OnboardingRoute: OnboardingRoute,
   ParaTiRoute: ParaTiRoute,
+  PreferencesRoute: PreferencesRoute,
   ProfileRoute: ProfileRouteWithChildren,
+  PublishRoute: PublishRoute,
   RegisterRoute: RegisterRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   RoomsRoute: RoomsRoute,
   SettingsRoute: SettingsRoute,
+  SplashRoute: SplashRoute,
   VisitsRoute: VisitsRoute,
   VisitsManagerRoute: VisitsManagerRoute,
   CandidatesRequestIdRoute: CandidatesRequestIdRoute,
   ChatsIdRoute: ChatsIdRoute,
   ExploreIdRoute: ExploreIdRoute,
   ExploreMapaRoute: ExploreMapaRoute,
+  FeedbackMatchIdRoute: FeedbackMatchIdRoute,
   LegalPrivacyRoute: LegalPrivacyRoute,
   LegalTermsRoute: LegalTermsRoute,
   MyListingsNewRoute: MyListingsNewRoute,
@@ -679,13 +784,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

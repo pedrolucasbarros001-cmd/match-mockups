@@ -1,3 +1,36 @@
+export type SpaceType =
+  | "Quarto"
+  | "Suite"
+  | "Quarto Partilhado"
+  | "Estúdio"
+  | "T1"
+  | "T2"
+  | "T3"
+  | "T4+";
+
+export type ListingLifecycle =
+  | "draft"
+  | "published"
+  | "negotiating"
+  | "rented";
+
+export type MatchState =
+  | "interested"
+  | "conversation"
+  | "visit_scheduled"
+  | "visit_done"
+  | "negotiating"
+  | "rental_confirmed"
+  | "closed";
+
+export type VisitState =
+  | "proposed"
+  | "accepted"
+  | "rescheduled"
+  | "confirmed"
+  | "done"
+  | "cancelled";
+
 export type Listing = {
   id: string;
   title: string;
@@ -5,10 +38,15 @@ export type Listing = {
   city: string;
   neighborhood: string;
   distanceM: number;
-  type: "Quarto" | "Apartamento" | "Casa";
+  type: "Quarto" | "Apartamento" | "Casa"; // legado (usado por listagens antigas)
+  spaceType: SpaceType;
+  lifecycle: ListingLifecycle;
+  qualityScore: number; // interno, nunca público
   pets: boolean;
   smoke: boolean;
   availableFrom: string;
+  moveInFrom: string;
+  visitAvailability: string[];
   minMonths: number;
   capacity: number;
   description: string;
@@ -30,9 +68,14 @@ export const listings: Listing[] = [
     neighborhood: "Bairro da Sé",
     distanceM: 800,
     type: "Quarto",
+    spaceType: "Quarto",
+    lifecycle: "published",
+    qualityScore: 82,
     pets: true,
     smoke: false,
     availableFrom: "1 Jul",
+    moveInFrom: "1 Jul 2026",
+    visitAvailability: ["Sáb 10:00", "Sáb 15:00", "Dom 11:00"],
     minMonths: 6,
     capacity: 1,
     description:
@@ -55,9 +98,14 @@ export const listings: Listing[] = [
     neighborhood: "Centro",
     distanceM: 300,
     type: "Apartamento",
+    spaceType: "T1",
+    lifecycle: "negotiating",
+    qualityScore: 74,
     pets: false,
     smoke: false,
     availableFrom: "15 Jul",
+    moveInFrom: "15 Jul 2026",
+    visitAvailability: ["Sex 18:00", "Sáb 12:00"],
     minMonths: 12,
     capacity: 2,
     description:
@@ -80,9 +128,14 @@ export const listings: Listing[] = [
     neighborhood: "Sé",
     distanceM: 500,
     type: "Quarto",
+    spaceType: "Quarto",
+    lifecycle: "published",
+    qualityScore: 88,
     pets: true,
     smoke: false,
     availableFrom: "Imediato",
+    moveInFrom: "Imediato",
+    visitAvailability: ["Sáb 10:00", "Dom 16:00"],
     minMonths: 3,
     capacity: 1,
     description: "Quarto pequeno mas muito acolhedor. Ideal para estudantes. Inclui despesas.",
@@ -103,9 +156,14 @@ export const listings: Listing[] = [
     neighborhood: "Santa Maria",
     distanceM: 1800,
     type: "Casa",
+    spaceType: "T3",
+    lifecycle: "published",
+    qualityScore: 66,
     pets: true,
     smoke: false,
     availableFrom: "1 Ago",
+    moveInFrom: "1 Ago 2026",
+    visitAvailability: ["Sáb 11:00"],
     minMonths: 12,
     capacity: 4,
     description: "Casa familiar com 3 quartos, 2 wcs, jardim privativo e garagem para 2 carros.",
@@ -126,9 +184,14 @@ export const listings: Listing[] = [
     neighborhood: "Campus",
     distanceM: 200,
     type: "Apartamento",
+    spaceType: "Estúdio",
+    lifecycle: "published",
+    qualityScore: 79,
     pets: false,
     smoke: false,
     availableFrom: "1 Set",
+    moveInFrom: "1 Set 2026",
+    visitAvailability: ["Ter 17:00", "Qui 18:00"],
     minMonths: 9,
     capacity: 1,
     description: "Estúdio recém-renovado, ideal para um estudante. A 2 minutos a pé do IPB.",
@@ -142,6 +205,29 @@ export const listings: Listing[] = [
     owner: { name: "Sofia L.", avatar: U("photo-1487412720507-e7ab37603c6f"), score: 88, responds: "Responde em < 3h", rating: 4.7, reviews: 12 },
   },
 ];
+
+// --- Contexto (o que o utilizador procura AGORA) ---
+export const userContext = {
+  city: "Bragança",
+  maxDistanceKm: 3,
+  spaceTypes: ["Quarto", "Estúdio", "T1"] as SpaceType[],
+  minPrice: 250,
+  maxPrice: 600,
+  moveInFrom: "1 Jul 2026",
+  pets: true,
+  needsFurnished: true,
+};
+
+// Devolve 2–3 razões (nunca um número) que explicam a compatibilidade
+export function compatibilityReasons(l: Listing): string[] {
+  const r: string[] = [];
+  if (l.price <= userContext.maxPrice && l.price >= userContext.minPrice) r.push("Dentro do orçamento");
+  if (userContext.pets && l.pets) r.push("Aceita animais");
+  if (userContext.spaceTypes.includes(l.spaceType)) r.push(`${l.spaceType} · o que procuras`);
+  if (l.distanceM <= userContext.maxDistanceKm * 1000) r.push(`A ${(l.distanceM / 1000).toFixed(1)} km de ti`);
+  if (l.amenities.includes("Mobilado") || l.amenities.includes("Cozinha")) r.push("Mobilado");
+  return r.slice(0, 3);
+}
 
 export type Interest = {
   listingId: string;
@@ -158,13 +244,14 @@ export const interests: Interest[] = [
   { listingId: "5", status: "passed", ago: "há 8 dias" },
 ];
 
+export type ChatMessage = { from: "me" | "them"; text: string; at: string };
 export type Chat = {
   id: string;
   listingId: string;
   unread: number;
   lastMessage: string;
   lastAt: string;
-  messages: { from: "me" | "them"; text: string; at: string }[];
+  messages: ChatMessage[];
 };
 
 export const chats: Chat[] = [
@@ -195,25 +282,77 @@ export const chats: Chat[] = [
   },
 ];
 
+// --- Matches (o "estado" de cada negociação) ---
+export type Match = {
+  id: string;
+  listingId: string;
+  chatId: string;
+  state: MatchState;
+  updatedAt: string;
+  reasons: string[];
+};
+
+export const matches: Match[] = [
+  { id: "m1", listingId: "3", chatId: "c1", state: "visit_scheduled", updatedAt: "há 2h", reasons: ["Aceita animais", "Dentro do orçamento"] },
+  { id: "m2", listingId: "2", chatId: "c2", state: "conversation", updatedAt: "ontem", reasons: ["Perto do centro", "Mobilado"] },
+  { id: "m3", listingId: "1", chatId: "", state: "interested", updatedAt: "há 2h", reasons: ["Dentro do orçamento", "Aceita animais"] },
+  { id: "m4", listingId: "5", chatId: "", state: "closed", updatedAt: "há 8 dias", reasons: [] },
+];
+
+// Passos canónicos usados pela NegotiationTimeline
+export const MATCH_STEPS: { key: MatchState; label: string }[] = [
+  { key: "interested", label: "Interesse" },
+  { key: "conversation", label: "Conversa" },
+  { key: "visit_scheduled", label: "Visita marcada" },
+  { key: "visit_done", label: "Visita feita" },
+  { key: "rental_confirmed", label: "Arrendado" },
+];
+
+export function nextActionFor(state: MatchState, role: "tenant" | "landlord" = "tenant"): string {
+  switch (state) {
+    case "interested":
+      return role === "landlord" ? "Responder ao interessado" : "Aguardar resposta";
+    case "conversation":
+      return "Propor visita";
+    case "visit_scheduled":
+      return role === "landlord" ? "Confirmar visita" : "Confirmar presença";
+    case "visit_done":
+      return "Confirmar arrendamento";
+    case "negotiating":
+      return "Confirmar arrendamento";
+    case "rental_confirmed":
+      return "Arrendado";
+    case "closed":
+      return "Reativar anúncio";
+  }
+}
+
 export type Notification = {
   id: string;
+  category: "interest" | "match" | "conversation" | "visit" | "availability" | "marketplace" | "system";
   icon: "match" | "message" | "reminder";
   title: string;
   body: string;
   ago: string;
   unread: boolean;
+  to?: string;
 };
 
 export const notifications: Notification[] = [
-  { id: "n1", icon: "match", title: "Tens um match 🎉", body: "Ana P. aceitou o teu interesse no Quarto Largo do Sé.", ago: "há 1h", unread: true },
-  { id: "n2", icon: "message", title: "Nova mensagem", body: "Ana P.: Combinado! Vemo-nos sábado às 10h.", ago: "há 2h", unread: true },
-  { id: "n3", icon: "reminder", title: "Não perderias isto?", body: "Apareceu 1 novo imóvel na tua zona.", ago: "há 1 dia", unread: false },
+  { id: "n1", category: "match", icon: "match", title: "Tens um match 🎉", body: "Ana P. aceitou o teu interesse no Quarto Largo do Sé.", ago: "há 1h", unread: true, to: "/matches" },
+  { id: "n2", category: "conversation", icon: "message", title: "Nova mensagem", body: "Ana P.: Combinado! Vemo-nos sábado às 10h.", ago: "há 2h", unread: true, to: "/chats" },
+  { id: "n3", category: "visit", icon: "reminder", title: "Visita amanhã", body: "Sábado às 10h no Largo do Sé.", ago: "há 4h", unread: true, to: "/visits" },
+  { id: "n4", category: "interest", icon: "match", title: "Novo interessado", body: "Rui M. mostrou interesse no teu Quarto Rua das Flores.", ago: "há 1 dia", unread: false, to: "/matches" },
+  { id: "n5", category: "availability", icon: "reminder", title: "Novo perto de ti", body: "Apareceu 1 estúdio a 500m.", ago: "há 1 dia", unread: false, to: "/explore" },
+  { id: "n6", category: "marketplace", icon: "reminder", title: "Melhora o teu anúncio", body: "Adiciona fotos da cozinha para subir na descoberta.", ago: "há 2 dias", unread: false, to: "/my-listings" },
+  { id: "n7", category: "system", icon: "reminder", title: "Plano Free", body: "1 de 1 anúncios ativos.", ago: "há 3 dias", unread: false, to: "/account" },
 ];
 
 export const me = {
   name: "Tiago Costa",
   avatar: U("photo-1539571696357-5a69c17a67c6"),
   email: "tiago@homematch.pt",
+  bio: "Estudante do IPB, tranquilo, gosto de cozinhar.",
   score: 78,
   scoreBreakdown: [
     { label: "Email verificado", pts: 5, done: true },
@@ -234,13 +373,10 @@ export function scoreColor(score: number): string {
   return "score-red";
 }
 
+// Legado (mantido para compat, mas /rooms agora redireciona)
 export type Room = { id: string; listingId: string; name: string; price: number; status: "available" | "reserved" | "occupied"; tenant?: string };
 export const rooms: Room[] = [
   { id: "r1", listingId: "1", name: "Suite A", price: 450, status: "available" },
-  { id: "r2", listingId: "1", name: "Quarto B", price: 380, status: "reserved", tenant: "Ana P." },
-  { id: "r3", listingId: "1", name: "Quarto C", price: 360, status: "occupied", tenant: "Rui M." },
-  { id: "r4", listingId: "4", name: "Suite Master", price: 500, status: "available" },
-  { id: "r5", listingId: "4", name: "Quarto Duplo", price: 380, status: "available" },
 ];
 
 export type Visit = { id: string; listingId: string; who: string; whoAvatar: string; date: string; time: string; status: "pending" | "confirmed" | "done" | "cancelled" };

@@ -1,14 +1,13 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Home, Heart, MessageCircle, Bell, User, LayoutDashboard, Building2, Users } from "lucide-react";
+import { Home, MessageCircle, Bell, User, LayoutDashboard, Building2, PlusSquare } from "lucide-react";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 type NavItem = { to: string; label: string; Icon: typeof Home };
 
 const seekerNav: NavItem[] = [
-  { to: "/explore", label: "Início", Icon: Home },
-  { to: "/interests", label: "Likes", Icon: Heart },
-  { to: "/chats", label: "Chats", Icon: MessageCircle },
+  { to: "/explore", label: "Feed", Icon: Home },
+  { to: "/matches", label: "Matches", Icon: MessageCircle },
   { to: "/notifications", label: "Avisos", Icon: Bell },
   { to: "/profile", label: "Eu", Icon: User },
 ];
@@ -16,21 +15,23 @@ const seekerNav: NavItem[] = [
 const landlordNav: NavItem[] = [
   { to: "/dashboard", label: "Início", Icon: LayoutDashboard },
   { to: "/my-listings", label: "Anúncios", Icon: Building2 },
-  { to: "/candidates", label: "Candidatos", Icon: Users },
-  { to: "/chats", label: "Chats", Icon: MessageCircle },
+  { to: "/publish", label: "Publicar", Icon: PlusSquare },
+  { to: "/matches", label: "Matches", Icon: MessageCircle },
   { to: "/profile", label: "Eu", Icon: User },
 ];
 
 export function AppShell({ children, role = "seeker", maxWidth = "max-w-[440px]" }: { children: ReactNode; role?: "seeker" | "landlord"; maxWidth?: string }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const nav = role === "landlord" ? landlordNav : seekerNav;
+  const cols = nav.length === 4 ? "grid-cols-4" : "grid-cols-5";
   return (
     <div className="min-h-svh bg-background">
       <div className={cn("mx-auto w-full bg-background pb-24", maxWidth)}>{children}</div>
       <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface/95 backdrop-blur">
-        <ul className={cn("mx-auto grid grid-cols-5", maxWidth)}>
+        <ul className={cn("mx-auto grid", cols, maxWidth)}>
           {nav.map(({ to, label, Icon }) => {
             const active = pathname === to || pathname.startsWith(to + "/");
+            const isPublish = to === "/publish";
             return (
               <li key={to}>
                 <Link
@@ -40,7 +41,13 @@ export function AppShell({ children, role = "seeker", maxWidth = "max-w-[440px]"
                     active ? "text-primary" : "text-muted-foreground",
                   )}
                 >
-                  <Icon className={cn("size-6", active && "stroke-[2.5]")} />
+                  {isPublish ? (
+                    <span className="grid size-9 place-items-center rounded-xl bg-primary text-primary-foreground">
+                      <Icon className="size-5" strokeWidth={2.5} />
+                    </span>
+                  ) : (
+                    <Icon className={cn("size-6", active && "stroke-[2.5]")} />
+                  )}
                   <span>{label}</span>
                 </Link>
               </li>
@@ -80,5 +87,25 @@ export function ScoreBadge({ score, size = "sm" }: { score: number; size?: "sm" 
     >
       {score}
     </span>
+  );
+}
+
+/** Chips de razão (2–3) que explicam a compatibilidade — nunca números. */
+export function CompatibilityReasons({ reasons, dark = false }: { reasons: string[]; dark?: boolean }) {
+  if (!reasons.length) return null;
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {reasons.map((r) => (
+        <span
+          key={r}
+          className={cn(
+            "inline-flex items-center gap-1 rounded-pill px-2.5 py-0.5 text-[11px] font-semibold",
+            dark ? "bg-white/20 text-white backdrop-blur" : "bg-primary-soft text-primary",
+          )}
+        >
+          ✓ {r}
+        </span>
+      ))}
+    </div>
   );
 }
