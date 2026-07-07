@@ -1,6 +1,8 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { PageHeader } from "@/components/AppShell";
-import { Bell, Globe, Lock, FileText, Trash2, HelpCircle, ChevronRight, Sliders, Crown } from "lucide-react";
+import { Bell, Globe, Lock, FileText, Trash2, HelpCircle, ChevronRight, Sliders, Crown, UserCog } from "lucide-react";
+import { useRole, setRole, setSession } from "@/lib/user-state";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({ meta: [{ title: "Definições — HomeMatch" }] }),
@@ -9,10 +11,40 @@ export const Route = createFileRoute("/settings")({
 
 function SettingsPage() {
   const nav = useNavigate();
+  const role = useRole();
+
   return (
     <div className="mx-auto min-h-svh w-full max-w-[440px] bg-background pb-10">
       <PageHeader title="Definições" back="/profile" />
       <div className="px-4 pt-4">
+        <Group title="Modo (teste)">
+          <div className="p-3">
+            <div className="mb-2 flex items-center gap-2 text-xs text-muted-foreground">
+              <UserCog className="size-4" /> Alterna entre inquilino e senhorio para testar cada fluxo.
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => setRole("seeker")}
+                className={cn(
+                  "h-11 rounded-lg border text-sm font-semibold transition",
+                  role === "seeker" ? "border-primary bg-primary text-primary-foreground" : "border-border bg-surface",
+                )}
+              >
+                Hóspede
+              </button>
+              <button
+                onClick={() => setRole("landlord")}
+                className={cn(
+                  "h-11 rounded-lg border text-sm font-semibold transition",
+                  role === "landlord" ? "border-primary bg-primary text-primary-foreground" : "border-border bg-surface",
+                )}
+              >
+                Senhorio
+              </button>
+            </div>
+          </div>
+        </Group>
+
         <Group title="Descoberta">
           <Item icon={<Sliders className="size-5" />} label="Preferências" onClick={() => nav({ to: "/preferences" })} />
         </Group>
@@ -28,8 +60,8 @@ function SettingsPage() {
           <Item icon={<HelpCircle className="size-5" />} label="Ajuda" onClick={() => nav({ to: "/help" })} />
         </Group>
         <Group title="Zona perigosa">
-          <Item icon={<Trash2 className="size-5" />} label="Eliminar conta" destructive
-            onClick={() => nav({ to: "/login" })} />
+          <Item icon={<Trash2 className="size-5" />} label="Terminar sessão" destructive
+            onClick={() => { setSession("out"); nav({ to: "/login" }); }} />
         </Group>
         <p className="mt-8 text-center text-xs text-muted-foreground">HomeMatch v1.0</p>
       </div>

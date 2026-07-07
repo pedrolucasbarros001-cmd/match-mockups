@@ -1,8 +1,8 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { chats, listings, matches, nextActionFor } from "@/lib/mock-data";
+import { chats, listings, matches, nextActionFor, type ChatMessage } from "@/lib/mock-data";
 import { NegotiationTimeline } from "@/components/NegotiationTimeline";
-import { ChevronLeft, Send, MoreVertical, Calendar, Check, Lock, RefreshCcw, X } from "lucide-react";
+import { ChevronLeft, Send, MoreVertical, Calendar, Check, Lock, RefreshCcw, X, MessageCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/chats/$id")({
@@ -12,11 +12,11 @@ export const Route = createFileRoute("/chats/$id")({
 
 function ChatRoom() {
   const { id } = useParams({ from: "/chats/$id" });
-  const chat = chats.find((c) => c.id === id)!;
-  const listing = listings.find((l) => l.id === chat.listingId)!;
-  const match = matches.find((m) => m.chatId === chat.id);
+  const chat = chats.find((c) => c.id === id);
+  const listing = chat ? listings.find((l) => l.id === chat.listingId) : undefined;
+  const match = chat ? matches.find((m) => m.chatId === chat.id) : undefined;
 
-  const [msgs, setMsgs] = useState(chat.messages);
+  const [msgs, setMsgs] = useState<ChatMessage[]>(chat?.messages ?? []);
   const [text, setText] = useState("");
   const [state, setState] = useState(match?.state ?? "conversation");
   const [showVisitSheet, setShowVisitSheet] = useState(false);
@@ -27,20 +27,32 @@ function ChatRoom() {
   const rented = state === "rental_confirmed";
   const action = useMemo(() => nextActionFor(state), [state]);
 
+  if (!chat || !listing) {
+    return (
+      <div className="mx-auto grid min-h-svh w-full max-w-[440px] place-items-center bg-background p-8 text-center">
+        <div>
+          <div className="mx-auto grid size-14 place-items-center rounded-pill bg-muted text-muted-foreground">
+            <MessageCircle className="size-6" />
+          </div>
+          <h2 className="mt-3 font-display text-lg font-bold">Conversa indisponível</h2>
+          <p className="mt-1 text-sm text-muted-foreground">Ainda não tens conversas. Dá interesse num anúncio para começar.</p>
+          <Link to="/matches" className="mt-4 inline-flex h-11 items-center rounded-pill bg-primary px-5 text-sm font-semibold text-primary-foreground">Ver matches</Link>
+        </div>
+      </div>
+    );
+  }
+
   const send = () => {
     if (!text.trim() || rented) return;
     setMsgs((m) => [...m, { from: "me", text: text.trim(), at: "agora" }]);
     setText("");
   };
-
   const proposeVisit = (slot: string) => {
     setMsgs((m) => [...m, { from: "me", text: `Proposta de visita: ${slot}`, at: "agora" }]);
     setState("visit_scheduled");
     setShowVisitSheet(false);
   };
-
   const markVisitDone = () => setState("visit_done");
-
   const doConfirm = (side: "landlord" | "tenant") => {
     if (side === "landlord") setLandlordConfirmed(true);
     else setTenantConfirmed(true);
@@ -50,7 +62,6 @@ function ChatRoom() {
       setMsgs((m) => [...m, { from: "me", text: "Arrendamento confirmado ✅", at: "agora" }]);
     }
   };
-
   const reactivate = () => {
     setState("conversation");
     setLandlordConfirmed(false);
@@ -72,7 +83,6 @@ function ChatRoom() {
 
       <NegotiationTimeline state={state} />
 
-      {/* Próxima acção */}
       {!rented ? (
         <div className="flex items-center justify-between gap-2 border-b border-border bg-primary-soft px-4 py-2.5">
           <div className="min-w-0">
@@ -101,7 +111,7 @@ function ChatRoom() {
             <Lock className="size-3.5" /> Este espaço foi arrendado. A conversa fica no histórico.
           </div>
           <button onClick={reactivate} className="mt-1.5 inline-flex items-center gap-1 text-xs font-bold text-primary">
-            <RefreshCcw className="size-3" /> Reativar (mock)
+            <RefreshCcw className="size-3" /> Reativar
           </button>
         </div>
       )}
@@ -124,8 +134,8 @@ function ChatRoom() {
             <span className="mt-1 px-1 font-num text-[10px] text-muted-foreground">{m.at}</span>
           </div>
         ))}
-        {rented && (
-          <Link to="/feedback/$matchId" params={{ matchId: match?.id ?? "m1" }} className="mx-auto mt-3 inline-flex items-center gap-2 rounded-pill border border-border bg-surface px-4 py-2 text-xs font-semibold">
+        {rented && match && (
+          <Link to="/feedback/$matchId" params={{ matchId: match.id }} className="mx-auto mt-3 inline-flex items-center gap-2 rounded-pill border border-border bg-surface px-4 py-2 text-xs font-semibold">
             Deixar feedback →
           </Link>
         )}
@@ -141,11 +151,13 @@ function ChatRoom() {
         </form>
       </div>
 
-      {/* Sheets */}
       {showVisitSheet && (
         <Sheet onClose={() => setShowVisitSheet(false)} title="Propor visita">
           <p className="text-sm text-muted-foreground">Escolhe um horário disponível.</p>
           <div className="mt-3 flex flex-col gap-2">
+            {listing.visitAvailability.length === 0 && (
+              <p className="rounded-xl border border-dashed border-border p-4 text-center text-xs text-muted-foreground">Sem horários definidos.</p>
+            )}
             {listing.visitAvailability.map((s) => (
               <button key={s} onClick={() => proposeVisit(s)} className="flex items-center justify-between rounded-xl border border-border bg-surface px-4 py-3 text-left">
                 <span className="font-semibold">{s}</span>

@@ -2,6 +2,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { Home, MessageCircle, Bell, User, LayoutDashboard, Building2, PlusSquare } from "lucide-react";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import { useRole, type Role } from "@/lib/user-state";
 
 type NavItem = { to: string; label: string; Icon: typeof Home };
 
@@ -20,9 +21,11 @@ const landlordNav: NavItem[] = [
   { to: "/profile", label: "Eu", Icon: User },
 ];
 
-export function AppShell({ children, role = "seeker", maxWidth = "max-w-[440px]" }: { children: ReactNode; role?: "seeker" | "landlord"; maxWidth?: string }) {
+export function AppShell({ children, role, maxWidth = "max-w-[440px]" }: { children: ReactNode; role?: Role; maxWidth?: string }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const nav = role === "landlord" ? landlordNav : seekerNav;
+  const hookRole = useRole();
+  const activeRole: Role = role ?? hookRole;
+  const nav = activeRole === "landlord" ? landlordNav : seekerNav;
   const cols = nav.length === 4 ? "grid-cols-4" : "grid-cols-5";
   return (
     <div className="min-h-svh bg-background">

@@ -1,7 +1,8 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { me } from "@/lib/mock-data";
 import { AppShell, PageHeader, ScoreBadge } from "@/components/AppShell";
-import { ChevronRight, Settings, Shield, Heart, LogOut, Edit3, Calendar, Crown, Sliders } from "lucide-react";
+import { ChevronRight, Settings, Shield, Heart, LogOut, Edit3, Calendar, Crown, Sliders, User } from "lucide-react";
+import { useRole, setSession } from "@/lib/user-state";
 
 export const Route = createFileRoute("/profile")({
   head: () => ({ meta: [{ title: "Perfil — HomeMatch" }] }),
@@ -10,6 +11,11 @@ export const Route = createFileRoute("/profile")({
 
 function ProfilePage() {
   const nav = useNavigate();
+  const role = useRole();
+  const displayName = me.name || "Sem nome";
+  const displayEmail = me.email || "Sem email";
+  const displayBio = me.bio || "Adiciona uma bio.";
+
   return (
     <AppShell>
       <PageHeader title="O meu perfil" right={
@@ -21,13 +27,27 @@ function ProfilePage() {
         {/* Identidade */}
         <div className="mb-2 px-1 text-xs font-bold uppercase tracking-wide text-muted-foreground">Identidade</div>
         <div className="flex items-center gap-4 rounded-2xl border border-border bg-surface p-4">
-          <img src={me.avatar} className="size-16 rounded-pill object-cover" alt="" />
+          {me.avatar ? (
+            <img src={me.avatar} className="size-16 rounded-pill object-cover" alt="" />
+          ) : (
+            <div className="grid size-16 place-items-center rounded-pill bg-muted text-muted-foreground">
+              <User className="size-7" />
+            </div>
+          )}
           <div className="min-w-0 flex-1">
-            <div className="truncate font-display text-lg font-bold">{me.name}</div>
-            <div className="truncate text-xs text-muted-foreground">{me.email}</div>
-            <div className="truncate text-xs text-muted-foreground">{me.bio}</div>
+            <div className="truncate font-display text-lg font-bold">{displayName}</div>
+            <div className="truncate text-xs text-muted-foreground">{displayEmail}</div>
+            <div className="truncate text-xs text-muted-foreground">{displayBio}</div>
           </div>
           <button className="grid size-10 place-items-center rounded-pill border border-border"><Edit3 className="size-4" /></button>
+        </div>
+
+        <div className="mt-3 flex items-center justify-between rounded-2xl border border-border bg-primary-soft p-4 text-sm">
+          <div>
+            <div className="font-display font-bold">Modo atual: {role === "landlord" ? "Senhorio" : "Hóspede"}</div>
+            <div className="text-xs text-muted-foreground">Alterna em Definições para testar o outro fluxo.</div>
+          </div>
+          <Link to="/settings" className="rounded-pill bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground">Alterar</Link>
         </div>
 
         <Link to="/profile/score" className="mt-3 flex items-center justify-between rounded-2xl border border-border bg-surface p-4">
@@ -69,10 +89,10 @@ function ProfilePage() {
 
         <div className="mt-6 overflow-hidden rounded-2xl border border-border bg-surface">
           <Row icon={<Settings className="size-5" />} label="Definições" onClick={() => nav({ to: "/settings" })} />
-          <Row icon={<LogOut className="size-5" />} label="Terminar sessão" onClick={() => nav({ to: "/login" })} destructive last />
+          <Row icon={<LogOut className="size-5" />} label="Terminar sessão" onClick={() => { setSession("out"); nav({ to: "/login" }); }} destructive last />
         </div>
 
-        <div className="mt-8 text-center text-xs text-muted-foreground">HomeMatch v1.0 · Julho 2026</div>
+        <div className="mt-8 text-center text-xs text-muted-foreground">HomeMatch v1.0</div>
       </div>
     </AppShell>
   );

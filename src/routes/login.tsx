@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
+import { setSession, getRole } from "@/lib/user-state";
 
 export const Route = createFileRoute("/login")({
   head: () => ({ meta: [{ title: "Entrar — HomeMatch" }] }),
@@ -22,7 +23,8 @@ function LoginPage() {
         className="flex flex-col gap-3"
         onSubmit={(e) => {
           e.preventDefault();
-          nav({ to: "/explore" });
+          setSession("in");
+          nav({ to: getRole() === "landlord" ? "/dashboard" : "/explore" });
         }}
       >
         <Field>
