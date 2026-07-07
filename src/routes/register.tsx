@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Eye, EyeOff, ChevronLeft } from "lucide-react";
 import { Divider, GoogleIcon } from "./login";
+import { setSession } from "@/lib/user-state";
 
 export const Route = createFileRoute("/register")({
   head: () => ({ meta: [{ title: "Criar conta — HomeMatch" }] }),
