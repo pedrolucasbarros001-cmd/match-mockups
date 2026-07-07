@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
+import { getRole, getSession } from "@/lib/user-state";
 
 export const Route = createFileRoute("/splash")({
   head: () => ({ meta: [{ title: "HomeMatch" }] }),
@@ -9,11 +10,15 @@ export const Route = createFileRoute("/splash")({
 function SplashPage() {
   const nav = useNavigate();
   useEffect(() => {
-    // Mock: check "session" via localStorage; sempre segue para /explore (mockado como logado).
     const t = setTimeout(() => {
-      const hasSession = typeof window !== "undefined" && window.localStorage.getItem("hm.session") === "in";
-      nav({ to: hasSession ? "/explore" : "/login" });
-    }, 900);
+      const session = getSession();
+      if (session !== "in") {
+        nav({ to: "/login" });
+        return;
+      }
+      const role = getRole();
+      nav({ to: role === "landlord" ? "/dashboard" : "/explore" });
+    }, 700);
     return () => clearTimeout(t);
   }, [nav]);
   return (
@@ -23,7 +28,7 @@ function SplashPage() {
           <span className="font-display text-4xl font-extrabold">H</span>
         </div>
         <div className="font-display text-2xl font-extrabold tracking-tight">HomeMatch</div>
-        <div className="text-xs opacity-80">A encontrar o teu espaço…</div>
+        <div className="text-xs opacity-80">A carregar…</div>
       </div>
     </div>
   );
