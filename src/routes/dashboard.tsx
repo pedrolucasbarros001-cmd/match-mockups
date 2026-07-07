@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { listings, me, matches, visits } from "@/lib/mock-data";
 import { AppShell, PageHeader, ScoreBadge } from "@/components/AppShell";
-import { Plus, ChevronRight, MessageCircle, Calendar, Clock } from "lucide-react";
+import { me } from "@/lib/mock-data";
+import { Plus, ChevronRight, MessageCircle, Calendar } from "lucide-react";
 
 export const Route = createFileRoute("/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard — HomeMatch" }] }),
@@ -9,17 +9,15 @@ export const Route = createFileRoute("/dashboard")({
 });
 
 function Dashboard() {
-  const mine = listings.slice(0, 1);
-  const activeMatches = matches.filter((m) => m.state !== "closed" && m.state !== "rental_confirmed").length;
-  const pendingVisits = visits.filter((v) => v.status === "pending").length;
+  const firstName = me.name ? me.name.split(" ")[0] : "Olá";
   return (
     <AppShell role="landlord">
-      <PageHeader title={`Olá, ${me.name.split(" ")[0]} 👋`} />
+      <PageHeader title={`${firstName ? "Olá, " + firstName : "Olá"} 👋`} />
       <div className="px-4 pt-4">
         <div className="grid grid-cols-3 gap-2">
-          <Stat n={1} label="Anúncios ativos" />
-          <Stat n={activeMatches} label="Matches" />
-          <Stat n={pendingVisits} label="Visitas p/ confirmar" />
+          <Stat n={0} label="Anúncios ativos" />
+          <Stat n={0} label="Matches" />
+          <Stat n={0} label="Visitas p/ confirmar" />
         </div>
 
         <Link to="/profile/score" className="mt-4 flex items-center gap-4 rounded-2xl border border-border bg-surface p-4">
@@ -34,42 +32,23 @@ function Dashboard() {
         </Link>
 
         <div className="mt-4 grid grid-cols-2 gap-2">
-          <Shortcut to="/matches" Icon={MessageCircle} label="Matches" n={activeMatches} />
-          <Shortcut to="/visits-manager" Icon={Calendar} label="Visitas" n={pendingVisits} />
+          <Shortcut to="/matches" Icon={MessageCircle} label="Matches" n={0} />
+          <Shortcut to="/visits-manager" Icon={Calendar} label="Visitas" n={0} />
         </div>
 
-        <h2 className="mt-6 mb-2 font-display text-base font-bold">Para fazer agora</h2>
-        <div className="overflow-hidden rounded-2xl border border-border bg-surface">
-          <TodoRow to="/matches" icon={<MessageCircle className="size-4 text-primary" />} text="Responder a 2 interessados" />
-          <TodoRow to="/visits-manager" icon={<Clock className="size-4 text-warning" />} text="Confirmar visita com João M." last />
+        <div className="mt-6 rounded-2xl border border-dashed border-border bg-surface p-6 text-center">
+          <div className="mx-auto grid size-12 place-items-center rounded-pill bg-primary-soft text-primary">
+            <Plus className="size-6" />
+          </div>
+          <h2 className="mt-3 font-display text-base font-bold">Ainda não tens anúncios</h2>
+          <p className="mt-1 text-xs text-muted-foreground">Publica o teu primeiro espaço em poucos passos.</p>
+          <Link to="/publish" className="mt-4 inline-flex h-11 items-center gap-1.5 rounded-lg bg-primary px-5 font-display font-semibold text-primary-foreground shadow-lift">
+            <Plus className="size-4" /> Publicar anúncio
+          </Link>
         </div>
-
-        <div className="mt-6 flex items-center justify-between">
-          <h2 className="font-display text-base font-bold">Os meus anúncios</h2>
-          <Link to="/my-listings" className="text-sm font-semibold text-primary">Ver todos →</Link>
-        </div>
-        <div className="mt-2 flex flex-col gap-3">
-          {mine.map((l) => (
-            <Link key={l.id} to="/my-listings" className="flex gap-3 rounded-2xl border border-border bg-surface p-3">
-              <img src={l.photos[0]} className="size-20 rounded-xl object-cover" alt="" />
-              <div className="flex-1">
-                <div className="font-display font-bold">{l.title}</div>
-                <div className="font-num text-sm text-muted-foreground">€{l.price}/mês · {l.spaceType}</div>
-                <div className="mt-1 flex items-center gap-2 text-xs">
-                  <span className="inline-flex items-center gap-1 rounded-pill bg-success/15 px-2 py-0.5 font-semibold text-success">● Publicado</span>
-                  <span className="text-muted-foreground">Qualidade {l.qualityScore}/100</span>
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
-
-        <Link to="/publish" className="mt-4 flex h-14 items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border bg-surface font-display font-semibold text-foreground transition active:scale-[0.99]">
-          <Plus className="size-5" /> Publicar novo anúncio
-        </Link>
 
         <div className="mt-4 rounded-2xl border border-border bg-primary-soft p-4 text-sm">
-          <div className="font-semibold">Plano: Free · 1/1 anúncios</div>
+          <div className="font-semibold">Plano: Free · 0/1 anúncios</div>
           <Link to="/account" className="mt-1 inline-block text-xs font-semibold text-primary">Ver plano →</Link>
         </div>
       </div>
@@ -83,15 +62,6 @@ function Stat({ n, label }: { n: number; label: string }) {
       <div className="font-num text-3xl font-bold">{n}</div>
       <div className="mt-0.5 text-[11px] font-medium text-muted-foreground">{label}</div>
     </div>
-  );
-}
-
-function TodoRow({ to, icon, text, last }: { to: string; icon: React.ReactNode; text: string; last?: boolean }) {
-  return (
-    <Link to={to} className={"flex w-full items-center justify-between px-4 py-3 text-left active:bg-muted " + (last ? "" : "border-b border-border")}>
-      <span className="flex items-center gap-2 text-sm font-medium">{icon}{text}</span>
-      <ChevronRight className="size-4 text-muted-foreground" />
-    </Link>
   );
 }
 
