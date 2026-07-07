@@ -35,7 +35,7 @@ function RegisterPage() {
       <p className="mt-1 text-sm text-muted-foreground">Demora 1 minuto.</p>
 
       <form
-        onSubmit={(e) => { e.preventDefault(); if (ok) nav({ to: "/onboarding" }); }}
+        onSubmit={(e) => { e.preventDefault(); if (ok) { setSession("in"); nav({ to: "/onboarding" }); } }}
         className="mt-6 flex flex-col gap-3"
       >
         <input type="email" required placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value.toLowerCase())}
