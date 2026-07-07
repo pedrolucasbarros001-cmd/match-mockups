@@ -25,7 +25,47 @@ function ChatRoom() {
   const [tenantConfirmed, setTenantConfirmed] = useState(false);
 
   const rented = state === "rental_confirmed";
-  const action = useMemo(() => nextActionFor(state), [state]);
+  if (!chat || !listing) return <ChatMissing />;
+
+  return <ChatBody
+    listing={listing}
+    match={match}
+    msgs={msgs}
+    setMsgs={setMsgs}
+    text={text}
+    setText={setText}
+    state={state}
+    setState={setState}
+    rented={rented}
+    action={action}
+    showVisitSheet={showVisitSheet}
+    setShowVisitSheet={setShowVisitSheet}
+    showConfirmSheet={showConfirmSheet}
+    setShowConfirmSheet={setShowConfirmSheet}
+    landlordConfirmed={landlordConfirmed}
+    tenantConfirmed={tenantConfirmed}
+    proposeVisit={proposeVisit}
+    markVisitDone={markVisitDone}
+    doConfirm={doConfirm}
+    reactivate={reactivate}
+    send={send}
+  />;
+}
+
+function ChatMissing() {
+  return (
+    <div className="mx-auto grid min-h-svh w-full max-w-[440px] place-items-center bg-background p-8 text-center">
+      <div>
+        <div className="mx-auto grid size-14 place-items-center rounded-pill bg-muted text-muted-foreground">
+          <Lock className="size-6" />
+        </div>
+        <h2 className="mt-3 font-display text-lg font-bold">Conversa indisponível</h2>
+        <p className="mt-1 text-sm text-muted-foreground">Ainda não tens conversas. Dá interesse num anúncio para começar.</p>
+        <Link to="/matches" className="mt-4 inline-flex h-11 items-center rounded-pill bg-primary px-5 text-sm font-semibold text-primary-foreground">Ver matches</Link>
+      </div>
+    </div>
+  );
+}
 
   const send = () => {
     if (!text.trim() || rented) return;
