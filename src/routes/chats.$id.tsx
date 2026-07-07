@@ -12,11 +12,11 @@ export const Route = createFileRoute("/chats/$id")({
 
 function ChatRoom() {
   const { id } = useParams({ from: "/chats/$id" });
-  const chat = chats.find((c) => c.id === id)!;
-  const listing = listings.find((l) => l.id === chat.listingId)!;
-  const match = matches.find((m) => m.chatId === chat.id);
+  const chat = chats.find((c) => c.id === id);
+  const listing = chat ? listings.find((l) => l.id === chat.listingId) : undefined;
+  const match = chat ? matches.find((m) => m.chatId === chat.id) : undefined;
 
-  const [msgs, setMsgs] = useState(chat.messages);
+  const [msgs, setMsgs] = useState<{ from: "me" | "them"; text: string; at: string }[]>(chat?.messages ?? []);
   const [text, setText] = useState("");
   const [state, setState] = useState(match?.state ?? "conversation");
   const [showVisitSheet, setShowVisitSheet] = useState(false);
