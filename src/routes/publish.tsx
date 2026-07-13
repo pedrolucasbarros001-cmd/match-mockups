@@ -3,7 +3,9 @@ import { useState } from "react";
 import { PageHeader } from "@/components/AppShell";
 import { ChevronLeft, ChevronRight, Camera, Check, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { SpaceType } from "@/lib/mock-data";
+import type { SpaceType, Listing } from "@/lib/mock-data";
+import { api } from "@/lib/api";
+import { useStore } from "@/lib/store";
 
 export const Route = createFileRoute("/publish")({
   head: () => ({ meta: [{ title: "Publicar — HomeMatch" }] }),
@@ -23,13 +25,18 @@ const SPACE_TYPES: { key: SpaceType; desc: string; photos: string[] }[] = [
   { key: "T4+", desc: "4 ou mais quartos.", photos: ["Sala", "Cozinha", "Quarto principal", "Casa de banho"] },
 ];
 
+const AMENITIES = ["Wi-Fi", "Cozinha", "Aquecimento", "Mobilado", "Varanda", "Elevador"];
+
 function PublishWizard() {
   const nav = useNavigate();
+  const profile = useStore((s) => s.profile);
   const [step, setStep] = useState(0);
   const [type, setType] = useState<SpaceType | null>(null);
   const [city, setCity] = useState("");
+  const [neighborhood, setNeighborhood] = useState("");
   const [title, setTitle] = useState("");
   const [desc, setDesc] = useState("");
+  const [amenities, setAmenities] = useState<string[]>([]);
   const [price, setPrice] = useState(450);
   const [pets, setPets] = useState(false);
   const [smoke, setSmoke] = useState(false);
@@ -47,10 +54,6 @@ function PublishWizard() {
     (step === 4 && price >= 100) ||
     step >= 5;
 
-  const next = () => (step === STEPS.length - 1 ? nav({ to: "/my-listings" }) : setStep((s) => s + 1));
-  const prev = () => (step === 0 ? nav({ to: "/my-listings" }) : setStep((s) => s - 1));
-
-  // Quality score interno (mock)
   const quality =
     (type ? 20 : 0) +
     (city.length > 1 ? 15 : 0) +
@@ -60,6 +63,46 @@ function PublishWizard() {
     (moveIn ? 10 : 0) +
     (visitSlots.length ? 10 : 0) +
     10;
+
+  const publish = async () => {
+    const listing: Omit<Listing, "id"> = {
+      title: title || `${type} em ${city || "—"}`,
+      price,
+      city,
+      neighborhood,
+      distanceM: 0,
+      type: type === "T1" || type === "T2" || type === "T3" || type === "T4+" || type === "Estúdio" ? "Apartamento" : "Quarto",
+      spaceType: type ?? "Quarto",
+      lifecycle: "published",
+      qualityScore: Math.min(100, quality),
+      pets,
+      smoke,
+      availableFrom: moveIn || "Imediato",
+      moveInFrom: moveIn,
+      visitAvailability: visitSlots,
+      minMonths: 6,
+      capacity: 1,
+      description: desc,
+      amenities,
+      rules: `${students ? "Aceita estudantes. " : ""}${pets ? "Aceita animais. " : "Sem animais. "}${smoke ? "Fumadores ok." : "Sem fumo."}`,
+      photos: ["https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&auto=format&fit=crop"],
+      owner: {
+        name: profile.name || "O meu anúncio",
+        avatar: profile.avatar || "https://api.dicebear.com/7.x/initials/svg?seed=" + encodeURIComponent(profile.name || "Eu"),
+        score: 60,
+        responds: "Responde em breve",
+        rating: 0,
+        reviews: 0,
+      },
+    };
+    await api.createListing(listing);
+    nav({ to: "/my-listings" });
+  };
+
+  const next = () => (step === STEPS.length - 1 ? publish() : setStep((s) => s + 1));
+  const prev = () => (step === 0 ? nav({ to: "/my-listings" }) : setStep((s) => s - 1));
+
+  const toggleAmenity = (a: string) => setAmenities(amenities.includes(a) ? amenities.filter((x) => x !== a) : [...amenities, a]);
 
   return (
     <div className="mx-auto flex min-h-svh w-full max-w-[440px] flex-col bg-background">
@@ -97,7 +140,7 @@ function PublishWizard() {
           <Step title="Onde fica?" sub="A morada exata só é partilhada quando aceitares alguém.">
             <input value={city} onChange={(e) => setCity(e.target.value)} placeholder="Cidade"
               className="h-14 w-full rounded-md border border-border bg-surface px-4 outline-none focus:border-primary focus:ring-2 focus:ring-primary/15" />
-            <input placeholder="Bairro / referência" className="h-14 w-full rounded-md border border-border bg-surface px-4 outline-none focus:border-primary" />
+            <input value={neighborhood} onChange={(e) => setNeighborhood(e.target.value)} placeholder="Bairro / referência" className="h-14 w-full rounded-md border border-border bg-surface px-4 outline-none focus:border-primary" />
             <input placeholder="Rua e número (privado)" className="h-14 w-full rounded-md border border-border bg-surface px-4 outline-none focus:border-primary" />
           </Step>
         )}
@@ -110,8 +153,11 @@ function PublishWizard() {
               className="w-full resize-none rounded-md border border-border bg-surface p-4 outline-none focus:border-primary" />
             <div className="text-xs text-muted-foreground">{desc.length} caracteres · sugerido &gt; 50</div>
             <div className="grid grid-cols-3 gap-2">
-              {["Wi-Fi", "Cozinha", "Aquecimento", "Mobilado", "Varanda", "Elevador"].map((a) => (
-                <span key={a} className="rounded-pill border border-border bg-surface px-3 py-1.5 text-center text-xs">{a}</span>
+              {AMENITIES.map((a) => (
+                <button key={a} onClick={() => toggleAmenity(a)} className={cn(
+                  "rounded-pill border px-3 py-1.5 text-center text-xs",
+                  amenities.includes(a) ? "border-primary bg-primary-soft text-primary" : "border-border bg-surface",
+                )}>{a}</button>
               ))}
             </div>
           </Step>
@@ -126,7 +172,7 @@ function PublishWizard() {
                 </button>
               ))}
             </div>
-            <Tip>Ensinamos, não bloqueamos. Podes publicar com menos, mas o teu anúncio sobe mais na descoberta com as fotos recomendadas.</Tip>
+            <Tip>Upload real fica quando ligarmos o backend. Vamos usar uma foto genérica para testares o fluxo.</Tip>
           </Step>
         )}
 

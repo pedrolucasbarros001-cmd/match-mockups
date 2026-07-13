@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { notifications } from "@/lib/mock-data";
 import { AppShell, PageHeader } from "@/components/AppShell";
+import { useStore } from "@/lib/store";
+import { api } from "@/lib/api";
 import { Heart, MessageCircle, Bell, Home, Calendar, Store, Cog } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -23,15 +24,14 @@ const CAT = {
 const TABS: (keyof typeof CAT | "all")[] = ["all", "interest", "match", "conversation", "visit", "availability", "marketplace", "system"];
 
 function NotificationsPage() {
+  const notifications = useStore((s) => s.notifications);
   const [tab, setTab] = useState<(typeof TABS)[number]>("all");
-  const [readIds, setReadIds] = useState<string[]>([]);
   const items = tab === "all" ? notifications : notifications.filter((n) => n.category === tab);
-  const isRead = (id: string) => readIds.includes(id);
 
   return (
     <AppShell>
       <PageHeader title="Notificações" right={
-        <button onClick={() => setReadIds(notifications.map((n) => n.id))} className="text-sm font-semibold text-primary">Marcar lidas</button>
+        <button onClick={() => api.markAllNotificationsRead()} className="text-sm font-semibold text-primary">Marcar lidas</button>
       } />
       <div className="sticky top-14 z-20 flex gap-2 overflow-x-auto border-b border-border bg-surface/95 px-3 py-2 backdrop-blur">
         {TABS.map((t) => (
@@ -47,10 +47,9 @@ function NotificationsPage() {
         {items.map((n) => {
           const c = CAT[n.category];
           const Icon = c.Icon ?? Bell;
-          const unread = n.unread && !isRead(n.id);
           return (
-            <li key={n.id} className={cn("transition", unread && "bg-primary/[0.03]")}>
-              <Link to={n.to ?? "/notifications"} onClick={() => setReadIds((r) => [...r, n.id])} className="flex gap-3 px-4 py-4 active:bg-muted">
+            <li key={n.id} className={cn("transition", n.unread && "bg-primary/[0.03]")}>
+              <Link to={n.to ?? "/notifications"} onClick={() => api.markNotificationRead(n.id)} className="flex gap-3 px-4 py-4 active:bg-muted">
                 <div className={cn("grid size-10 shrink-0 place-items-center rounded-pill", c.color)}>
                   <Icon className="size-5" />
                 </div>
@@ -62,7 +61,7 @@ function NotificationsPage() {
                   <p className="mt-0.5 text-sm text-muted-foreground">{n.body}</p>
                   <div className="mt-1 text-[10px] font-bold uppercase tracking-wide text-muted-foreground/70">{c.label}</div>
                 </div>
-                {unread && <span className="mt-1.5 size-2 shrink-0 rounded-pill bg-primary" />}
+                {n.unread && <span className="mt-1.5 size-2 shrink-0 rounded-pill bg-primary" />}
               </Link>
             </li>
           );

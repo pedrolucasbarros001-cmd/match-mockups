@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell, PageHeader, ScoreBadge } from "@/components/AppShell";
-import { me } from "@/lib/mock-data";
+import { useStore } from "@/lib/store";
 import { Plus, ChevronRight, MessageCircle, Calendar } from "lucide-react";
 
 export const Route = createFileRoute("/dashboard")({
@@ -9,46 +9,57 @@ export const Route = createFileRoute("/dashboard")({
 });
 
 function Dashboard() {
-  const firstName = me.name ? me.name.split(" ")[0] : "Olá";
+  const listings = useStore((s) => s.listings);
+  const matches = useStore((s) => s.matches);
+  const visits = useStore((s) => s.visits);
+  const profile = useStore((s) => s.profile);
+
+  const activeListings = listings.filter((l) => l.lifecycle === "published" || l.lifecycle === "negotiating").length;
+  const visitsPending = visits.filter((v) => v.status === "pending").length;
+  const profileScore = profile.name ? 40 : 0 + (profile.email ? 20 : 0) + (profile.phoneVerified ? 20 : 0) + (profile.bio ? 20 : 0);
+  const firstName = profile.name ? profile.name.split(" ")[0] : "";
+
   return (
     <AppShell role="landlord">
-      <PageHeader title={`${firstName ? "Olá, " + firstName : "Olá"} 👋`} />
+      <PageHeader title={firstName ? `Olá, ${firstName} 👋` : "Olá 👋"} />
       <div className="px-4 pt-4">
         <div className="grid grid-cols-3 gap-2">
-          <Stat n={0} label="Anúncios ativos" />
-          <Stat n={0} label="Matches" />
-          <Stat n={0} label="Visitas p/ confirmar" />
+          <Stat n={activeListings} label="Anúncios ativos" />
+          <Stat n={matches.length} label="Matches" />
+          <Stat n={visitsPending} label="Visitas p/ confirmar" />
         </div>
 
         <Link to="/profile/score" className="mt-4 flex items-center gap-4 rounded-2xl border border-border bg-surface p-4">
-          <ScoreBadge score={me.score} size="md" />
+          <ScoreBadge score={profileScore} size="md" />
           <div className="flex-1">
             <div className="text-sm font-semibold">Completar perfil</div>
             <div className="mt-1 h-2 overflow-hidden rounded-pill bg-muted">
-              <div className="h-full bg-primary" style={{ width: `${me.score}%` }} />
+              <div className="h-full bg-primary" style={{ width: `${profileScore}%` }} />
             </div>
           </div>
           <ChevronRight className="size-5 text-muted-foreground" />
         </Link>
 
         <div className="mt-4 grid grid-cols-2 gap-2">
-          <Shortcut to="/matches" Icon={MessageCircle} label="Matches" n={0} />
-          <Shortcut to="/visits-manager" Icon={Calendar} label="Visitas" n={0} />
+          <Shortcut to="/matches" Icon={MessageCircle} label="Matches" n={matches.length} />
+          <Shortcut to="/visits-manager" Icon={Calendar} label="Visitas" n={visitsPending} />
         </div>
 
-        <div className="mt-6 rounded-2xl border border-dashed border-border bg-surface p-6 text-center">
-          <div className="mx-auto grid size-12 place-items-center rounded-pill bg-primary-soft text-primary">
-            <Plus className="size-6" />
+        {listings.length === 0 && (
+          <div className="mt-6 rounded-2xl border border-dashed border-border bg-surface p-6 text-center">
+            <div className="mx-auto grid size-12 place-items-center rounded-pill bg-primary-soft text-primary">
+              <Plus className="size-6" />
+            </div>
+            <h2 className="mt-3 font-display text-base font-bold">Ainda não tens anúncios</h2>
+            <p className="mt-1 text-xs text-muted-foreground">Publica o teu primeiro espaço em poucos passos.</p>
+            <Link to="/publish" className="mt-4 inline-flex h-11 items-center gap-1.5 rounded-lg bg-primary px-5 font-display font-semibold text-primary-foreground shadow-lift">
+              <Plus className="size-4" /> Publicar anúncio
+            </Link>
           </div>
-          <h2 className="mt-3 font-display text-base font-bold">Ainda não tens anúncios</h2>
-          <p className="mt-1 text-xs text-muted-foreground">Publica o teu primeiro espaço em poucos passos.</p>
-          <Link to="/publish" className="mt-4 inline-flex h-11 items-center gap-1.5 rounded-lg bg-primary px-5 font-display font-semibold text-primary-foreground shadow-lift">
-            <Plus className="size-4" /> Publicar anúncio
-          </Link>
-        </div>
+        )}
 
         <div className="mt-4 rounded-2xl border border-border bg-primary-soft p-4 text-sm">
-          <div className="font-semibold">Plano: Free · 0/1 anúncios</div>
+          <div className="font-semibold">Plano: Free · {activeListings}/1 anúncios</div>
           <Link to="/account" className="mt-1 inline-block text-xs font-semibold text-primary">Ver plano →</Link>
         </div>
       </div>
