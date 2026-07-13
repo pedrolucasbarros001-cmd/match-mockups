@@ -61,31 +61,41 @@ function ProfilePage() {
           <ChevronRight className="size-5 text-muted-foreground" />
         </Link>
 
-        {/* Contexto */}
-        <div className="mt-6 mb-2 px-1 text-xs font-bold uppercase tracking-wide text-muted-foreground">O que procuro agora</div>
-        <Link to="/preferences" className="flex items-center justify-between rounded-2xl border border-border bg-surface p-4">
-          <div className="flex items-center gap-3">
-            <div className="grid size-10 place-items-center rounded-pill bg-primary-soft text-primary"><Sliders className="size-5" /></div>
-            <div>
-              <div className="font-display text-sm font-bold">Preferências</div>
-              <div className="text-xs text-muted-foreground">Cidade, orçamento, tipo, data de entrada.</div>
+        {role === "seeker" ? (
+          <>
+            <div className="mt-6 mb-2 px-1 text-xs font-bold uppercase tracking-wide text-muted-foreground">O que procuro agora</div>
+            <Link to="/preferences" className="flex items-center justify-between rounded-2xl border border-border bg-surface p-4">
+              <div className="flex items-center gap-3">
+                <div className="grid size-10 place-items-center rounded-pill bg-primary-soft text-primary"><Sliders className="size-5" /></div>
+                <div>
+                  <div className="font-display text-sm font-bold">Preferências</div>
+                  <div className="text-xs text-muted-foreground">Cidade, orçamento, tipo, data de entrada.</div>
+                </div>
+              </div>
+              <ChevronRight className="size-5 text-muted-foreground" />
+            </Link>
+
+            <div className="mt-6 mb-2 px-1 text-xs font-bold uppercase tracking-wide text-muted-foreground">Atividade</div>
+            <div className="overflow-hidden rounded-2xl border border-border bg-surface">
+              <Row icon={<Shield className="size-5" />} label="Verificações" onClick={() => nav({ to: "/profile/score" })} />
+              <Row icon={<Heart className="size-5" />} label="Favoritos" onClick={() => nav({ to: "/favorites" })} />
+              <Row icon={<Calendar className="size-5" />} label="As minhas visitas" onClick={() => nav({ to: "/visits" })} last />
             </div>
-          </div>
-          <ChevronRight className="size-5 text-muted-foreground" />
-        </Link>
+          </>
+        ) : (
+          <>
+            <div className="mt-6 mb-2 px-1 text-xs font-bold uppercase tracking-wide text-muted-foreground">Atividade</div>
+            <div className="overflow-hidden rounded-2xl border border-border bg-surface">
+              <Row icon={<Shield className="size-5" />} label="Verificações" onClick={() => nav({ to: "/profile/score" })} last />
+            </div>
 
-        <div className="mt-6 mb-2 px-1 text-xs font-bold uppercase tracking-wide text-muted-foreground">Atividade</div>
-        <div className="overflow-hidden rounded-2xl border border-border bg-surface">
-          <Row icon={<Shield className="size-5" />} label="Verificações" onClick={() => nav({ to: "/profile/score" })} />
-          <Row icon={<Heart className="size-5" />} label="Favoritos" onClick={() => nav({ to: "/favorites" })} />
-          <Row icon={<Calendar className="size-5" />} label="As minhas visitas" onClick={() => nav({ to: "/visits" })} last />
-        </div>
-
-        <div className="mt-6 mb-2 px-1 text-xs font-bold uppercase tracking-wide text-muted-foreground">Área senhorio</div>
-        <div className="overflow-hidden rounded-2xl border border-border bg-surface">
-          <Row icon={<Calendar className="size-5" />} label="Gerir visitas" onClick={() => nav({ to: "/visits-manager" })} />
-          <Row icon={<Crown className="size-5" />} label="Conta e plano" onClick={() => nav({ to: "/account" })} last />
-        </div>
+            <div className="mt-6 mb-2 px-1 text-xs font-bold uppercase tracking-wide text-muted-foreground">Área senhorio</div>
+            <div className="overflow-hidden rounded-2xl border border-border bg-surface">
+              <Row icon={<Calendar className="size-5" />} label="Gerir visitas" onClick={() => nav({ to: "/visits-manager" })} />
+              <Row icon={<Crown className="size-5" />} label="Conta e plano" onClick={() => nav({ to: "/account" })} last />
+            </div>
+          </>
+        )}
 
         <div className="mt-6 overflow-hidden rounded-2xl border border-border bg-surface">
           <Row icon={<Settings className="size-5" />} label="Definições" onClick={() => nav({ to: "/settings" })} />
