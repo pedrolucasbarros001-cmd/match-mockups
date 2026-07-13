@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell, PageHeader, ScoreBadge } from "@/components/AppShell";
-import { listings, favoriteIds } from "@/lib/mock-data";
+import { useStore } from "@/lib/store";
+import { api } from "@/lib/api";
 import { Heart } from "lucide-react";
 
 export const Route = createFileRoute("/favorites")({
@@ -9,7 +10,10 @@ export const Route = createFileRoute("/favorites")({
 });
 
 function FavoritesPage() {
-  const items = listings.filter((l) => favoriteIds.includes(l.id));
+  const favorites = useStore((s) => s.favorites);
+  const listings = useStore((s) => s.listings);
+  const items = listings.filter((l) => favorites.includes(l.id));
+
   return (
     <AppShell>
       <PageHeader title="Favoritos" back="/profile" />
@@ -22,7 +26,10 @@ function FavoritesPage() {
               <Link to="/explore/$id" params={{ id: l.id }} className="block overflow-hidden rounded-2xl border border-border bg-surface">
                 <div className="relative aspect-square">
                   <img src={l.photos[0]} className="absolute inset-0 h-full w-full object-cover" alt="" />
-                  <button className="absolute right-2 top-2 grid size-9 place-items-center rounded-pill bg-white/95">
+                  <button
+                    onClick={(e) => { e.preventDefault(); api.toggleFavorite(l.id); }}
+                    className="absolute right-2 top-2 grid size-9 place-items-center rounded-pill bg-white/95"
+                  >
                     <Heart className="size-4 fill-danger text-danger" />
                   </button>
                 </div>

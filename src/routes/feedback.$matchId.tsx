@@ -1,7 +1,8 @@
 import { createFileRoute, useNavigate, useParams } from "@tanstack/react-router";
 import { useState } from "react";
 import { PageHeader } from "@/components/AppShell";
-import { matches, listings } from "@/lib/mock-data";
+import { useStore } from "@/lib/store";
+import { api } from "@/lib/api";
 import { Star, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -21,8 +22,8 @@ const TOPICS = [
 function FeedbackPage() {
   const { matchId } = useParams({ from: "/feedback/$matchId" });
   const nav = useNavigate();
-  const m = matches.find((x) => x.id === matchId);
-  const l = m ? listings.find((x) => x.id === m.listingId) : undefined;
+  const m = useStore((s) => s.matches.find((x) => x.id === matchId));
+  const l = useStore((s) => (m ? s.listings.find((x) => x.id === m.listingId) : undefined));
   const [rating, setRating] = useState(0);
   const [topics, setTopics] = useState<string[]>([]);
   const [note, setNote] = useState("");
@@ -31,6 +32,11 @@ function FeedbackPage() {
   if (!m || !l) return <div className="p-8 text-center text-sm text-muted-foreground">Feedback não disponível.</div>;
 
   const toggle = (t: string) => setTopics(topics.includes(t) ? topics.filter((x) => x !== t) : [...topics, t]);
+  const submit = async () => {
+    const comment = [note, topics.join("; ")].filter(Boolean).join(" | ");
+    await api.saveFeedback(matchId, rating, comment);
+    setDone(true);
+  };
 
   return (
     <div className="mx-auto min-h-svh w-full max-w-[440px] bg-background pb-16">
@@ -83,7 +89,7 @@ function FeedbackPage() {
                 className="w-full resize-none rounded-md border border-border bg-surface p-3 outline-none focus:border-primary" />
             </div>
 
-            <button onClick={() => setDone(true)} className="h-12 w-full rounded-lg bg-primary font-display font-semibold text-primary-foreground shadow-lift">
+            <button onClick={submit} disabled={rating === 0} className="h-12 w-full rounded-lg bg-primary font-display font-semibold text-primary-foreground shadow-lift disabled:opacity-50">
               Enviar feedback
             </button>
           </>

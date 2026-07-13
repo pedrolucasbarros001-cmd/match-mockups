@@ -1,9 +1,12 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { chats, listings, matches, nextActionFor, type ChatMessage } from "@/lib/mock-data";
+import { nextActionFor } from "@/lib/mock-data";
 import { NegotiationTimeline } from "@/components/NegotiationTimeline";
 import { ChevronLeft, Send, MoreVertical, Calendar, Check, Lock, RefreshCcw, X, MessageCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useStore } from "@/lib/store";
+import { api } from "@/lib/api";
+import { store } from "@/lib/store";
 
 export const Route = createFileRoute("/chats/$id")({
   head: () => ({ meta: [{ title: "Chat — HomeMatch" }] }),
@@ -12,18 +15,17 @@ export const Route = createFileRoute("/chats/$id")({
 
 function ChatRoom() {
   const { id } = useParams({ from: "/chats/$id" });
-  const chat = chats.find((c) => c.id === id);
-  const listing = chat ? listings.find((l) => l.id === chat.listingId) : undefined;
-  const match = chat ? matches.find((m) => m.chatId === chat.id) : undefined;
+  const chat = useStore((s) => s.chats.find((c) => c.id === id));
+  const listing = useStore((s) => (chat ? s.listings.find((l) => l.id === chat.listingId) : undefined));
+  const match = useStore((s) => (chat ? s.matches.find((m) => m.chatId === chat.id) : undefined));
 
-  const [msgs, setMsgs] = useState<ChatMessage[]>(chat?.messages ?? []);
   const [text, setText] = useState("");
-  const [state, setState] = useState(match?.state ?? "conversation");
   const [showVisitSheet, setShowVisitSheet] = useState(false);
   const [showConfirmSheet, setShowConfirmSheet] = useState(false);
   const [landlordConfirmed, setLandlordConfirmed] = useState(false);
   const [tenantConfirmed, setTenantConfirmed] = useState(false);
 
+  const state = match?.state ?? "conversation";
   const rented = state === "rental_confirmed";
   const action = useMemo(() => nextActionFor(state), [state]);
 
@@ -42,31 +44,37 @@ function ChatRoom() {
     );
   }
 
-  const send = () => {
+  const send = async () => {
     if (!text.trim() || rented) return;
-    setMsgs((m) => [...m, { from: "me", text: text.trim(), at: "agora" }]);
+    await api.sendMessage(chat.id, text.trim());
     setText("");
   };
-  const proposeVisit = (slot: string) => {
-    setMsgs((m) => [...m, { from: "me", text: `Proposta de visita: ${slot}`, at: "agora" }]);
-    setState("visit_scheduled");
+  const proposeVisit = async (slot: string) => {
+    if (!match) return;
+    await api.sendMessage(chat.id, `Proposta de visita: ${slot}`);
+    await api.proposeVisit(listing.id, match.id, slot);
     setShowVisitSheet(false);
   };
-  const markVisitDone = () => setState("visit_done");
+  const markVisitDone = () => match && store.setMatchState(match.id, "visit_done");
   const doConfirm = (side: "landlord" | "tenant") => {
-    if (side === "landlord") setLandlordConfirmed(true);
-    else setTenantConfirmed(true);
-    if ((side === "landlord" ? true : landlordConfirmed) && (side === "tenant" ? true : tenantConfirmed)) {
-      setState("rental_confirmed");
+    const nextLL = side === "landlord" ? true : landlordConfirmed;
+    const nextTT = side === "tenant" ? true : tenantConfirmed;
+    setLandlordConfirmed(nextLL);
+    setTenantConfirmed(nextTT);
+    if (nextLL && nextTT && match) {
+      store.setMatchState(match.id, "rental_confirmed");
+      store.updateListing(listing.id, { lifecycle: "rented" });
+      store.sendMessage(chat.id, "Arrendamento confirmado ✅", "me");
       setShowConfirmSheet(false);
-      setMsgs((m) => [...m, { from: "me", text: "Arrendamento confirmado ✅", at: "agora" }]);
     }
   };
   const reactivate = () => {
-    setState("conversation");
+    if (!match) return;
+    store.setMatchState(match.id, "conversation");
+    store.updateListing(listing.id, { lifecycle: "published" });
+    store.sendMessage(chat.id, "O anúncio foi reativado. Continuamos onde parámos.", "them");
     setLandlordConfirmed(false);
     setTenantConfirmed(false);
-    setMsgs((m) => [...m, { from: "them", text: "O anúncio foi reativado. Continuamos onde parámos.", at: "agora" }]);
   };
 
   return (
@@ -89,7 +97,7 @@ function ChatRoom() {
             <div className="text-[10px] font-bold uppercase tracking-wide text-primary/80">Próxima ação</div>
             <div className="truncate text-sm font-semibold text-foreground">{action}</div>
           </div>
-          {state === "conversation" && (
+          {(state === "conversation" || state === "interested") && (
             <button onClick={() => setShowVisitSheet(true)} className="inline-flex items-center gap-1 rounded-pill bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground">
               <Calendar className="size-3.5" /> Propor
             </button>
@@ -125,7 +133,10 @@ function ChatRoom() {
       </Link>
 
       <div className="flex flex-1 flex-col gap-2 overflow-y-auto p-4">
-        {msgs.map((m, i) => (
+        {chat.messages.length === 0 && (
+          <div className="mx-auto rounded-xl bg-muted px-3 py-2 text-xs text-muted-foreground">Envia a primeira mensagem para iniciar a conversa.</div>
+        )}
+        {chat.messages.map((m, i) => (
           <div key={i} className={cn("flex flex-col", m.from === "me" ? "items-end" : "items-start")}>
             <div className={cn(
               "max-w-[78%] rounded-2xl px-4 py-2.5 text-[15px] leading-snug",
@@ -156,7 +167,7 @@ function ChatRoom() {
           <p className="text-sm text-muted-foreground">Escolhe um horário disponível.</p>
           <div className="mt-3 flex flex-col gap-2">
             {listing.visitAvailability.length === 0 && (
-              <p className="rounded-xl border border-dashed border-border p-4 text-center text-xs text-muted-foreground">Sem horários definidos.</p>
+              <p className="rounded-xl border border-dashed border-border p-4 text-center text-xs text-muted-foreground">Sem horários definidos pelo senhorio.</p>
             )}
             {listing.visitAvailability.map((s) => (
               <button key={s} onClick={() => proposeVisit(s)} className="flex items-center justify-between rounded-xl border border-border bg-surface px-4 py-3 text-left">

@@ -1,7 +1,8 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { PageHeader } from "@/components/AppShell";
-import { Bell, Globe, Lock, FileText, Trash2, HelpCircle, ChevronRight, Sliders, Crown, UserCog } from "lucide-react";
+import { Bell, Globe, Lock, FileText, Trash2, HelpCircle, ChevronRight, Sliders, Crown, UserCog, RefreshCcw } from "lucide-react";
 import { useRole, setRole, setSession } from "@/lib/user-state";
+import { store } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/settings")({
@@ -12,6 +13,13 @@ export const Route = createFileRoute("/settings")({
 function SettingsPage() {
   const nav = useNavigate();
   const role = useRole();
+
+  const resetData = () => {
+    if (confirm("Apagar todos os dados locais? (anúncios, matches, chats, visitas, notificações)")) {
+      store.reset();
+      nav({ to: "/splash" });
+    }
+  };
 
   return (
     <div className="mx-auto min-h-svh w-full max-w-[440px] bg-background pb-10">
@@ -25,22 +33,14 @@ function SettingsPage() {
             <div className="grid grid-cols-2 gap-2">
               <button
                 onClick={() => setRole("seeker")}
-                className={cn(
-                  "h-11 rounded-lg border text-sm font-semibold transition",
-                  role === "seeker" ? "border-primary bg-primary text-primary-foreground" : "border-border bg-surface",
-                )}
-              >
-                Hóspede
-              </button>
+                className={cn("h-11 rounded-lg border text-sm font-semibold transition",
+                  role === "seeker" ? "border-primary bg-primary text-primary-foreground" : "border-border bg-surface")}
+              >Hóspede</button>
               <button
                 onClick={() => setRole("landlord")}
-                className={cn(
-                  "h-11 rounded-lg border text-sm font-semibold transition",
-                  role === "landlord" ? "border-primary bg-primary text-primary-foreground" : "border-border bg-surface",
-                )}
-              >
-                Senhorio
-              </button>
+                className={cn("h-11 rounded-lg border text-sm font-semibold transition",
+                  role === "landlord" ? "border-primary bg-primary text-primary-foreground" : "border-border bg-surface")}
+              >Senhorio</button>
             </div>
           </div>
         </Group>
@@ -60,6 +60,7 @@ function SettingsPage() {
           <Item icon={<HelpCircle className="size-5" />} label="Ajuda" onClick={() => nav({ to: "/help" })} />
         </Group>
         <Group title="Zona perigosa">
+          <Item icon={<RefreshCcw className="size-5" />} label="Repor dados de demonstração" onClick={resetData} />
           <Item icon={<Trash2 className="size-5" />} label="Terminar sessão" destructive
             onClick={() => { setSession("out"); nav({ to: "/login" }); }} />
         </Group>
