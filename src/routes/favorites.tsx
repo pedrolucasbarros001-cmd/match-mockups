@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useRoleGuard } from "@/lib/user-state";
 import { AppShell, PageHeader, ScoreBadge } from "@/components/AppShell";
 import { useStore } from "@/lib/store";
 import { api } from "@/lib/api";

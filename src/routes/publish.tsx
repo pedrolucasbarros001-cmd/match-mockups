@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useRoleGuard } from "@/lib/user-state";
 import { useState } from "react";
 import { PageHeader } from "@/components/AppShell";
 import { ChevronLeft, ChevronRight, Camera, Check, Info } from "lucide-react";

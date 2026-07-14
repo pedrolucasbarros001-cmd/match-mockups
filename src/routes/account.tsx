@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useRoleGuard } from "@/lib/user-state";
 import { AppShell, PageHeader } from "@/components/AppShell";
 import { landlordAccount } from "@/lib/mock-data";
 import { Crown, FileText, Receipt } from "lucide-react";

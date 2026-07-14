@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useRoleGuard } from "@/lib/user-state";
 import { useState } from "react";
 import { PageHeader } from "@/components/AppShell";
 import { userContext, type SpaceType } from "@/lib/mock-data";

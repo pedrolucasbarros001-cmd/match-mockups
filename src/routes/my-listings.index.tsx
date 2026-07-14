@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useRoleGuard } from "@/lib/user-state";
 import { AppShell, PageHeader } from "@/components/AppShell";
 import { Plus, Building2, MoreVertical } from "lucide-react";
 import { useStore } from "@/lib/store";
