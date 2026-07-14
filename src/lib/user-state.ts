@@ -53,3 +53,19 @@ export function useRole(): Role {
 export function useSession(): SessionState {
   return useSyncExternalStore(subscribe, getSession, () => "out");
 }
+
+/**
+ * Guarda de papel: se o utilizador estiver no papel errado para a rota,
+ * redireciona para o "home" do papel atual. Usa-se dentro de componentes de rota.
+ */
+export function useRoleGuard(expected: Role) {
+  const role = useRole();
+  const nav = useNavigate();
+  useEffect(() => {
+    if (role !== expected) {
+      nav({ to: expected === "seeker" ? "/dashboard" : "/explore", replace: true });
+    }
+  }, [role, expected, nav]);
+  return role === expected;
+}
+
