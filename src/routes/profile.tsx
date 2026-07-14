@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { me } from "@/lib/mock-data";
 import { AppShell, PageHeader, ScoreBadge } from "@/components/AppShell";
-import { ChevronRight, Settings, Shield, Heart, LogOut, Edit3, Calendar, Crown, Sliders, User } from "lucide-react";
+import { ChevronRight, Settings, Shield, Heart, LogOut, Edit3, Calendar, Crown, Sliders, User, Building2, Users } from "lucide-react";
 import { useRole, setSession } from "@/lib/user-state";
 
 export const Route = createFileRoute("/profile")({
@@ -84,15 +84,17 @@ function ProfilePage() {
           </>
         ) : (
           <>
-            <div className="mt-6 mb-2 px-1 text-xs font-bold uppercase tracking-wide text-muted-foreground">Atividade</div>
-            <div className="overflow-hidden rounded-2xl border border-border bg-surface">
-              <Row icon={<Shield className="size-5" />} label="Verificações" onClick={() => nav({ to: "/profile/score" })} last />
-            </div>
-
             <div className="mt-6 mb-2 px-1 text-xs font-bold uppercase tracking-wide text-muted-foreground">Área senhorio</div>
             <div className="overflow-hidden rounded-2xl border border-border bg-surface">
+              <Row icon={<Building2 className="size-5" />} label="Meus anúncios" onClick={() => nav({ to: "/my-listings" })} />
+              <Row icon={<Users className="size-5" />} label="Candidatos" onClick={() => nav({ to: "/candidates" })} />
               <Row icon={<Calendar className="size-5" />} label="Gerir visitas" onClick={() => nav({ to: "/visits-manager" })} />
               <Row icon={<Crown className="size-5" />} label="Conta e plano" onClick={() => nav({ to: "/account" })} last />
+            </div>
+
+            <div className="mt-6 mb-2 px-1 text-xs font-bold uppercase tracking-wide text-muted-foreground">Confiança</div>
+            <div className="overflow-hidden rounded-2xl border border-border bg-surface">
+              <Row icon={<Shield className="size-5" />} label="Verificações" onClick={() => nav({ to: "/profile/score" })} last />
             </div>
           </>
         )}
