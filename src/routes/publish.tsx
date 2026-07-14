@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useRoleGuard } from "@/lib/user-state";
 import { useState } from "react";
 import { PageHeader } from "@/components/AppShell";
 import { ChevronLeft, ChevronRight, Camera, Check, Info } from "lucide-react";
@@ -28,6 +29,7 @@ const SPACE_TYPES: { key: SpaceType; desc: string; photos: string[] }[] = [
 const AMENITIES = ["Wi-Fi", "Cozinha", "Aquecimento", "Mobilado", "Varanda", "Elevador"];
 
 function PublishWizard() {
+  useRoleGuard("landlord");
   const nav = useNavigate();
   const profile = useStore((s) => s.profile);
   const [step, setStep] = useState(0);

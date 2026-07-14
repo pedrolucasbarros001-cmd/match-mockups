@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useRoleGuard } from "@/lib/user-state";
 import { AppShell, PageHeader, ScoreBadge } from "@/components/AppShell";
 import { useStore } from "@/lib/store";
 import { Plus, ChevronRight, MessageCircle, Calendar } from "lucide-react";
@@ -9,6 +10,7 @@ export const Route = createFileRoute("/dashboard")({
 });
 
 function Dashboard() {
+  useRoleGuard("landlord");
   const listings = useStore((s) => s.listings);
   const matches = useStore((s) => s.matches);
   const visits = useStore((s) => s.visits);

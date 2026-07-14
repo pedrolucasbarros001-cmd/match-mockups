@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useRoleGuard } from "@/lib/user-state";
 import { AppShell, PageHeader } from "@/components/AppShell";
 import { useStore } from "@/lib/store";
 import { Calendar, MapPin, Clock } from "lucide-react";
@@ -17,6 +18,7 @@ const STATUS: Record<string, { label: string; cls: string }> = {
 };
 
 function VisitsPage() {
+  useRoleGuard("seeker");
   const visits = useStore((s) => s.visits);
   const listings = useStore((s) => s.listings);
 

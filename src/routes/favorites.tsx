@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useRoleGuard } from "@/lib/user-state";
 import { AppShell, PageHeader, ScoreBadge } from "@/components/AppShell";
 import { useStore } from "@/lib/store";
 import { api } from "@/lib/api";
@@ -10,6 +11,7 @@ export const Route = createFileRoute("/favorites")({
 });
 
 function FavoritesPage() {
+  useRoleGuard("seeker");
   const favorites = useStore((s) => s.favorites);
   const listings = useStore((s) => s.listings);
   const items = listings.filter((l) => favorites.includes(l.id));
