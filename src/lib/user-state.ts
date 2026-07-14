@@ -1,4 +1,5 @@
-import { useSyncExternalStore } from "react";
+import { useSyncExternalStore, useEffect } from "react";
+import { useNavigate } from "@tanstack/react-router";
 
 export type Role = "seeker" | "landlord";
 export type SessionState = "in" | "out";
