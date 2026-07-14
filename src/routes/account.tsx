@@ -9,6 +9,7 @@ export const Route = createFileRoute("/account")({
 });
 
 function AccountPage() {
+  useRoleGuard("landlord");
   const a = landlordAccount;
   return (
     <AppShell role="landlord">

@@ -17,6 +17,7 @@ const STATUS: Record<string, { label: string; cls: string }> = {
 };
 
 function VisitsPage() {
+  useRoleGuard("seeker");
   const visits = useStore((s) => s.visits);
   const listings = useStore((s) => s.listings);
 

@@ -12,6 +12,7 @@ export const Route = createFileRoute("/preferences")({
 const TYPES: SpaceType[] = ["Quarto", "Suite", "Quarto Partilhado", "Estúdio", "T1", "T2", "T3", "T4+"];
 
 function PreferencesPage() {
+  useRoleGuard("seeker");
   const [city, setCity] = useState(userContext.city);
   const [radius, setRadius] = useState(userContext.maxDistanceKm);
   const [types, setTypes] = useState<SpaceType[]>(userContext.spaceTypes);

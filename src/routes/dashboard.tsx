@@ -9,6 +9,7 @@ export const Route = createFileRoute("/dashboard")({
 });
 
 function Dashboard() {
+  useRoleGuard("landlord");
   const listings = useStore((s) => s.listings);
   const matches = useStore((s) => s.matches);
   const visits = useStore((s) => s.visits);

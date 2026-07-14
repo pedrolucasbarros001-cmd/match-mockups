@@ -10,6 +10,7 @@ export const Route = createFileRoute("/favorites")({
 });
 
 function FavoritesPage() {
+  useRoleGuard("seeker");
   const favorites = useStore((s) => s.favorites);
   const listings = useStore((s) => s.listings);
   const items = listings.filter((l) => favorites.includes(l.id));

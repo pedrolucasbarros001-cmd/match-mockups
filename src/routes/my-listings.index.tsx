@@ -18,6 +18,7 @@ const LIFE: Record<string, { label: string; cls: string }> = {
 };
 
 function MyListings() {
+  useRoleGuard("landlord");
   const listings = useStore((s) => s.listings);
 
   return (
