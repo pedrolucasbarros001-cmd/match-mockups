@@ -63,7 +63,7 @@ export function useRoleGuard(expected: Role) {
   const nav = useNavigate();
   useEffect(() => {
     if (role !== expected) {
-      nav({ to: expected === "seeker" ? "/dashboard" : "/explore", replace: true });
+      nav({ to: role === "landlord" ? "/dashboard" : "/explore", replace: true });
     }
   }, [role, expected, nav]);
   return role === expected;
