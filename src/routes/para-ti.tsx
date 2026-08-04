@@ -10,7 +10,7 @@ export const Route = createFileRoute("/para-ti")({
 
 function ParaTi() {
   return (
-    <AppShell>
+    <AppShell width="wide">
       <PageHeader title="Para Ti" right={<Sparkles className="size-5 text-primary" />} />
       <div className="space-y-6 px-4 pt-4">
         {recommendationSections.map((sec) => (

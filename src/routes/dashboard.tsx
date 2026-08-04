@@ -26,10 +26,10 @@ function Dashboard() {
   const firstName = profile.name ? profile.name.split(" ")[0] : "";
 
   return (
-    <AppShell role="landlord">
+    <AppShell role="landlord" width="wide">
       <PageHeader title={firstName ? `Olá, ${firstName} 👋` : "Olá 👋"} />
       <div className="px-4 pt-4">
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-3 gap-2 lg:gap-4">
           <Stat n={activeListings} label="Anúncios ativos" />
           <Stat n={candidatesPending} label="Candidatos" />
           <Stat n={visitsPending} label="Visitas p/ confirmar" />

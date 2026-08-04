@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Search, Building2, Check, ArrowRight } from "lucide-react";
-import { PageHeader } from "@/components/AppShell";
+import { PageHeader, PageShell } from "@/components/AppShell";
 import { useRole, setRole, type Role } from "@/lib/user-state";
 import { useStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
@@ -25,7 +25,7 @@ function SwitchUserPage() {
   };
 
   return (
-    <div className="mx-auto min-h-svh w-full max-w-[440px] bg-background">
+    <PageShell width="list">
       <PageHeader title="Trocar de utilizador" back="/profile" />
       <div className="px-5 pt-5">
         <p className="text-sm text-muted-foreground">
@@ -63,7 +63,7 @@ function SwitchUserPage() {
           </ol>
         </div>
       </div>
-    </div>
+    </PageShell>
   );
 }
 

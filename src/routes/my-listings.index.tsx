@@ -37,7 +37,7 @@ function MyListings() {
   };
 
   return (
-    <AppShell role="landlord">
+    <AppShell role="landlord" width="wide">
       <PageHeader title="Anúncios" right={
         <Link to="/publish" className="inline-flex h-10 items-center gap-1 rounded-pill bg-primary px-3 text-sm font-semibold text-primary-foreground">
           <Plus className="size-4" /> Novo
@@ -58,7 +58,7 @@ function MyListings() {
           </div>
         </div>
       ) : (
-        <ul className="flex flex-col gap-3 p-4">
+        <ul className="grid gap-3 p-4 md:grid-cols-2 xl:grid-cols-3">
           {listings.map((l) => {
             const s = LIFE[l.lifecycle] ?? LIFE.published;
             // Só é seguro fechar aqui diretamente se não houver ninguém em negociação —

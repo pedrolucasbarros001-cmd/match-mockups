@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate, useParams } from "@tanstack/react-router";
 import { useState } from "react";
-import { ScoreBadge, VerifiedBadge, ActiveNowBadge } from "@/components/AppShell";
+import { ScoreBadge, VerifiedBadge, ActiveNowBadge, PageShell } from "@/components/AppShell";
 import { Toast, useToast } from "@/components/Toast";
 import { ChevronLeft, ChevronRight, MapPin, Calendar, Users, PawPrint, Cigarette, MoreHorizontal, Heart, X, Star, Wifi, ChefHat, Shirt, Wind, Car, MessageCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -59,7 +59,7 @@ function DetailPage() {
   };
 
   return (
-    <div className="mx-auto min-h-svh w-full max-w-[440px] bg-background pb-28">
+    <PageShell width="list" className="pb-28">
       <div className="relative aspect-[4/3] w-full bg-muted">
         <img src={listing.photos[photoIdx]} alt={listing.title} className="h-full w-full object-cover" />
         <div className="absolute inset-x-3 top-3 flex gap-1">
@@ -162,8 +162,8 @@ function DetailPage() {
         </div>
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border glass-light pb-safe">
-        <div className="mx-auto flex max-w-[440px] items-center justify-around px-6 py-3">
+      <div className="fixed inset-x-0 bottom-0 z-30 md:pl-[76px] lg:pl-[240px] border-t border-border glass-light pb-safe">
+        <div className="mx-auto flex max-w-[440px] md:max-w-[760px] items-center justify-around px-6 py-3">
           <button onClick={() => nav({ to: "/explore" })} className="grid size-14 place-items-center rounded-pill border-2 border-nope/25 bg-surface text-nope shadow-action transition active:scale-90">
             <X className="size-7" strokeWidth={3} />
           </button>
@@ -186,7 +186,7 @@ function DetailPage() {
         </div>
       </div>
       <Toast msg={msg} />
-    </div>
+    </PageShell>
   );
 }
 

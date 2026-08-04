@@ -60,7 +60,7 @@ function Candidates() {
   const ignore = (m: Match) => store.setMatchState(m.id, "closed");
 
   return (
-    <AppShell role="landlord">
+    <AppShell role="landlord" width="wide">
       <PageHeader title="Candidatos" back="/dashboard" />
 
       {all.length === 0 ? (
@@ -127,7 +127,7 @@ function Candidates() {
           {items.length === 0 ? (
             <p className="p-8 text-center text-sm text-muted-foreground">Nada em "{sub.label}" para este anúncio.</p>
           ) : (
-            <ul className="flex flex-col gap-3 p-4">
+            <ul className="grid gap-3 p-4 md:grid-cols-2 xl:grid-cols-3">
               {items.map((m) => {
                 const c = m.candidate;
                 const cross = crossListing(m);

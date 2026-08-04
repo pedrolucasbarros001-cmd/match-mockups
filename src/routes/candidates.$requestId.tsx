@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate, useParams } from "@tanstack/react-router";
 import { useMemo } from "react";
-import { PageHeader, ScoreBadge } from "@/components/AppShell";
+import { PageHeader, ScoreBadge, PageShell } from "@/components/AppShell";
 import { priceLabel } from "@/lib/mock-data";
 import { useStore, store } from "@/lib/store";
 import { Check, X, Phone, Mail, Shield, User } from "lucide-react";
@@ -51,7 +51,7 @@ function CandidateDetail() {
   };
 
   return (
-    <div className="mx-auto min-h-svh w-full max-w-[440px] bg-background pb-32">
+    <PageShell width="list" className="pb-32">
       <PageHeader title="Perfil do candidato" back="/candidates" />
       <div className="px-5 pt-6">
         <div className="flex flex-col items-center text-center">
@@ -134,8 +134,8 @@ function CandidateDetail() {
         <p className="mt-2 text-center text-xs text-muted-foreground">Contactos partilhados após aceitares.</p>
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border glass-light pb-safe">
-        <div className="mx-auto flex max-w-[440px] gap-2 p-3">
+      <div className="fixed inset-x-0 bottom-0 z-30 md:pl-[76px] lg:pl-[240px] border-t border-border glass-light pb-safe">
+        <div className="mx-auto flex max-w-[440px] md:max-w-[760px] gap-2 p-3">
           {pending ? (
             <>
               <button onClick={() => ignore()} className="inline-flex h-12 flex-1 items-center justify-center gap-1.5 rounded-lg border border-border text-sm font-semibold text-danger">
@@ -156,7 +156,7 @@ function CandidateDetail() {
           )}
         </div>
       </div>
-    </div>
+    </PageShell>
   );
 }
 

@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useRoleGuard } from "@/lib/user-state";
 import { useState } from "react";
-import { PageHeader } from "@/components/AppShell";
+import { PageHeader, PageShell } from "@/components/AppShell";
 import { ChevronLeft, ChevronRight, Camera, Check, Info, Crown, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { SpaceType, Listing, ListingKind } from "@/lib/mock-data";
@@ -218,7 +218,7 @@ function WizardInner({ nav, profile }: { nav: ReturnType<typeof useNavigate>; pr
   const toggleAmenity = (a: string) => setAmenities(amenities.includes(a) ? amenities.filter((x) => x !== a) : [...amenities, a]);
 
   return (
-    <div className="mx-auto flex min-h-svh w-full max-w-[440px] flex-col bg-background">
+    <PageShell width="list" className="flex flex-col">
       <PageHeader title={`Publicar · ${STEPS[step]?.label ?? ""}`} back="/my-listings" />
       <div className="px-4 pt-3">
         <div className="flex gap-1.5">
@@ -418,7 +418,7 @@ function WizardInner({ nav, profile }: { nav: ReturnType<typeof useNavigate>; pr
           </button>
         </div>
       </div>
-    </div>
+    </PageShell>
   );
 }
 
