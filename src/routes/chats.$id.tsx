@@ -164,7 +164,7 @@ function ChatRoom() {
       <Link
         to="/explore/$id"
         params={{ id: listing.id }}
-        className="sticky top-14 z-20 mx-3 mt-3 flex items-center gap-3 rounded-xl border border-border bg-surface p-3 shadow-card"
+        className="sticky top-14 md:top-0 z-20 mx-3 mt-3 flex items-center gap-3 rounded-xl border border-border bg-surface p-3 shadow-card"
       >
         <img src={listing.photos[0]} className="size-12 rounded-md object-cover" alt="" />
         <div className="min-w-0 flex-1">
