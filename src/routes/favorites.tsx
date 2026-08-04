@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useRoleGuard } from "@/lib/user-state";
 import { AppShell, PageHeader, ScoreBadge } from "@/components/AppShell";
+import { priceLabel } from "@/lib/mock-data";
 import { useStore } from "@/lib/store";
 import { api } from "@/lib/api";
 import { Heart } from "lucide-react";
@@ -40,7 +41,7 @@ function FavoritesPage() {
                     <span className="truncate font-display text-sm font-bold">{l.title}</span>
                     <ScoreBadge score={l.owner.score} />
                   </div>
-                  <div className="font-num text-xs text-muted-foreground">€{l.price}/mês</div>
+                  <div className="font-num text-xs text-muted-foreground">{priceLabel(l)}</div>
                 </div>
               </Link>
             </li>

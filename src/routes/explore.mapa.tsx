@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { AppShell, PageHeader, ScoreBadge } from "@/components/AppShell";
-import { listings, mapPins } from "@/lib/mock-data";
+import { listings, mapPins, priceLabel, priceAmount } from "@/lib/mock-data";
 import { LayoutGrid, MapPin } from "lucide-react";
 
 export const Route = createFileRoute("/explore/mapa")({
@@ -40,7 +40,7 @@ function MapaPage() {
               className={"absolute -translate-x-1/2 -translate-y-full transition " + (isSel ? "scale-110 z-10" : "")}
             >
               <div className={"flex items-center gap-1 rounded-pill px-2.5 py-1 font-num text-xs font-bold shadow-lg " + (isSel ? "bg-primary text-white" : "bg-white text-foreground")}>
-                <MapPin className="size-3" /> €{l.price}
+                <MapPin className="size-3" /> {priceAmount(l.price)}
               </div>
             </button>
           );
@@ -55,7 +55,7 @@ function MapaPage() {
               <span className="truncate font-display font-bold">{active.title}</span>
               <ScoreBadge score={active.owner.score} />
             </div>
-            <div className="font-num text-sm text-muted-foreground">€{active.price}/mês · {active.neighborhood}</div>
+            <div className="font-num text-sm text-muted-foreground">{priceLabel(active)} · {active.neighborhood}</div>
             <div className="mt-1 text-xs text-muted-foreground">{active.distanceM} m · {active.type}</div>
           </div>
         </Link>

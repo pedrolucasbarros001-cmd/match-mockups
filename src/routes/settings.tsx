@@ -1,8 +1,8 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { PageHeader } from "@/components/AppShell";
 import { Bell, Globe, Lock, FileText, Trash2, HelpCircle, ChevronRight, Sliders, Crown, UserCog, RefreshCcw } from "lucide-react";
 import { useRole, setRole, setSession } from "@/lib/user-state";
-import { store } from "@/lib/store";
+import { reseed } from "@/lib/seed";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/settings")({
@@ -15,8 +15,8 @@ function SettingsPage() {
   const role = useRole();
 
   const resetData = () => {
-    if (confirm("Apagar todos os dados locais? (anúncios, matches, chats, visitas, notificações)")) {
-      store.reset();
+    if (confirm("Repor os dados de demonstração? (anúncios, matches, chats, visitas, notificações)")) {
+      reseed();
       nav({ to: "/splash" });
     }
   };
@@ -25,23 +25,26 @@ function SettingsPage() {
     <div className="mx-auto min-h-svh w-full max-w-[440px] bg-background pb-10">
       <PageHeader title="Definições" back="/profile" />
       <div className="px-4 pt-4">
-        <Group title="Modo (teste)">
+        <Group title="Utilizador (teste)">
           <div className="p-3">
             <div className="mb-2 flex items-center gap-2 text-xs text-muted-foreground">
-              <UserCog className="size-4" /> Alterna entre inquilino e senhorio para testar cada fluxo.
+              <UserCog className="size-4" /> Troca entre inquilino e senhorio para testar cada fluxo.
             </div>
             <div className="grid grid-cols-2 gap-2">
               <button
-                onClick={() => setRole("seeker")}
-                className={cn("h-11 rounded-lg border text-sm font-semibold transition",
+                onClick={() => { setRole("seeker"); nav({ to: "/explore" }); }}
+                className={cn("h-11 rounded-lg border text-sm font-semibold transition active:scale-95",
                   role === "seeker" ? "border-primary bg-primary text-primary-foreground" : "border-border bg-surface")}
-              >Hóspede</button>
+              >Inquilino</button>
               <button
-                onClick={() => setRole("landlord")}
-                className={cn("h-11 rounded-lg border text-sm font-semibold transition",
+                onClick={() => { setRole("landlord"); nav({ to: "/dashboard" }); }}
+                className={cn("h-11 rounded-lg border text-sm font-semibold transition active:scale-95",
                   role === "landlord" ? "border-primary bg-primary text-primary-foreground" : "border-border bg-surface")}
               >Senhorio</button>
             </div>
+            <Link to="/switch-user" className="mt-2 flex h-10 items-center justify-center rounded-lg border border-border text-xs font-semibold text-primary">
+              Ver ecrã de troca com o guia de teste →
+            </Link>
           </div>
         </Group>
 

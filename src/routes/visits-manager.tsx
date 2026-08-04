@@ -81,6 +81,15 @@ function VisitsManager() {
                     </button>
                   </div>
                 )}
+                {/* Depois de confirmada e realizada: fecha o ciclo e destrava "Fechar este espaço" no chat. */}
+                {v.status === "confirmed" && (
+                  <button
+                    onClick={() => api.setVisitStatus(v.id, "done")}
+                    className="mt-3 flex h-10 w-full items-center justify-center gap-1 rounded-pill bg-primary text-sm font-semibold text-white"
+                  >
+                    <Check className="size-4" /> Marcar visita como concluída
+                  </button>
+                )}
               </li>
             );
           })}

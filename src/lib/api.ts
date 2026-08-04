@@ -4,7 +4,7 @@
 // TODO(backend): substituir cada implementação pela chamada HTTP correspondente.
 
 import { store, getState } from "./store";
-import type { Feedback, Preferences, Profile } from "./store";
+import type { Preferences, Profile } from "./store";
 import type { Listing, Match, MatchState, Chat, Visit, VisitState, Notification } from "./mock-data";
 
 const asAsync = <T,>(v: T): Promise<T> => Promise.resolve(v);
@@ -31,6 +31,8 @@ export const api = {
   sendInterest: (listingId: string, message?: string) => asAsync(store.sendInterest(listingId, message)),
   // TODO(backend): POST /api/interests/pass
   passListing: (listingId: string) => asAsync(store.passListing(listingId)),
+  unpassListing: (listingId: string) => asAsync(store.unpassListing(listingId)),
+  resetPassed: () => asAsync(store.resetPassed()),
   // TODO(backend): PATCH /api/matches/:id/state
   setMatchState: (matchId: string, next: MatchState) => asAsync(store.setMatchState(matchId, next)),
 
@@ -51,10 +53,21 @@ export const api = {
   // TODO(backend): PATCH /api/notifications/read-all
   markAllNotificationsRead: () => asAsync(store.markAllNotificationsRead()),
 
-  // ---------- Feedback ----------
-  // TODO(backend): POST /api/feedback
-  saveFeedback: (matchId: string, rating: number, comment: string) =>
-    asAsync(store.saveFeedback(matchId, rating, comment)),
+  // ---------- Reviews (duplo-cego) ----------
+  // TODO(backend): POST /api/matches/:id/reviews
+  submitReview: (matchId: string, by: "seeker" | "landlord", rating: number, tags: string[], comment: string) =>
+    asAsync(store.submitReview(matchId, by, rating, tags, comment)),
+
+  // ---------- Fecho de negócio (arrendamento ou venda) ----------
+  // TODO(backend): POST /api/matches/:id/close
+  closeListing: (matchId: string, reason: import("./mock-data").CloseReason, details?: { moveIn: string; months: number | null; amount: number }) =>
+    asAsync(store.closeListing(matchId, reason, details)),
+  // TODO(backend): POST /api/deals/:id/confirm
+  confirmDealSeeker: (dealId: string) => asAsync(store.confirmDealSeeker(dealId)),
+
+  // ---------- Plano ----------
+  // TODO(backend): POST /api/billing/plan (Stripe fica para depois)
+  setPlan: (plan: "free" | "pro") => asAsync(store.setPlan(plan)),
 
   // ---------- Profile / Preferences ----------
   // TODO(backend): PATCH /api/me
@@ -66,4 +79,4 @@ export const api = {
   reset: () => asAsync(store.reset()),
 };
 
-export type { Listing, Match, MatchState, Chat, Visit, VisitState, Notification, Feedback, Preferences, Profile };
+export type { Listing, Match, MatchState, Chat, Visit, VisitState, Notification, Preferences, Profile };

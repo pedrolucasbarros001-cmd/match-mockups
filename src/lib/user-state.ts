@@ -62,8 +62,11 @@ export function useRoleGuard(expected: Role) {
   const role = useRole();
   const nav = useNavigate();
   useEffect(() => {
-    if (role !== expected) {
-      nav({ to: role === "landlord" ? "/dashboard" : "/explore", replace: true });
+    // Lê o role real no momento do efeito — o valor do hook no primeiro render
+    // pós-SSR ainda é o snapshot do servidor ("seeker") e redirecionava mal.
+    const actual = getRole();
+    if (actual !== expected) {
+      nav({ to: actual === "landlord" ? "/dashboard" : "/explore", replace: true });
     }
   }, [role, expected, nav]);
   return role === expected;

@@ -2,7 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useRoleGuard } from "@/lib/user-state";
 import { AppShell, PageHeader } from "@/components/AppShell";
 import { Plus, Building2, MoreVertical } from "lucide-react";
-import { useStore } from "@/lib/store";
+import { priceLabel } from "@/lib/mock-data";
+import { useStore, canPublishAnother } from "@/lib/store";
 import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
@@ -14,6 +15,7 @@ export const Route = createFileRoute("/my-listings/")({
 const LIFE: Record<string, { label: string; cls: string }> = {
   draft: { label: "Rascunho", cls: "bg-muted text-muted-foreground" },
   published: { label: "Publicado", cls: "bg-success/15 text-success" },
+  paused: { label: "Pausado", cls: "bg-warning/15 text-warning" },
   negotiating: { label: "Em negociação", cls: "bg-warning/15 text-warning" },
   rented: { label: "Arrendado", cls: "bg-primary/15 text-primary" },
 };
@@ -21,6 +23,18 @@ const LIFE: Record<string, { label: string; cls: string }> = {
 function MyListings() {
   useRoleGuard("landlord");
   const listings = useStore((s) => s.listings);
+  const matches = useStore((s) => s.matches);
+  const allowNewActive = useStore((s) => canPublishAnother(s));
+
+  // P → Q: reativar só é permitido se o plano ainda tiver margem — o mesmo
+  // guard que bloqueia o wizard em /publish, aplicado aqui sem passo manual.
+  const reactivate = (id: string) => {
+    if (!allowNewActive) {
+      alert("Atingiste o limite do plano Free (1 anúncio ativo). Passa ao Pro em Conta e plano, ou pausa outro anúncio primeiro.");
+      return;
+    }
+    api.updateListing(id, { lifecycle: "published" });
+  };
 
   return (
     <AppShell role="landlord">
@@ -47,6 +61,12 @@ function MyListings() {
         <ul className="flex flex-col gap-3 p-4">
           {listings.map((l) => {
             const s = LIFE[l.lifecycle] ?? LIFE.published;
+            // Só é seguro fechar aqui diretamente se não houver ninguém em negociação —
+            // havendo candidato, o fecho tem de passar pelo wizard (senão o seeker
+            // nunca é avisado e a dupla confirmação fica por fazer).
+            const hasActiveMatch = matches.some(
+              (m) => m.listingId === l.id && !["closed", "rental_confirmed"].includes(m.state),
+            );
             return (
               <li key={l.id} className="overflow-hidden rounded-2xl border border-border bg-surface">
                 <div className="flex gap-3 p-3">
@@ -55,7 +75,7 @@ function MyListings() {
                     <div className="flex items-start justify-between gap-2">
                       <Link to="/explore/$id" params={{ id: l.id }} className="min-w-0 flex-1">
                         <div className="truncate font-display text-base font-bold">{l.title}</div>
-                        <div className="font-num text-sm text-muted-foreground">€{l.price}/mês · {l.city}</div>
+                        <div className="font-num text-sm text-muted-foreground">{priceLabel(l)} · {l.city}</div>
                       </Link>
                       <button className="grid size-8 shrink-0 place-items-center rounded-pill text-muted-foreground hover:bg-muted">
                         <MoreVertical className="size-4" />
@@ -69,11 +89,12 @@ function MyListings() {
                 </div>
                 <div className="flex divide-x divide-border border-t border-border text-xs font-semibold">
                   <Link to="/candidates" className="flex-1 py-2.5 text-center text-primary">Candidatos</Link>
-                  {l.lifecycle === "rented" ? (
-                    <button
-                      onClick={() => api.updateListing(l.id, { lifecycle: "published" })}
-                      className="flex-1 py-2.5 text-center text-primary"
-                    >Reativar</button>
+                  {l.lifecycle === "draft" ? (
+                    <Link to="/publish" className="flex-1 py-2.5 text-center text-primary">Continuar anúncio</Link>
+                  ) : l.lifecycle === "rented" || l.lifecycle === "paused" ? (
+                    <button onClick={() => reactivate(l.id)} className="flex-1 py-2.5 text-center text-primary">Reativar</button>
+                  ) : hasActiveMatch ? (
+                    <Link to="/matches" className="flex-1 py-2.5 text-center text-muted-foreground">Fechar pela conversa</Link>
                   ) : (
                     <button
                       onClick={() => api.updateListing(l.id, { lifecycle: "rented" })}

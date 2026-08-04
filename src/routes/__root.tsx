@@ -11,6 +11,7 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { seedIfEmpty } from "../lib/seed";
 
 function NotFoundComponent() {
   return (
@@ -76,7 +77,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
+      // viewport-fit=cover + user-scalable=no: no app nativo a WebView ocupa o
+      // ecrã todo, por isso precisamos das safe-area-inset e sem zoom por gesto.
+      {
+        name: "viewport",
+        content: "width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no",
+      },
       { title: "HomeMatch — Encontra a tua casa" },
       { name: "description", content: "Swipe, dá like e fala diretamente com proprietários. Encontrar onde viver nunca foi tão simples." },
       { property: "og:title", content: "HomeMatch" },
@@ -116,6 +122,11 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+
+  // Dados de demonstração em dev — sem isto todos os ecrãs ficam vazios.
+  useEffect(() => {
+    if (import.meta.env.DEV) seedIfEmpty();
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>

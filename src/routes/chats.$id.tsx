@@ -1,12 +1,12 @@
-import { createFileRoute, Link, useParams } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
-import { nextActionFor } from "@/lib/mock-data";
+import { createFileRoute, Link, useNavigate, useParams } from "@tanstack/react-router";
+import { useState } from "react";
+import { nextActionFor, priceLabel } from "@/lib/mock-data";
 import { NegotiationTimeline } from "@/components/NegotiationTimeline";
-import { ChevronLeft, Send, MoreVertical, Calendar, Check, Lock, RefreshCcw, X, MessageCircle } from "lucide-react";
+import { ChevronLeft, Send, MoreVertical, Calendar, Check, Star, User, X, MessageCircle, Hourglass } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useStore } from "@/lib/store";
+import { useStore, store } from "@/lib/store";
 import { api } from "@/lib/api";
-import { store } from "@/lib/store";
+import { useRole } from "@/lib/user-state";
 
 export const Route = createFileRoute("/chats/$id")({
   head: () => ({ meta: [{ title: "Chat — HomeMatch" }] }),
@@ -15,19 +15,24 @@ export const Route = createFileRoute("/chats/$id")({
 
 function ChatRoom() {
   const { id } = useParams({ from: "/chats/$id" });
+  const nav = useNavigate();
+  const role = useRole();
   const chat = useStore((s) => s.chats.find((c) => c.id === id));
   const listing = useStore((s) => (chat ? s.listings.find((l) => l.id === chat.listingId) : undefined));
   const match = useStore((s) => (chat ? s.matches.find((m) => m.chatId === chat.id) : undefined));
+  const deal = useStore((s) => (match ? s.deals.find((d) => d.matchId === match.id) : undefined));
+  // Visita mais recente deste match — é ela que decide se há "visita feita" por marcar.
+  const visit = useStore((s) => (match ? s.visits.find((v) => v.matchId === match.id) : undefined));
 
   const [text, setText] = useState("");
   const [showVisitSheet, setShowVisitSheet] = useState(false);
-  const [showConfirmSheet, setShowConfirmSheet] = useState(false);
-  const [landlordConfirmed, setLandlordConfirmed] = useState(false);
-  const [tenantConfirmed, setTenantConfirmed] = useState(false);
 
   const state = match?.state ?? "conversation";
+  const kind = listing?.kind ?? "rent";
+  const sale = kind === "sale";
   const rented = state === "rental_confirmed";
-  const action = useMemo(() => nextActionFor(state), [state]);
+  const archived = rented || state === "closed";
+  const action = nextActionFor(state, role === "landlord" ? "landlord" : "tenant", kind);
 
   if (!chat || !listing) {
     return (
@@ -44,8 +49,14 @@ function ChatRoom() {
     );
   }
 
+  // Cabeçalho mostra sempre a OUTRA PARTE: seeker vê o senhorio, landlord vê o candidato.
+  const other =
+    role === "landlord"
+      ? { name: match?.candidate?.name || "Candidato", avatar: match?.candidate?.avatar || "" }
+      : { name: listing.owner.name, avatar: listing.owner.avatar };
+
   const send = async () => {
-    if (!text.trim() || rented) return;
+    if (!text.trim() || archived) return;
     await api.sendMessage(chat.id, text.trim());
     setText("");
   };
@@ -55,80 +66,102 @@ function ChatRoom() {
     await api.proposeVisit(listing.id, match.id, slot);
     setShowVisitSheet(false);
   };
-  const markVisitDone = () => match && store.setMatchState(match.id, "visit_done");
-  const doConfirm = (side: "landlord" | "tenant") => {
-    const nextLL = side === "landlord" ? true : landlordConfirmed;
-    const nextTT = side === "tenant" ? true : tenantConfirmed;
-    setLandlordConfirmed(nextLL);
-    setTenantConfirmed(nextTT);
-    if (nextLL && nextTT && match) {
-      store.setMatchState(match.id, "rental_confirmed");
-      store.updateListing(listing.id, { lifecycle: "rented" });
-      store.sendMessage(chat.id, "Arrendamento confirmado ✅", "me");
-      setShowConfirmSheet(false);
-    }
+  const markVisitDone = () => {
+    // Passa sempre pelo mesmo caminho que /visits-manager: setVisitStatus já
+    // empurra o match para "visit_done" automaticamente (ver store.ts).
+    if (!visit) return;
+    store.setVisitStatus(visit.id, "done");
+    store.sendMessage(chat.id, "Visita marcada como realizada ✅", "them");
   };
-  const reactivate = () => {
-    if (!match) return;
-    store.setMatchState(match.id, "conversation");
-    store.updateListing(listing.id, { lifecycle: "published" });
-    store.sendMessage(chat.id, "O anúncio foi reativado. Continuamos onde parámos.", "them");
-    setLandlordConfirmed(false);
-    setTenantConfirmed(false);
+  const confirmAsSeeker = () => {
+    if (!deal) return;
+    store.confirmDealSeeker(deal.id);
+    store.sendMessage(chat.id, sale ? "Proposta confirmada pelos dois lados ✅" : "Arrendamento confirmado pelos dois lados ✅", "them");
   };
 
   return (
     <div className="mx-auto flex min-h-svh w-full max-w-[440px] flex-col bg-background">
-      <header className="sticky top-0 z-30 flex items-center gap-2 border-b border-border bg-surface/95 px-2 py-2 backdrop-blur">
+      <div className="sticky top-0 z-30 h-safe-top glass-light" />
+      <header className="sticky top-[env(safe-area-inset-top,0px)] z-30 flex items-center gap-2 border-b border-border glass-light px-2 py-2">
         <Link to="/matches" className="grid size-10 place-items-center rounded-pill hover:bg-muted"><ChevronLeft className="size-5" /></Link>
-        <img src={listing.owner.avatar} className="size-10 rounded-pill object-cover" alt="" />
+        {other.avatar ? (
+          <img src={other.avatar} className="size-10 rounded-pill object-cover" alt="" />
+        ) : (
+          <div className="grid size-10 place-items-center rounded-pill bg-muted text-muted-foreground"><User className="size-5" /></div>
+        )}
         <div className="min-w-0 flex-1">
-          <div className="truncate font-display text-base font-bold">{listing.owner.name}</div>
+          <div className="truncate font-display text-base font-bold">{other.name}</div>
           <div className="truncate text-xs text-muted-foreground">{listing.title}</div>
         </div>
         <button className="grid size-10 place-items-center rounded-pill hover:bg-muted"><MoreVertical className="size-5" /></button>
       </header>
 
-      <NegotiationTimeline state={state} />
+      <NegotiationTimeline state={state} kind={kind} />
 
-      {!rented ? (
+      {/* Banner "Próxima ação" — texto e botão mudam por role, estado e tipo de negócio. */}
+      {rented ? (
+        <div className="border-b border-border bg-success/10 px-4 py-3 text-center">
+          <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-success">
+            <Check className="size-3.5" /> {sale ? "Proposta confirmada pelos dois lados." : "Arrendamento confirmado pelos dois lados."}
+          </div>
+          {match && (
+            <Link to="/feedback/$matchId" params={{ matchId: match.id }} className="mt-1 flex items-center justify-center gap-1 text-xs font-bold text-primary">
+              <Star className="size-3" /> Deixar avaliação →
+            </Link>
+          )}
+        </div>
+      ) : (
         <div className="flex items-center justify-between gap-2 border-b border-border bg-primary-soft px-4 py-2.5">
           <div className="min-w-0">
             <div className="text-[10px] font-bold uppercase tracking-wide text-primary/80">Próxima ação</div>
             <div className="truncate text-sm font-semibold text-foreground">{action}</div>
           </div>
-          {(state === "conversation" || state === "interested") && (
+          {state === "interested" && role === "landlord" && (
+            <Link to="/candidates" className="inline-flex items-center gap-1 rounded-pill bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground">
+              Responder
+            </Link>
+          )}
+          {state === "interested" && role === "seeker" && (
+            <span className="inline-flex items-center gap-1 rounded-pill bg-muted px-3 py-1.5 text-xs font-bold text-muted-foreground">
+              <Hourglass className="size-3.5" /> Aguardar
+            </span>
+          )}
+          {state === "conversation" && (
             <button onClick={() => setShowVisitSheet(true)} className="inline-flex items-center gap-1 rounded-pill bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground">
-              <Calendar className="size-3.5" /> Propor
+              <Calendar className="size-3.5" /> Propor visita
             </button>
           )}
-          {state === "visit_scheduled" && (
+          {state === "visit_scheduled" && role === "landlord" && (
             <button onClick={markVisitDone} className="inline-flex items-center gap-1 rounded-pill bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground">
               <Check className="size-3.5" /> Visita feita
             </button>
           )}
-          {state === "visit_done" && (
-            <button onClick={() => setShowConfirmSheet(true)} className="inline-flex items-center gap-1 rounded-pill bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground">
+          {state === "visit_done" && role === "landlord" && (
+            <button
+              onClick={() => nav({ to: "/rental-close/$chatId", params: { chatId: chat.id } })}
+              className="inline-flex items-center gap-1 rounded-pill bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground"
+            >
+              <Check className="size-3.5" /> {sale ? "Registar proposta" : "Fechar este espaço"}
+            </button>
+          )}
+          {state === "negotiating" && role === "seeker" && deal && !deal.seekerConfirmed && (
+            <button onClick={confirmAsSeeker} className="inline-flex items-center gap-1 rounded-pill bg-success px-3 py-1.5 text-xs font-bold text-white">
               <Check className="size-3.5" /> Confirmar
             </button>
           )}
         </div>
-      ) : (
-        <div className="border-b border-border bg-muted px-4 py-3 text-center">
-          <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
-            <Lock className="size-3.5" /> Este espaço foi arrendado. A conversa fica no histórico.
-          </div>
-          <button onClick={reactivate} className="mt-1.5 inline-flex items-center gap-1 text-xs font-bold text-primary">
-            <RefreshCcw className="size-3" /> Reativar
-          </button>
-        </div>
       )}
 
-      <Link to="/explore/$id" params={{ id: listing.id }} className="mx-3 mt-3 flex items-center gap-3 rounded-xl border border-border bg-surface p-3">
+      {/* Card do anúncio — sticky, nunca desaparece no scroll. */}
+      <Link
+        to="/explore/$id"
+        params={{ id: listing.id }}
+        className="sticky top-14 z-20 mx-3 mt-3 flex items-center gap-3 rounded-xl border border-border bg-surface p-3 shadow-card"
+      >
         <img src={listing.photos[0]} className="size-12 rounded-md object-cover" alt="" />
         <div className="min-w-0 flex-1">
           <div className="truncate font-display text-sm font-bold">{listing.title}</div>
-          <div className="font-num text-xs text-muted-foreground">€{listing.price}/mês · {listing.city}</div>
+          <div className="font-num text-xs text-muted-foreground">{priceLabel(listing)} · {listing.city}</div>
         </div>
       </Link>
 
@@ -136,27 +169,34 @@ function ChatRoom() {
         {chat.messages.length === 0 && (
           <div className="mx-auto rounded-xl bg-muted px-3 py-2 text-xs text-muted-foreground">Envia a primeira mensagem para iniciar a conversa.</div>
         )}
-        {chat.messages.map((m, i) => (
-          <div key={i} className={cn("flex flex-col", m.from === "me" ? "items-end" : "items-start")}>
-            <div className={cn(
-              "max-w-[78%] rounded-2xl px-4 py-2.5 text-[15px] leading-snug",
-              m.from === "me" ? "rounded-br-md bg-primary text-primary-foreground" : "rounded-bl-md bg-muted text-foreground",
-            )}>{m.text}</div>
-            <span className="mt-1 px-1 font-num text-[10px] text-muted-foreground">{m.at}</span>
-          </div>
-        ))}
-        {rented && match && (
-          <Link to="/feedback/$matchId" params={{ matchId: match.id }} className="mx-auto mt-3 inline-flex items-center gap-2 rounded-pill border border-border bg-surface px-4 py-2 text-xs font-semibold">
-            Deixar feedback →
-          </Link>
-        )}
+        {chat.messages.map((m, i) => {
+          // Mensagens de sistema: centradas, neutras.
+          if (m.text.endsWith("✅")) {
+            return (
+              <div key={i} className="mx-auto rounded-pill bg-muted px-3 py-1.5 text-center text-[11px] font-semibold text-muted-foreground">
+                {m.text}
+              </div>
+            );
+          }
+          // "me" no store = seeker. O landlord vê as bolhas espelhadas.
+          const mine = role === "landlord" ? m.from === "them" : m.from === "me";
+          return (
+            <div key={i} className={cn("flex flex-col", mine ? "items-end" : "items-start")}>
+              <div className={cn(
+                "max-w-[78%] rounded-2xl px-4 py-2.5 text-[15px] leading-snug",
+                mine ? "rounded-br-md bg-primary text-primary-foreground" : "rounded-bl-md bg-muted text-foreground",
+              )}>{m.text}</div>
+              <span className="mt-1 px-1 font-num text-[10px] text-muted-foreground">{m.at}</span>
+            </div>
+          );
+        })}
       </div>
 
-      <div className="sticky bottom-0 border-t border-border bg-surface px-3 py-3">
+      <div className="sticky bottom-0 border-t border-border bg-surface px-3 py-3 pb-safe">
         <form onSubmit={(e) => { e.preventDefault(); send(); }} className="flex items-center gap-2">
-          <input value={text} onChange={(e) => setText(e.target.value)} placeholder={rented ? "Conversa arquivada" : "Escreve uma mensagem…"} disabled={rented}
+          <input value={text} onChange={(e) => setText(e.target.value)} placeholder={archived ? "Conversa arquivada" : "Escreve uma mensagem…"} disabled={archived}
             className="h-12 flex-1 rounded-pill border border-border bg-background px-4 outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 disabled:bg-muted" />
-          <button type="submit" disabled={!text.trim() || rented} className="grid size-12 place-items-center rounded-pill bg-primary text-primary-foreground active:scale-95 disabled:bg-muted disabled:text-muted-foreground">
+          <button type="submit" disabled={!text.trim() || archived} className="grid size-12 place-items-center rounded-pill bg-primary text-primary-foreground active:scale-95 disabled:bg-muted disabled:text-muted-foreground">
             <Send className="size-5" />
           </button>
         </form>
@@ -178,32 +218,7 @@ function ChatRoom() {
           </div>
         </Sheet>
       )}
-
-      {showConfirmSheet && (
-        <Sheet onClose={() => setShowConfirmSheet(false)} title="Confirmar arrendamento">
-          <p className="text-sm text-muted-foreground">Os dois lados precisam de confirmar. O anúncio só sai do feed depois disso.</p>
-          <div className="mt-4 space-y-2">
-            <ConfirmRow label="Proprietário" ok={landlordConfirmed} onClick={() => doConfirm("landlord")} />
-            <ConfirmRow label="Inquilino" ok={tenantConfirmed} onClick={() => doConfirm("tenant")} />
-          </div>
-          {landlordConfirmed && tenantConfirmed && (
-            <div className="mt-3 rounded-xl bg-success/10 p-3 text-sm text-success">Ambos confirmaram. A finalizar…</div>
-          )}
-        </Sheet>
-      )}
     </div>
-  );
-}
-
-function ConfirmRow({ label, ok, onClick }: { label: string; ok: boolean; onClick: () => void }) {
-  return (
-    <button onClick={onClick} disabled={ok} className={cn(
-      "flex w-full items-center justify-between rounded-xl border px-4 py-3 text-left",
-      ok ? "border-success bg-success/10" : "border-border bg-surface",
-    )}>
-      <span className="font-semibold">{label}</span>
-      {ok ? <Check className="size-5 text-success" /> : <span className="text-xs font-semibold text-primary">Confirmar →</span>}
-    </button>
   );
 }
 
@@ -211,7 +226,7 @@ function Sheet({ title, children, onClose }: { title: string; children: React.Re
   return (
     <>
       <div onClick={onClose} className="fixed inset-0 z-40 bg-black/40" />
-      <div className="fixed inset-x-0 bottom-0 z-50 mx-auto max-w-[440px] rounded-t-3xl bg-surface p-5 pb-8">
+      <div className="fixed inset-x-0 bottom-0 z-50 mx-auto max-w-[440px] rounded-t-[28px] bg-surface p-5 pb-safe">
         <div className="mx-auto mb-3 h-1.5 w-12 rounded-pill bg-border" />
         <div className="flex items-center justify-between">
           <h2 className="font-display text-lg font-bold">{title}</h2>

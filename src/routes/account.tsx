@@ -2,7 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useRoleGuard } from "@/lib/user-state";
 import { AppShell, PageHeader } from "@/components/AppShell";
 import { landlordAccount } from "@/lib/mock-data";
-import { Crown, FileText, Receipt } from "lucide-react";
+import { useStore } from "@/lib/store";
+import { api } from "@/lib/api";
+import { Crown, FileText, Receipt, Check } from "lucide-react";
 
 export const Route = createFileRoute("/account")({
   head: () => ({ meta: [{ title: "Conta e Plano — HomeMatch" }] }),
@@ -12,6 +14,8 @@ export const Route = createFileRoute("/account")({
 function AccountPage() {
   useRoleGuard("landlord");
   const a = landlordAccount;
+  const plan = useStore((s) => s.plan);
+  const activeListings = useStore((s) => s.listings.filter((l) => l.lifecycle === "published" || l.lifecycle === "negotiating").length);
   return (
     <AppShell role="landlord">
       <PageHeader title="Conta e plano" back="/profile" />
@@ -29,11 +33,29 @@ function AccountPage() {
           <div className="flex items-center gap-2">
             <div className="grid size-10 place-items-center rounded-pill bg-primary text-white"><Crown className="size-5" /></div>
             <div className="flex-1">
-              <div className="font-display font-bold">Plano {a.plan}</div>
-              <div className="text-xs text-muted-foreground">{a.planLimit}</div>
+              <div className="font-display font-bold">Plano {plan === "pro" ? "Pro" : "Free"}</div>
+              <div className="text-xs text-muted-foreground">
+                {plan === "pro" ? `Anúncios ilimitados · ${activeListings} ativos` : `1 anúncio ativo · ${activeListings}/1 em uso`}
+              </div>
             </div>
           </div>
-          <button className="mt-3 h-11 w-full rounded-pill bg-primary font-semibold text-white">Fazer upgrade para Pro</button>
+          {plan === "free" ? (
+            <>
+              <ul className="mt-3 space-y-1.5 text-xs text-foreground/80">
+                <li className="flex items-center gap-1.5"><Check className="size-3.5 text-success" /> Anúncios ilimitados</li>
+                <li className="flex items-center gap-1.5"><Check className="size-3.5 text-success" /> Destaque na descoberta</li>
+                <li className="flex items-center gap-1.5"><Check className="size-3.5 text-success" /> Estatísticas de candidatos</li>
+              </ul>
+              {/* Pagamento real (Stripe) fica para depois — o upgrade é imediato no mock. */}
+              <button onClick={() => api.setPlan("pro")} className="mt-3 h-11 w-full rounded-pill bg-primary font-semibold text-white">
+                Fazer upgrade para Pro
+              </button>
+            </>
+          ) : (
+            <button onClick={() => api.setPlan("free")} className="mt-3 h-11 w-full rounded-pill border border-border bg-surface text-sm font-semibold">
+              Cancelar Pro (volta ao Free)
+            </button>
+          )}
         </section>
 
         <section>

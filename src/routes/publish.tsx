@@ -1,19 +1,41 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useRoleGuard } from "@/lib/user-state";
 import { useState } from "react";
 import { PageHeader } from "@/components/AppShell";
-import { ChevronLeft, ChevronRight, Camera, Check, Info } from "lucide-react";
+import { ChevronLeft, ChevronRight, Camera, Check, Info, Crown, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { SpaceType, Listing } from "@/lib/mock-data";
+import type { SpaceType, Listing, ListingKind } from "@/lib/mock-data";
+import { priceAmount, priceLabel, priceRange } from "@/lib/mock-data";
 import { api } from "@/lib/api";
-import { useStore } from "@/lib/store";
+import { useStore, canPublishAnother, qualityScore, trustScore, type Profile } from "@/lib/store";
 
 export const Route = createFileRoute("/publish")({
   head: () => ({ meta: [{ title: "Publicar — HomeMatch" }] }),
   component: PublishWizard,
 });
 
-const STEPS = ["Tipo", "Localização", "Características", "Fotos", "Preço", "Regras", "Disponibilidade", "Rever"] as const;
+/**
+ * Passos derivados do tipo de negócio: escolher "Venda" já implica que não há
+ * regras de convivência nem data de mudança — não se pergunta o que a escolha
+ * anterior já respondeu. A barra de progresso e a navegação leem daqui, por
+ * isso nunca podem discordar do que está realmente a ser mostrado.
+ */
+type StepKey = "kind" | "type" | "place" | "about" | "photos" | "price" | "rules" | "availability" | "review";
+
+function stepsFor(kind: ListingKind | null): { key: StepKey; label: string }[] {
+  const base: { key: StepKey; label: string }[] = [
+    { key: "kind", label: "Negócio" },
+    { key: "type", label: "Tipo" },
+    { key: "place", label: "Localização" },
+    { key: "about", label: "Características" },
+    { key: "photos", label: "Fotos" },
+    { key: "price", label: "Preço" },
+  ];
+  if (kind !== "sale") base.push({ key: "rules", label: "Regras" });
+  base.push({ key: "availability", label: kind === "sale" ? "Visitas" : "Disponibilidade" });
+  base.push({ key: "review", label: "Rever" });
+  return base;
+}
 
 const SPACE_TYPES: { key: SpaceType; desc: string; photos: string[] }[] = [
   { key: "Quarto", desc: "Um quarto numa casa partilhada.", photos: ["Quarto", "Cozinha", "Casa de banho"] },
@@ -28,11 +50,62 @@ const SPACE_TYPES: { key: SpaceType; desc: string; photos: string[] }[] = [
 
 const AMENITIES = ["Wi-Fi", "Cozinha", "Aquecimento", "Mobilado", "Varanda", "Elevador"];
 
+// ---- Anti-abuso (avisos em tempo real no step 2) ----
+
+/** Deteta tentativas de anunciar vários espaços num só anúncio. */
+function detectMultipleSpaces(text: string): boolean {
+  return /\b([2-9]|dois|duas|três|tres|quatro|vários|varias|vários)\s+(quartos?|suites?|estúdios?|estudios?|espaços?|espacos?|vagas?)\b/i.test(text)
+    || /\bquartos? dispon[ií]veis\b/i.test(text);
+}
+
+/** Deteta partilha de contacto direto (email/telefone/WhatsApp/links). */
+function detectDirectContact(text: string): boolean {
+  return /\b9\d{2}[\s.-]?\d{3}[\s.-]?\d{3}\b/.test(text) // telemóvel PT
+    || /\+?\d{9,}/.test(text.replace(/[\s.-]/g, ""))
+    || /[\w.+-]+@[\w-]+\.[\w.]+/.test(text)
+    || /whats?app|telegram|zap\b/i.test(text)
+    || /https?:\/\/|www\./i.test(text);
+}
+
 function PublishWizard() {
   useRoleGuard("landlord");
   const nav = useNavigate();
   const profile = useStore((s) => s.profile);
+  const allowed = useStore((s) => canPublishAnother(s));
+
+  // Limite de plano verificado ANTES do wizard — não deixa preencher para depois bloquear.
+  if (!allowed) return <PlanBlockScreen />;
+
+  return <WizardInner nav={nav} profile={profile} />;
+}
+
+function PlanBlockScreen() {
+  return (
+    <div className="mx-auto grid min-h-svh w-full max-w-[440px] place-items-center bg-background p-8 text-center">
+      <div>
+        <div className="mx-auto grid size-16 place-items-center rounded-pill bg-warning/15 text-warning">
+          <Crown className="size-8" />
+        </div>
+        <h1 className="mt-4 font-display text-2xl font-bold">Atingiste o limite do plano Free</h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          O plano Free permite <b>1 anúncio ativo</b>. Para publicares mais espaços em simultâneo, passa ao Pro — ou arquiva um anúncio ativo primeiro.
+        </p>
+        <div className="mt-6 flex flex-col gap-2">
+          <Link to="/account" className="inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-primary font-display font-semibold text-primary-foreground shadow-lift">
+            <Crown className="size-4" /> Conhecer o Pro
+          </Link>
+          <Link to="/my-listings" className="inline-flex h-12 items-center justify-center rounded-lg border border-border text-sm font-semibold">
+            Gerir os meus anúncios
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function WizardInner({ nav, profile }: { nav: ReturnType<typeof useNavigate>; profile: Profile }) {
   const [step, setStep] = useState(0);
+  const [kind, setKind] = useState<ListingKind | null>(null);
   const [type, setType] = useState<SpaceType | null>(null);
   const [city, setCity] = useState("");
   const [neighborhood, setNeighborhood] = useState("");
@@ -47,28 +120,63 @@ function PublishWizard() {
   const [visitSlots, setVisitSlots] = useState<string[]>([]);
 
   const selected = SPACE_TYPES.find((t) => t.key === type);
+  const sale = kind === "sale";
+  const STEPS = stepsFor(kind);
+  const stepKey = STEPS[step]?.key ?? "kind";
+  const range = priceRange(kind ?? "rent");
 
-  const canGoNext =
-    (step === 0 && !!type) ||
-    (step === 1 && city.length > 1) ||
-    step === 2 ||
-    step === 3 ||
-    (step === 4 && price >= 100) ||
-    step >= 5;
+  /**
+   * Contrapositiva: em vez de um booleano, devolve a RAZÃO por que não se pode
+   * avançar. O botão fica ativo se e só se isto for null e mostra este texto
+   * quando está bloqueado — uma só função decide as duas coisas, portanto o
+   * utilizador nunca vê um botão cinzento sem saber porquê.
+   */
+  const blockedBecause: string | null = (() => {
+    switch (stepKey) {
+      case "kind":
+        return kind ? null : "Escolhe se queres arrendar ou vender.";
+      case "type":
+        return type ? null : "Escolhe o tipo de espaço.";
+      case "place":
+        return city.trim().length > 1 ? null : "Indica a cidade.";
+      case "about":
+        return title.trim().length > 3 ? null : "Dá um título ao anúncio (mín. 4 caracteres).";
+      case "price":
+        return price >= range.min ? null : `Define um valor a partir de ${priceAmount(range.min)}.`;
+      case "availability":
+        return visitSlots.length > 0 ? null : "Escolhe pelo menos um horário para visitas.";
+      default:
+        return null;
+    }
+  })();
 
-  const quality =
-    (type ? 20 : 0) +
-    (city.length > 1 ? 15 : 0) +
-    (title.length > 3 ? 10 : 0) +
-    (desc.length > 50 ? 15 : 0) +
-    (price >= 100 ? 10 : 0) +
-    (moveIn ? 10 : 0) +
-    (visitSlots.length ? 10 : 0) +
-    10;
+  // Quality Score calculado dos campos reais (qualityScore em store.ts)
+  const quality = qualityScore({
+    kind: kind ?? "rent",
+    spaceType: type ?? undefined,
+    city,
+    neighborhood,
+    title,
+    description: desc,
+    amenities,
+    price,
+    moveInFrom: moveIn,
+    visitAvailability: visitSlots,
+  });
+
+  // Avisos anti-abuso em tempo real sobre título + descrição
+  const abuseText = `${title} ${desc}`;
+  const warnMultiple = detectMultipleSpaces(abuseText);
+  const warnContact = detectDirectContact(abuseText);
+
+  /** Capacidade implícita no tipo de espaço — não se pergunta o que já se sabe. */
+  const capacityFor = (t: SpaceType | null): number =>
+    t === "T4+" ? 6 : t === "T3" ? 5 : t === "T2" ? 4 : t === "T1" || t === "Estúdio" ? 2 : 1;
 
   const publish = async () => {
     const listing: Omit<Listing, "id"> = {
       title: title || `${type} em ${city || "—"}`,
+      kind: kind ?? "rent",
       price,
       city,
       neighborhood,
@@ -79,19 +187,22 @@ function PublishWizard() {
       qualityScore: Math.min(100, quality),
       pets,
       smoke,
-      availableFrom: moveIn || "Imediato",
-      moveInFrom: moveIn,
+      availableFrom: sale ? "Imediato" : moveIn || "Imediato",
+      // Data de mudança e prazo mínimo não existem numa venda.
+      moveInFrom: sale ? "" : moveIn,
       visitAvailability: visitSlots,
-      minMonths: 6,
-      capacity: 1,
+      minMonths: sale ? 0 : 6,
+      capacity: capacityFor(type),
       description: desc,
       amenities,
-      rules: `${students ? "Aceita estudantes. " : ""}${pets ? "Aceita animais. " : "Sem animais. "}${smoke ? "Fumadores ok." : "Sem fumo."}`,
+      rules: sale
+        ? "Escritura e condições a combinar entre as partes."
+        : `${students ? "Aceita estudantes. " : ""}${pets ? "Aceita animais. " : "Sem animais. "}${smoke ? "Fumadores ok." : "Sem fumo."}`,
       photos: ["https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&auto=format&fit=crop"],
       owner: {
         name: profile.name || "O meu anúncio",
         avatar: profile.avatar || "https://api.dicebear.com/7.x/initials/svg?seed=" + encodeURIComponent(profile.name || "Eu"),
-        score: 60,
+        score: trustScore(),
         responds: "Responde em breve",
         rating: 0,
         reviews: 0,
@@ -108,18 +219,40 @@ function PublishWizard() {
 
   return (
     <div className="mx-auto flex min-h-svh w-full max-w-[440px] flex-col bg-background">
-      <PageHeader title={`Publicar · ${STEPS[step]}`} back="/my-listings" />
+      <PageHeader title={`Publicar · ${STEPS[step]?.label ?? ""}`} back="/my-listings" />
       <div className="px-4 pt-3">
         <div className="flex gap-1.5">
-          {STEPS.map((_, i) => (
-            <div key={i} className={cn("h-1.5 flex-1 rounded-pill", i <= step ? "bg-primary" : "bg-border")} />
+          {STEPS.map((s, i) => (
+            <div key={s.key} className={cn("h-1.5 flex-1 rounded-pill", i <= step ? "bg-primary" : "bg-border")} />
           ))}
         </div>
         <div className="mt-1 text-[11px] text-muted-foreground">Passo {step + 1} de {STEPS.length}</div>
       </div>
 
       <div className="flex-1 px-5 pt-6 pb-24">
-        {step === 0 && (
+        {stepKey === "kind" && (
+          <Step title="O que queres fazer com este espaço?" sub="Isto define o resto do anúncio.">
+            <div className="flex flex-col gap-2.5">
+              <button
+                onClick={() => { setKind("rent"); setPrice(450); setTimeout(() => setStep(1), 250); }}
+                className={cn("rounded-2xl border-2 bg-surface p-4 text-left transition", kind === "rent" ? "border-primary bg-primary-soft" : "border-border")}
+              >
+                <div className="font-display text-base font-bold">Arrendar</div>
+                <div className="mt-1 text-xs leading-snug text-muted-foreground">Renda mensal, com regras de convivência e data de entrada.</div>
+              </button>
+              <button
+                onClick={() => { setKind("sale"); setPrice(180_000); setTimeout(() => setStep(1), 250); }}
+                className={cn("rounded-2xl border-2 bg-surface p-4 text-left transition", kind === "sale" ? "border-primary bg-primary-soft" : "border-border")}
+              >
+                <div className="font-display text-base font-bold">Vender</div>
+                <div className="mt-1 text-xs leading-snug text-muted-foreground">Valor total pedido. Sem regras de convivência nem prazo de contrato.</div>
+              </button>
+            </div>
+            <Tip>O HomeMatch liga-te a interessados e regista o que combinarem. A escritura e o contrato são tratados entre as partes, fora da app.</Tip>
+          </Step>
+        )}
+
+        {stepKey === "type" && (
           <Step title="Que tipo de espaço estás a anunciar?" sub="Um anúncio representa exatamente um espaço.">
             <div className="grid grid-cols-2 gap-2.5">
               {SPACE_TYPES.map((t) => (
@@ -138,7 +271,7 @@ function PublishWizard() {
           </Step>
         )}
 
-        {step === 1 && (
+        {stepKey === "place" && (
           <Step title="Onde fica?" sub="A morada exata só é partilhada quando aceitares alguém.">
             <input value={city} onChange={(e) => setCity(e.target.value)} placeholder="Cidade"
               className="h-14 w-full rounded-md border border-border bg-surface px-4 outline-none focus:border-primary focus:ring-2 focus:ring-primary/15" />
@@ -147,13 +280,19 @@ function PublishWizard() {
           </Step>
         )}
 
-        {step === 2 && (
+        {stepKey === "about" && (
           <Step title="Conta um pouco sobre o sítio">
             <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Título do anúncio"
               className="h-14 w-full rounded-md border border-border bg-surface px-4 outline-none focus:border-primary" />
             <textarea value={desc} onChange={(e) => setDesc(e.target.value)} placeholder="Descrição (mín. 50 caracteres)" rows={6}
               className="w-full resize-none rounded-md border border-border bg-surface p-4 outline-none focus:border-primary" />
             <div className="text-xs text-muted-foreground">{desc.length} caracteres · sugerido &gt; 50</div>
+            {warnMultiple && (
+              <Warn>Parece que estás a anunciar <b>vários espaços</b> num só anúncio. Um anúncio representa exatamente um espaço — cria um anúncio por espaço.</Warn>
+            )}
+            {warnContact && (
+              <Warn>Detetámos um <b>contacto direto</b> (telefone, email, link ou WhatsApp). Por segurança, os contactos só são partilhados dentro da plataforma após aceitares um candidato.</Warn>
+            )}
             <div className="grid grid-cols-3 gap-2">
               {AMENITIES.map((a) => (
                 <button key={a} onClick={() => toggleAmenity(a)} className={cn(
@@ -165,7 +304,7 @@ function PublishWizard() {
           </Step>
         )}
 
-        {step === 3 && (
+        {stepKey === "photos" && (
           <Step title="Fotos" sub={selected ? `Recomendado para ${selected.key}: ${selected.photos.join(" · ")}` : "Escolhe primeiro o tipo."}>
             <div className="grid grid-cols-3 gap-2">
               {Array.from({ length: 6 }).map((_, i) => (
@@ -178,19 +317,33 @@ function PublishWizard() {
           </Step>
         )}
 
-        {step === 4 && (
-          <Step title="Quanto custa?">
+        {stepKey === "price" && (
+          <Step title={sale ? "Por quanto vendes?" : "Quanto custa?"}>
             <div className="rounded-2xl border border-border bg-surface p-5 text-center">
-              <div className="font-num text-5xl font-bold text-primary">€{price}</div>
-              <div className="text-sm text-muted-foreground">por mês</div>
-              <input type="range" min={100} max={2000} step={10} value={price} onChange={(e) => setPrice(+e.target.value)} className="mt-5 w-full accent-[color:var(--primary)]" />
+              <div className="font-num text-5xl font-bold text-primary">{priceAmount(price)}</div>
+              <div className="text-sm text-muted-foreground">{sale ? "valor pedido" : "por mês"}</div>
+              <input
+                type="range"
+                min={range.min}
+                max={range.max}
+                step={range.step}
+                value={price}
+                onChange={(e) => setPrice(+e.target.value)}
+                className="mt-5 w-full accent-[color:var(--primary)]"
+              />
             </div>
-            <label className="flex items-center gap-2 text-sm"><input type="checkbox" className="size-4 accent-[color:var(--primary)]" /> Despesas incluídas</label>
-            <label className="flex items-center gap-2 text-sm"><input type="checkbox" className="size-4 accent-[color:var(--primary)]" /> Caução exigida</label>
+            {/* Despesas e caução são conceitos de arrendamento — numa venda nem aparecem. */}
+            {!sale && (
+              <>
+                <label className="flex items-center gap-2 text-sm"><input type="checkbox" className="size-4 accent-[color:var(--primary)]" /> Despesas incluídas</label>
+                <label className="flex items-center gap-2 text-sm"><input type="checkbox" className="size-4 accent-[color:var(--primary)]" /> Caução exigida</label>
+              </>
+            )}
+            {sale && <Tip>Valor indicativo para atrair interessados. A negociação acontece na conversa, entre as partes.</Tip>}
           </Step>
         )}
 
-        {step === 5 && (
+        {stepKey === "rules" && (
           <Step title="Regras do espaço" sub="Regras aplicam-se ao anúncio, não a ti como pessoa.">
             <Toggle label="Aceita animais" v={pets} on={setPets} />
             <Toggle label="Pode fumar" v={smoke} on={setSmoke} />
@@ -198,12 +351,18 @@ function PublishWizard() {
           </Step>
         )}
 
-        {step === 6 && (
-          <Step title="Disponibilidade" sub="Visitas e mudança são coisas separadas.">
-            <Field label="Disponível para mudar em">
-              <input value={moveIn} onChange={(e) => setMoveIn(e.target.value)} placeholder="ex. 1 Set 2026"
-                className="h-12 w-full rounded-md border border-border bg-surface px-4 outline-none focus:border-primary" />
-            </Field>
+        {stepKey === "availability" && (
+          <Step
+            title={sale ? "Quando podes mostrar?" : "Disponibilidade"}
+            sub={sale ? "Horários em que aceitas receber visitas." : "Visitas e mudança são coisas separadas."}
+          >
+            {/* Data de mudança só existe no arrendamento. */}
+            {!sale && (
+              <Field label="Disponível para mudar em">
+                <input value={moveIn} onChange={(e) => setMoveIn(e.target.value)} placeholder="ex. 1 Set 2026"
+                  className="h-12 w-full rounded-md border border-border bg-surface px-4 outline-none focus:border-primary" />
+              </Field>
+            )}
             <Field label="Horários que aceitas para visitas">
               <div className="flex flex-wrap gap-2">
                 {["Sáb 10:00", "Sáb 15:00", "Dom 11:00", "Sex 18:00", "Ter 17:00"].map((s) => {
@@ -219,11 +378,16 @@ function PublishWizard() {
           </Step>
         )}
 
-        {step === 7 && (
+        {stepKey === "review" && (
           <Step title="Rever e publicar">
             <div className="rounded-2xl border border-border bg-surface p-4">
-              <div className="font-display text-lg font-bold">{title || "Anúncio sem título"}</div>
-              <div className="font-num text-sm text-muted-foreground">€{price}/mês · {city || "—"} · {type ?? "—"}</div>
+              <div className="flex items-center gap-2">
+                <div className="font-display text-lg font-bold">{title || "Anúncio sem título"}</div>
+                <span className="rounded-pill bg-primary-soft px-2 py-0.5 text-[10px] font-bold text-primary">{sale ? "Venda" : "Arrendar"}</span>
+              </div>
+              <div className="font-num text-sm text-muted-foreground">
+                {priceLabel({ kind: kind ?? "rent", price })} · {city || "—"} · {type ?? "—"}
+              </div>
               <div className="mt-2 text-sm text-muted-foreground">{desc || "Sem descrição."}</div>
             </div>
             <div className="rounded-2xl border border-border bg-surface p-4">
@@ -238,13 +402,21 @@ function PublishWizard() {
         )}
       </div>
 
-      <div className="sticky bottom-0 flex gap-2 border-t border-border bg-surface px-4 py-3">
-        <button onClick={prev} className="grid size-12 place-items-center rounded-lg border border-border">
-          <ChevronLeft className="size-5" />
-        </button>
-        <button onClick={next} disabled={!canGoNext} className="flex h-12 flex-1 items-center justify-center gap-2 rounded-lg bg-primary font-display font-semibold text-primary-foreground shadow-lift disabled:opacity-50">
-          {step === STEPS.length - 1 ? (<><Check className="size-5" /> Publicar</>) : (<>Continuar <ChevronRight className="size-5" /></>)}
-        </button>
+      <div className="sticky bottom-0 border-t border-border bg-surface px-4 py-3 pb-safe">
+        {/* Contrapositiva visível: se o botão está bloqueado, diz-se porquê. */}
+        {blockedBecause && (
+          <div className="mb-2 flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Info className="size-3.5 shrink-0" /> {blockedBecause}
+          </div>
+        )}
+        <div className="flex gap-2">
+          <button onClick={prev} className="grid size-12 place-items-center rounded-lg border border-border" aria-label="Voltar">
+            <ChevronLeft className="size-5" />
+          </button>
+          <button onClick={next} disabled={!!blockedBecause} className="flex h-12 flex-1 items-center justify-center gap-2 rounded-lg bg-primary font-display font-semibold text-primary-foreground shadow-lift disabled:opacity-50">
+            {step === STEPS.length - 1 ? (<><Check className="size-5" /> Publicar</>) : (<>Continuar <ChevronRight className="size-5" /></>)}
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -258,6 +430,15 @@ function Step({ title, sub, children }: { title: string; sub?: string; children:
         {sub && <p className="mt-1 text-sm text-muted-foreground">{sub}</p>}
       </div>
       {children}
+    </div>
+  );
+}
+
+function Warn({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex items-start gap-2 rounded-xl border border-warning/40 bg-warning/10 p-3 text-xs">
+      <AlertTriangle className="mt-0.5 size-4 shrink-0 text-warning" />
+      <div className="text-foreground/85">{children}</div>
     </div>
   );
 }

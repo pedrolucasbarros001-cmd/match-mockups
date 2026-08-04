@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { MATCH_STEPS, nextActionFor, type MatchState } from "@/lib/mock-data";
+import { matchSteps, nextActionFor, priceLabel, type MatchState } from "@/lib/mock-data";
 import { AppShell, PageHeader } from "@/components/AppShell";
 import { useStore } from "@/lib/store";
 import { useRole } from "@/lib/user-state";
@@ -29,7 +29,7 @@ function MatchesPage() {
   const closedCount = matches.filter((m) => GROUPS[2].states.includes(m.state)).length;
   const currentStates = GROUPS.find((g) => g.key === tab)!.states;
   const items = matches.filter((m) => currentStates.includes(m.state));
-  const totalStepIndex = MATCH_STEPS.length;
+  const totalStepIndex = matchSteps("rent").length; // o número de fases é igual nos dois tipos
 
   return (
     <AppShell>
@@ -40,19 +40,22 @@ function MatchesPage() {
         <div className="mt-0.5">{role === "landlord" ? "As tuas negociações com candidatos." : "As tuas negociações com senhorios."}</div>
       </div>
 
-      <div className="sticky top-14 z-20 grid grid-cols-3 gap-1 border-b border-border bg-surface/95 px-3 py-2 backdrop-blur">
-        {GROUPS.map((g) => (
-          <button
-            key={g.key}
-            onClick={() => setTab(g.key)}
-            className={cn(
-              "h-9 rounded-pill text-xs font-semibold transition",
-              tab === g.key ? "bg-foreground text-background" : "bg-muted text-muted-foreground",
-            )}
-          >
-            {g.label}
-          </button>
-        ))}
+      {/* Tabs em segmented control — assenta por baixo do header sticky. */}
+      <div className="sticky top-[calc(3.5rem+env(safe-area-inset-top,0px))] z-20 border-b border-border glass-light px-3 py-2">
+        <div className="grid grid-cols-3 gap-1 rounded-pill bg-muted p-1">
+          {GROUPS.map((g) => (
+            <button
+              key={g.key}
+              onClick={() => setTab(g.key)}
+              className={cn(
+                "h-8 rounded-pill text-xs font-bold transition",
+                tab === g.key ? "bg-surface text-foreground shadow-card" : "text-muted-foreground",
+              )}
+            >
+              {g.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {items.length === 0 ? (
@@ -80,11 +83,17 @@ function MatchesPage() {
           {items.map((m) => {
             const l = listings.find((x) => x.id === m.listingId);
             if (!l) return null;
-            const stepIdx = Math.max(0, MATCH_STEPS.findIndex((s) => s.key === m.state));
-            const step = MATCH_STEPS[stepIdx];
-            const action = nextActionFor(m.state, role === "landlord" ? "landlord" : "tenant");
-            const primaryName = role === "landlord" ? "Candidato" : l.title;
-            const secondary = role === "landlord" ? l.title : `${l.neighborhood} · €${l.price}`;
+            // Fases lidas com o kind do anúncio — senão a última fase de uma
+            // venda apareceria aqui como "Arrendado".
+            const STEPS = matchSteps(l.kind);
+            const shown = m.state === "negotiating" ? "visit_done" : m.state === "closed" ? "rental_confirmed" : m.state;
+            const stepIdx = Math.max(0, STEPS.findIndex((s) => s.key === shown));
+            const step = STEPS[stepIdx];
+            // Passa o kind do anúncio: sem ele, um negócio de venda mostraria
+            // aqui o vocabulário de arrendamento e divergiria do chat.
+            const action = nextActionFor(m.state, role === "landlord" ? "landlord" : "tenant", l.kind);
+            const primaryName = role === "landlord" ? (m.candidate?.name ?? "Candidato") : l.title;
+            const secondary = role === "landlord" ? l.title : `${l.neighborhood} · ${priceLabel(l)}`;
             return (
               <li key={m.id}>
                 <Link
@@ -94,9 +103,13 @@ function MatchesPage() {
                 >
                   <div className="flex items-center gap-3">
                     {role === "landlord" ? (
-                      <div className="grid size-14 shrink-0 place-items-center rounded-2xl bg-muted text-muted-foreground">
-                        <User className="size-6" />
-                      </div>
+                      m.candidate?.avatar ? (
+                        <img src={m.candidate.avatar} className="size-14 shrink-0 rounded-2xl object-cover" alt="" />
+                      ) : (
+                        <div className="grid size-14 shrink-0 place-items-center rounded-2xl bg-muted text-muted-foreground">
+                          <User className="size-6" />
+                        </div>
+                      )
                     ) : (
                       <img src={l.photos[0]} className="size-14 shrink-0 rounded-2xl object-cover" alt="" />
                     )}

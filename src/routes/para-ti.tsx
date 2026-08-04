@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell, PageHeader, ScoreBadge } from "@/components/AppShell";
-import { listings, recommendationSections } from "@/lib/mock-data";
+import { listings, recommendationSections, priceLabel } from "@/lib/mock-data";
 import { Sparkles } from "lucide-react";
 
 export const Route = createFileRoute("/para-ti")({
@@ -32,7 +32,7 @@ function ParaTi() {
                       <div className="absolute right-2 top-2"><ScoreBadge score={l.owner.score} /></div>
                       <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-3 text-white">
                         <div className="truncate font-display font-bold">{l.title}</div>
-                        <div className="font-num text-sm">€{l.price}/mês · {l.neighborhood}</div>
+                        <div className="font-num text-sm">{priceLabel(l)} · {l.neighborhood}</div>
                       </div>
                     </div>
                   </Link>

@@ -1,9 +1,9 @@
 import { createFileRoute, useNavigate, useParams } from "@tanstack/react-router";
 import { useState } from "react";
 import { PageHeader } from "@/components/AppShell";
-import { useStore } from "@/lib/store";
-import { api } from "@/lib/api";
-import { Star, Check } from "lucide-react";
+import { useStore, store, reviewsVisible } from "@/lib/store";
+import { useRole } from "@/lib/user-state";
+import { Star, Check, EyeOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/feedback/$matchId")({
@@ -22,19 +22,24 @@ const TOPICS = [
 function FeedbackPage() {
   const { matchId } = useParams({ from: "/feedback/$matchId" });
   const nav = useNavigate();
+  const role = useRole();
+  const side = role === "landlord" ? "landlord" : "seeker";
   const m = useStore((s) => s.matches.find((x) => x.id === matchId));
   const l = useStore((s) => (m ? s.listings.find((x) => x.id === m.listingId) : undefined));
+  const myReview = useStore((s) => s.reviews.find((r) => r.matchId === matchId && r.by === side));
+  const bothVisible = useStore((s) => reviewsVisible(matchId, s));
+  const otherReview = useStore((s) => s.reviews.find((r) => r.matchId === matchId && r.by !== side));
   const [rating, setRating] = useState(0);
   const [topics, setTopics] = useState<string[]>([]);
   const [note, setNote] = useState("");
-  const [done, setDone] = useState(false);
+  const [done, setDone] = useState(!!myReview);
 
   if (!m || !l) return <div className="p-8 text-center text-sm text-muted-foreground">Feedback não disponível.</div>;
 
   const toggle = (t: string) => setTopics(topics.includes(t) ? topics.filter((x) => x !== t) : [...topics, t]);
-  const submit = async () => {
-    const comment = [note, topics.join("; ")].filter(Boolean).join(" | ");
-    await api.saveFeedback(matchId, rating, comment);
+  const submit = () => {
+    // Duplo-cego: a avaliação do outro lado só fica visível quando ambos submeterem.
+    store.submitReview(matchId, side, rating, topics, note);
     setDone(true);
   };
 
@@ -51,9 +56,27 @@ function FeedbackPage() {
         </div>
 
         {done ? (
-          <div className="rounded-2xl border border-success/30 bg-success/10 p-4 text-center text-success">
-            <Check className="mx-auto mb-1 size-6" /> Obrigado. O teu feedback foi guardado.
-            <button onClick={() => nav({ to: "/matches" })} className="mt-3 text-sm font-semibold underline">Voltar aos matches</button>
+          <div className="space-y-3">
+            <div className="rounded-2xl border border-success/30 bg-success/10 p-4 text-center text-success">
+              <Check className="mx-auto mb-1 size-6" /> Obrigado. A tua avaliação foi guardada.
+              <button onClick={() => nav({ to: "/matches" })} className="mt-3 block w-full text-sm font-semibold underline">Voltar aos matches</button>
+            </div>
+            {bothVisible && otherReview ? (
+              <div className="rounded-2xl border border-border bg-surface p-4">
+                <div className="mb-1 text-xs font-bold uppercase tracking-wide text-muted-foreground">Avaliação que recebeste</div>
+                <div className="flex gap-0.5">
+                  {[1, 2, 3, 4, 5].map((n) => (
+                    <Star key={n} className={cn("size-5", n <= otherReview.rating ? "fill-warning text-warning" : "text-muted-foreground")} />
+                  ))}
+                </div>
+                {otherReview.comment && <p className="mt-2 text-sm text-foreground/90">{otherReview.comment}</p>}
+              </div>
+            ) : (
+              <div className="flex items-start gap-2 rounded-2xl border border-border bg-muted p-4 text-xs text-muted-foreground">
+                <EyeOff className="mt-0.5 size-4 shrink-0" />
+                Avaliação duplo-cego: só vês a avaliação do outro lado quando ambos submeterem.
+              </div>
+            )}
           </div>
         ) : (
           <>

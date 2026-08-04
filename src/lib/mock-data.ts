@@ -1,6 +1,8 @@
 // Estado "virgem": tudo vazio, sem dados fictícios.
 // Mantemos os tipos e helpers para não partir imports pelas telas.
 
+import { getState } from "./store";
+
 export type SpaceType =
   | "Quarto"
   | "Suite"
@@ -14,6 +16,7 @@ export type SpaceType =
 export type ListingLifecycle =
   | "draft"
   | "published"
+  | "paused"
   | "negotiating"
   | "rented";
 
@@ -34,9 +37,14 @@ export type VisitState =
   | "done"
   | "cancelled";
 
+/** Arrendar ou vender. Decide vocabulário, passos do wizard e leitura do preço. */
+export type ListingKind = "rent" | "sale";
+
 export type Listing = {
   id: string;
   title: string;
+  kind: ListingKind;
+  /** Renda mensal se kind="rent"; valor total pedido se kind="sale". Ver priceLabel(). */
   price: number;
   city: string;
   neighborhood: string;
@@ -61,23 +69,44 @@ export type Listing = {
 
 export const listings: Listing[] = [];
 
-// Contexto de pesquisa (o que o utilizador procura AGORA). Vazio por defeito.
-export const userContext = {
-  city: "",
-  maxDistanceKm: 5,
-  spaceTypes: [] as SpaceType[],
-  minPrice: 0,
-  maxPrice: 2000,
-  moveInFrom: "",
-  pets: false,
-  needsFurnished: false,
-};
+// ============ Leitura do preço (fonte única) ============
+// O campo `price` é o mesmo; só o kind decide como se lê. Nenhum ecrã escreve
+// "/mês" à mão — senão um anúncio de venda apareceria como renda mensal.
+
+// Ponto como separador de milhares: na fonte mono o espaço do pt-PT abre um
+// vão enorme no meio do número ("€235 000"), e o ponto é uso corrente em PT.
+const euros = (n: number) => `€${n.toLocaleString("pt-PT").replace(/\s/g, ".")}`;
+
+/** Preço completo, pronto a mostrar. Ex: "€450 / mês" ou "€180 000". */
+export function priceLabel(l: Pick<Listing, "kind" | "price">): string {
+  return l.kind === "sale" ? euros(l.price) : `${euros(l.price)} / mês`;
+}
+
+/** Só o sufixo, para quem quer estilizar o número em separado. */
+export function priceSuffix(kind: ListingKind): string {
+  return kind === "sale" ? "" : "/ mês";
+}
+
+/** Valor sem sufixo. */
+export function priceAmount(price: number): string {
+  return euros(price);
+}
+
+/** Escala do slider de preço — mensal e total vivem em ordens de grandeza diferentes. */
+export function priceRange(kind: ListingKind): { min: number; max: number; step: number } {
+  return kind === "sale" ? { min: 25_000, max: 900_000, step: 5_000 } : { min: 100, max: 2_000, step: 10 };
+}
 
 export function compatibilityReasons(l: Listing): string[] {
+  // Lê as preferências reais do store (import tardio para evitar ciclo em SSR).
+  const prefs = getState().preferences;
   const r: string[] = [];
-  if (userContext.maxPrice && l.price <= userContext.maxPrice && l.price >= userContext.minPrice) r.push("Dentro do orçamento");
-  if (userContext.pets && l.pets) r.push("Aceita animais");
-  if (userContext.spaceTypes.includes(l.spaceType)) r.push(`${l.spaceType} · o que procuras`);
+  // Teto de preço conforme o tipo de negócio do próprio anúncio.
+  const ceiling = l.kind === "sale" ? prefs.maxSalePrice : prefs.maxPrice;
+  if (ceiling && l.price <= ceiling) r.push("Dentro do orçamento");
+  if (l.kind === "rent" && prefs.pets && l.pets) r.push("Aceita animais");
+  if ((prefs.spaceTypes[l.kind] ?? []).includes(l.spaceType)) r.push(`${l.spaceType} · o que procuras`);
+  if (prefs.city && l.city.toLowerCase() === prefs.city.toLowerCase()) r.push("Na tua cidade");
   return r.slice(0, 3);
 }
 
@@ -101,6 +130,16 @@ export type Chat = {
 };
 export const chats: Chat[] = [];
 
+export type Candidate = {
+  name: string;
+  avatar: string;
+  score: number;
+  occupation: string;
+  city: string;
+  bio: string;
+  verifications: { label: string; ok: boolean }[];
+};
+
 export type Match = {
   id: string;
   listingId: string;
@@ -108,33 +147,118 @@ export type Match = {
   state: MatchState;
   updatedAt: string;
   reasons: string[];
+  candidate?: Candidate;
+  message?: string;
 };
 export const matches: Match[] = [];
 
-export const MATCH_STEPS: { key: MatchState; label: string }[] = [
-  { key: "interested", label: "Interesse" },
-  { key: "conversation", label: "Conversa" },
-  { key: "visit_scheduled", label: "Visita marcada" },
-  { key: "visit_done", label: "Visita feita" },
-  { key: "rental_confirmed", label: "Arrendado" },
-];
+// Motivos de fecho de anúncio (wizard /rental-close/$chatId)
+export type CloseReason = "homematch" | "outside" | "paused" | "rework";
 
-export function nextActionFor(state: MatchState, role: "tenant" | "landlord" = "tenant"): string {
+/**
+ * Negócio fechado — arrendamento ou venda. Só existe depois de AMBOS os lados
+ * confirmarem. `months` é null numa venda (não há prazo de contrato).
+ * Nota: o HomeMatch só regista o que as partes declararam ter acordado; não é
+ * parte no contrato nem processa pagamentos (ver /legal/terms).
+ */
+export type ClosedDeal = {
+  id: string;
+  kind: ListingKind;
+  matchId: string;
+  listingId: string;
+  /** Data de entrada (arrendamento) ou de escritura prevista (venda). */
+  moveIn: string;
+  months: number | null;
+  /** Renda mensal acordada ou valor da proposta aceite. */
+  amount: number;
+  landlordConfirmed: boolean;
+  seekerConfirmed: boolean;
+  at: string;
+};
+
+// Avaliação duplo-cego: só visível quando ambos os lados submetem.
+export type Review = {
+  id: string;
+  matchId: string;
+  by: "seeker" | "landlord";
+  rating: number;
+  tags: string[];
+  comment: string;
+  at: string;
+};
+
+/**
+ * Fases da negociação. As 4 primeiras são iguais nos dois tipos; só o fecho
+ * muda de nome. Passa-se o kind para o mesmo estado nunca ser lido como
+ * "Arrendado" num anúncio de venda.
+ */
+export function matchSteps(kind: ListingKind = "rent"): { key: MatchState; label: string }[] {
+  return [
+    { key: "interested", label: "Interesse" },
+    { key: "conversation", label: "Conversa" },
+    { key: "visit_scheduled", label: "Visita marcada" },
+    { key: "visit_done", label: "Visita feita" },
+    { key: "rental_confirmed", label: kind === "sale" ? "Proposta aceite" : "Arrendado" },
+  ];
+}
+
+/** Compatibilidade: continua a existir para quem não conhece o kind. */
+export const MATCH_STEPS = matchSteps("rent");
+
+/**
+ * Fonte ÚNICA do texto de "próxima ação" para um par (estado, role).
+ * Equivalência: o que /matches, /chats e a lista de conversas dizem tem de ser
+ * exatamente o mesmo facto — nenhum ecrã pode escrever a sua própria versão,
+ * senão o mesmo estado passa a ter duas leituras diferentes.
+ */
+export function nextActionFor(
+  state: MatchState,
+  role: "tenant" | "landlord" = "tenant",
+  kind: ListingKind = "rent",
+): string {
+  const sale = kind === "sale";
   switch (state) {
     case "interested":
       return role === "landlord" ? "Responder ao interessado" : "Aguardar resposta";
     case "conversation":
       return "Propor visita";
     case "visit_scheduled":
-      return role === "landlord" ? "Confirmar visita" : "Confirmar presença";
+      return role === "landlord" ? "Confirmar visita feita" : "Aguardar confirmação da visita";
     case "visit_done":
-      return "Confirmar arrendamento";
+      return role === "landlord"
+        ? sale ? "Registar proposta" : "Fechar este espaço"
+        : sale ? "Aguardar decisão do proprietário" : "Aguardar decisão do senhorio";
     case "negotiating":
-      return "Confirmar arrendamento";
+      return role === "landlord"
+        ? sale ? "Aguardar confirmação do comprador" : "Aguardar confirmação do inquilino"
+        : sale ? "Confirmar proposta" : "Confirmar arrendamento";
     case "rental_confirmed":
-      return "Arrendado";
+      return "Deixar avaliação";
     case "closed":
-      return "Reativar anúncio";
+      return "Sem ação — negociação fechada";
+  }
+}
+
+/**
+ * Equivalência UI↔estado: o botão de ação existe se e só se este par
+ * (estado, role) tiver mesmo uma ação a executar. Quem só pode aguardar
+ * não vê botão nenhum — a UI nunca oferece algo que o estado não permite.
+ */
+export function canActOn(state: MatchState, role: "tenant" | "landlord" = "tenant"): boolean {
+  switch (state) {
+    case "interested":
+      return role === "landlord";
+    case "conversation":
+      return true;
+    case "visit_scheduled":
+    case "visit_done":
+      return role === "landlord";
+    case "negotiating":
+      return role === "tenant";
+    case "rental_confirmed":
+      return true; // deixar avaliação
+    case "closed":
+      return false;
   }
 }
 
@@ -179,7 +303,17 @@ export function scoreColor(score: number): string {
 export type Room = { id: string; listingId: string; name: string; price: number; status: "available" | "reserved" | "occupied"; tenant?: string };
 export const rooms: Room[] = [];
 
-export type Visit = { id: string; listingId: string; who: string; whoAvatar: string; date: string; time: string; status: "pending" | "confirmed" | "done" | "cancelled" };
+export type Visit = {
+  id: string;
+  listingId: string;
+  /** Liga a visita ao match — é o que permite ao status da visita empurrar o estado do match automaticamente. */
+  matchId: string;
+  who: string;
+  whoAvatar: string;
+  date: string;
+  time: string;
+  status: "pending" | "confirmed" | "done" | "cancelled";
+};
 export const visits: Visit[] = [];
 
 export const favoriteIds: string[] = [];

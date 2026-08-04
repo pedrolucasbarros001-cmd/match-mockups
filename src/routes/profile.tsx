@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { me } from "@/lib/mock-data";
 import { AppShell, PageHeader, ScoreBadge } from "@/components/AppShell";
+import { useStore, trustScore } from "@/lib/store";
 import { ChevronRight, Settings, Shield, Heart, LogOut, Edit3, Calendar, Crown, Sliders, User, Building2, Users } from "lucide-react";
 import { useRole, setSession } from "@/lib/user-state";
 
@@ -12,9 +12,12 @@ export const Route = createFileRoute("/profile")({
 function ProfilePage() {
   const nav = useNavigate();
   const role = useRole();
-  const displayName = me.name || "Sem nome";
-  const displayEmail = me.email || "Sem email";
-  const displayBio = me.bio || "Adiciona uma bio.";
+  // Lê do store.profile real (o que foi preenchido no onboarding).
+  const profile = useStore((s) => s.profile);
+  const score = useStore((s) => trustScore(s));
+  const displayName = profile.name || "Sem nome";
+  const displayEmail = profile.email || "Sem email";
+  const displayBio = profile.bio || "Adiciona uma bio.";
 
   return (
     <AppShell>
@@ -27,8 +30,8 @@ function ProfilePage() {
         {/* Identidade */}
         <div className="mb-2 px-1 text-xs font-bold uppercase tracking-wide text-muted-foreground">Identidade</div>
         <div className="flex items-center gap-4 rounded-2xl border border-border bg-surface p-4">
-          {me.avatar ? (
-            <img src={me.avatar} className="size-16 rounded-pill object-cover" alt="" />
+          {profile.avatar ? (
+            <img src={profile.avatar} className="size-16 rounded-pill object-cover" alt="" />
           ) : (
             <div className="grid size-16 place-items-center rounded-pill bg-muted text-muted-foreground">
               <User className="size-7" />
@@ -42,17 +45,17 @@ function ProfilePage() {
           <button className="grid size-10 place-items-center rounded-pill border border-border"><Edit3 className="size-4" /></button>
         </div>
 
-        <div className="mt-3 flex items-center justify-between rounded-2xl border border-border bg-primary-soft p-4 text-sm">
+        <Link to="/switch-user" className="mt-3 flex items-center justify-between rounded-2xl border border-border bg-primary-soft p-4 text-sm transition active:scale-[0.98]">
           <div>
-            <div className="font-display font-bold">Modo atual: {role === "landlord" ? "Senhorio" : "Hóspede"}</div>
-            <div className="text-xs text-muted-foreground">Alterna em Definições para testar o outro fluxo.</div>
+            <div className="font-display font-bold">A usar como: {role === "landlord" ? "Senhorio" : "Inquilino"}</div>
+            <div className="text-xs text-muted-foreground">Troca de utilizador para testar o outro lado.</div>
           </div>
-          <Link to="/settings" className="rounded-pill bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground">Alterar</Link>
-        </div>
+          <span className="rounded-pill bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground">Trocar</span>
+        </Link>
 
         <Link to="/profile/score" className="mt-3 flex items-center justify-between rounded-2xl border border-border bg-surface p-4">
           <div className="flex items-center gap-3">
-            <ScoreBadge score={me.score} />
+            <ScoreBadge score={score} />
             <div>
               <div className="font-display text-sm font-bold">Completar perfil</div>
               <div className="text-xs text-muted-foreground">Progresso interno de confiança.</div>
