@@ -1,60 +1,64 @@
-## Problema
+# Responsividade tipo Spotify + testar no telemóvel
 
-Duas dores no mesmo tema — separação de papéis (hóspede vs senhorio) e separação semântica entre ecrãs parecidos:
+## Situação atual
 
-1. **Perfil do hóspede continua a mostrar "ÁREA SENHORIO"** (Gerir visitas), o que não deve existir para quem está em modo hóspede. Simétrico: senhorio não deve ver "Favoritos" nem "As minhas visitas" do hóspede.
-2. **Matches e Avisos parecem o mesmo ecrã** — mesmos chips (Todos / Interesse / Em conversa / Visita) e mesma leitura visual. São coisas diferentes: Matches é a lista de **relações ativas** (uma conversa por candidatura); Avisos é o **histórico de eventos** (log).
-3. Vários ecrãs ainda misturam papéis por baixo: `visits-manager` importa mocks antigos, `notifications` mostra tudo a toda a gente, `matches` no lado senhorio deveria mostrar candidatos-por-anúncio e não anúncios-por-candidato.
+O `AppShell` força `max-w-[440px]` em todos os ecrãs e tem sempre uma bottom nav flutuante. Em desktop isso resulta numa coluna estreita centrada — não é um layout de desktop, é a app mobile esticada no meio do ecrã. É exatamente a diferença face ao Spotify: no mobile ele usa tab bar em baixo; no desktop usa sidebar à esquerda, header próprio, painel de detalhe à direita e grelhas que crescem com a largura.
 
-## Objetivo
+## O que vou construir
 
-Cada ecrã tem um único papel dono e mostra só o que faz sentido nesse papel; ecrãs que sobrevivem em ambos os papéis (Matches, Avisos, Chats) têm variantes visuais e conteúdo filtrado. Nada de campos do outro lado.
+### 1. AppShell com dois modos de navegação
 
-## Alterações
+- **Mobile (< 768px)**: mantém-se exatamente como está — coluna de 440px, bottom nav em pill, safe areas.
+- **Desktop (>= 768px)**: sidebar fixa à esquerda (~240px, colapsa para ~72px só com ícones entre 768–1024px) com os mesmos destinos do papel ativo (hóspede/senhorio), logótipo em cima, "Eu"/Definições em baixo. A bottom nav desaparece.
+- Um único componente decide, sem duplicar páginas: o mesmo array `seekerNav`/`landlordNav` alimenta as duas variantes.
+- Feito por CSS/Tailwind (`hidden md:flex`, `md:hidden`), não por JS de largura de ecrã — evita saltos na hidratação.
 
-### 1. Perfil (`src/routes/profile.tsx`)
-- Reforçar o `role === "seeker"` vs `role === "landlord"` (já existe; auditar e garantir que **nenhum** bloco senhorio renderiza em modo hóspede).
-- Hóspede: Identidade → Completar perfil → **O que procuro agora** (Preferências) → **Atividade** (Verificações, Favoritos, As minhas visitas) → Definições / Sair.
-- Senhorio: Identidade → Completar perfil → **Área senhorio** (Meus anúncios, Candidatos, Gerir visitas, Conta e plano) → **Confiança** (Verificações) → Definições / Sair. Sem Favoritos, sem "As minhas visitas", sem Preferências de descoberta.
+### 2. Área de conteúdo que respira
 
-### 2. Matches (`src/routes/matches.tsx`) — diferenciar de Avisos
-- **Header próprio**: subtítulo "As tuas negociações ativas" + contador ("3 ativas · 1 fechada"). Distingue-se logo do topo de Avisos.
-- **Substituir chips por segmented control de estado do funil** (Ativas / Visita / Fechadas) — 3 grupos, não 7. As sub-fases (interesse, conversa, visita marcada, visita feita, arrendado) aparecem como *badge* dentro do cartão, não como aba.
-- **Cartão richer**: foto + título + linha da timeline mini ("● ● ● ○ ○") + próxima ação em bold + CTA "Abrir conversa". Diferente do estilo de linha de log dos Avisos.
-- **Variante por papel**:
-  - Hóspede: uma linha por *listing* candidatado (é o que já faz).
-  - Senhorio: uma linha por *candidato × anúncio*; foto do candidato, não do imóvel; título = nome do candidato, subtítulo = anúncio.
+- `maxWidth` deixa de ser um valor fixo: passa a variantes por ecrã — `feed` (continua estreito e centrado, o swipe deve manter-se com largura de cartão), `list` (até ~720px) e `wide` (até ~1200px, para grelhas).
+- Páginas de lista/grelha ganham colunas responsivas: `/my-listings`, `/favorites`, `/para-ti`, `/candidates`, `/rooms`, `/visits`, `/visits-manager`, `/notifications`, `/matches` passam a `grid sm:grid-cols-2 xl:grid-cols-3` em vez de coluna única.
+- Dashboard do senhorio: cartões de métrica em `grid-cols-2 lg:grid-cols-4` e atalhos numa grelha larga.
 
-### 3. Avisos (`src/routes/notifications.tsx`) — assumir-se como log
-- Manter chips, mas mudar rótulos e ordem para **eventos** (Todas / Não lidas / Hoje / Esta semana) em vez de replicar os estados de Matches. As categorias (Interesse, Match, Visita…) passam a ser só o *pill* dentro do item, não a navegação.
-- **Filtrar por papel**: hóspede não vê categorias `marketplace` de senhorio (novo candidato, anúncio expirou); senhorio não vê categorias de descoberta (novo match sugerido, imóvel novo perto). Adicionar campo `audience: "seeker" | "landlord" | "both"` nos eventos (já parcialmente presente via `category`; mapear).
-- Estilo denso de linha temporal com timestamps proeminentes — visualmente diferente do cartão-conversa de Matches.
+### 3. Padrão master–detail (o "painel direito" do Spotify)
 
-### 4. Visitas
-- **Hóspede** (`/visits`): já OK, só afinar cabeçalho ("As minhas visitas") e remover se abrir em modo senhorio (redirect para `/visits-manager`).
-- **Senhorio** (`/visits-manager`): trocar imports de `mock-data` (`visits`, `listings`) por `useStore` e filtrar apenas visitas dos anúncios do próprio senhorio. Botões Confirmar/Recusar ligados a `api.confirmVisit` / `api.cancelVisit`.
+- `/chats` e `/chats/$id`: em mobile continuam duas páginas com navegação; em desktop a lista fica à esquerda e a conversa aberta à direita, no mesmo ecrã.
+- Mesmo tratamento em `/candidates` → `/candidates/$requestId`.
+- Sem duplicar rotas: a rota de detalhe renderiza o painel; a rota índice mostra a lista, e em desktop mostra ambos com um estado vazio ("Escolhe uma conversa") quando não há detalhe.
 
-### 5. Guardas de rota (papel)
-Adicionar um pequeno hook `useRoleGuard(expected)` em `src/lib/user-state.ts` e aplicar:
-- `seeker`: `/explore`, `/explore/$id`, `/explore/mapa`, `/favorites`, `/visits`, `/preferences`, `/para-ti`.
-- `landlord`: `/dashboard`, `/my-listings`, `/my-listings/new`, `/publish`, `/candidates`, `/candidates/$requestId`, `/visits-manager`, `/account`.
-- Ambos: `/matches`, `/chats`, `/notifications`, `/profile`, `/settings`, `/onboarding`, páginas legais/help.
+### 4. PageHeader e cabeçalhos
 
-Se o papel não bate, redireciona para o home do papel atual (`/explore` ou `/dashboard`) — evita URLs "cruzados" que confundem o teste.
+- Em desktop o header deixa de ser sticky translúcido de 56px e passa a título grande com ações à direita; em mobile fica igual.
+- Botão "voltar" some em desktop quando a navegação lateral já dá contexto.
 
-### 6. AppShell
-Já reage a `useRole()`. Só validar que o nav do senhorio não tem "Avisos" duplicado com "Matches" e vice-versa — manter os dois separados nos dois papéis.
+### 5. Ecrãs de auth e onboarding
+
+- `/login`, `/register`, `/reset-password`, `/onboarding`, `/publish`: em desktop passam a layout de duas colunas (painel de marca à esquerda, formulário à direita, máx. ~420px), em vez do formulário solto no meio.
+
+### 6. Regras de responsividade aplicadas em todo o lado
+
+Nas linhas com texto + ícones/botões: `grid-cols-[minmax(0,1fr)_auto]` em mobile, `flex` a partir de `sm:`, `min-w-0` nos contentores de texto, `shrink-0` nos ícones, `truncate` nos títulos. Corrige os cortes de texto que aparecem em ecrãs estreitos.
+
+## Testar no telemóvel — Expo Go não serve
+
+O Expo Go só corre projetos React Native/Expo (JavaScript com componentes nativos). Este projeto é uma app web React (TanStack Start) embrulhada em Capacitor para iOS — o Expo Go não consegue abrir isto, e migrar para Expo significaria reescrever todos os ecrãs em React Native. Não recomendo.
+
+Três formas reais de testar no telefone, por ordem de esforço:
+
+1. **URL de preview no browser do telefone** (zero configuração): abrir o link de preview do projeto no Safari/Chrome do telemóvel. Serve para validar 90% do layout responsivo.
+2. **Adicionar ao ecrã principal (PWA)**: posso adicionar manifest + ícones para que, ao "Adicionar ao ecrã principal", abra em ecrã inteiro sem barra do browser — muito próximo da sensação de app. Sem offline, salvo pedido explícito.
+3. **Capacitor com live reload** (é o equivalente ao Expo Go aqui): já existe `ios/` e os scripts `build:native`/`ios`. Com o `server.url` do Capacitor a apontar para o teu Mac, a app nativa carrega o dev server e recarrega ao guardar. Requer macOS + Xcode. Posso deixar essa configuração preparada e documentada no README.
+
+Diz-me se queres o passo 2 (PWA) e/ou a configuração do passo 3 incluídos neste trabalho.
 
 ## Fora do âmbito
 
-Sem alterações a tokens/CSS, sem novo backend, sem novos componentes de design system, sem mexer em Cloud.
+Sem backend, sem migração para React Native/Expo, sem mudar tokens de cor/tipografia, sem alterar lógica de negócio — só camada de layout e apresentação.
 
 ## Ordem de execução
 
-1. `store.ts` — expor helpers `visitsForLandlord()`, `matchesForLandlord()` (candidato×anúncio) e `notificationsForRole(role)`.
-2. `profile.tsx` — auditar e limpar mistura de papéis.
-3. `matches.tsx` — novo header, 3 grupos, variante senhorio.
-4. `notifications.tsx` — filtro por papel + chips reformulados (log style).
-5. `visits-manager.tsx` — passar a usar store + ações reais.
-6. `user-state.ts` — `useRoleGuard`; aplicar nas rotas listadas.
-7. Passagem final: abrir cada rota nos dois papéis e confirmar que nada "vaza".
+1. `AppShell` — sidebar desktop + bottom nav mobile + variantes de largura.
+2. `PageHeader` — variante desktop.
+3. Grelhas responsivas nas páginas de lista (hóspede e senhorio).
+4. Master–detail em chats e candidatos.
+5. Auth/onboarding/publish em duas colunas.
+6. Passagem final a 375px, 768px, 1280px e 1920px nos dois papéis.
