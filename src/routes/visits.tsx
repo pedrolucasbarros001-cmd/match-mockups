@@ -23,7 +23,7 @@ function VisitsPage() {
   const listings = useStore((s) => s.listings);
 
   return (
-    <AppShell>
+    <AppShell width="wide">
       <PageHeader title="As minhas visitas" back="/profile" />
       {visits.length === 0 ? (
         <div className="p-8">
@@ -37,7 +37,7 @@ function VisitsPage() {
           </div>
         </div>
       ) : (
-        <ul className="flex flex-col gap-3 px-4 pt-4">
+        <ul className="grid gap-3 px-4 pt-4 md:grid-cols-2 xl:grid-cols-3">
           {visits.map((v) => {
             const l = listings.find((x) => x.id === v.listingId);
             if (!l) return null;

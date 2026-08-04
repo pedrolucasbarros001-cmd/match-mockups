@@ -1,3 +1,4 @@
+import { AuthLayout } from "@/components/AuthLayout";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { ChevronLeft, MailCheck } from "lucide-react";
@@ -10,7 +11,7 @@ export const Route = createFileRoute("/reset-password")({
 function ResetPage() {
   const [sent, setSent] = useState(false);
   return (
-    <div className="mx-auto flex min-h-svh w-full max-w-[440px] flex-col bg-background px-6 pb-10">
+    <AuthLayout className="px-6 pb-10">
       <header className="-mx-2 flex h-16 items-center">
         <Link to="/login" className="grid size-10 place-items-center rounded-full hover:bg-muted"><ChevronLeft className="size-5" /></Link>
       </header>
@@ -32,6 +33,6 @@ function ResetPage() {
           <button type="submit" className="mt-2 h-14 rounded-lg bg-primary font-display text-base font-semibold text-primary-foreground shadow-lift">Enviar link</button>
         </form>
       )}
-    </div>
+    </AuthLayout>
   );
 }

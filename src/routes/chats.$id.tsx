@@ -1,3 +1,5 @@
+import { PageShell } from "@/components/AppShell";
+import { ChatList } from "@/components/ChatList";
 import { createFileRoute, Link, useNavigate, useParams } from "@tanstack/react-router";
 import { useState } from "react";
 import { nextActionFor, priceLabel } from "@/lib/mock-data";
@@ -80,10 +82,16 @@ function ChatRoom() {
   };
 
   return (
-    <div className="mx-auto flex min-h-svh w-full max-w-[440px] flex-col bg-background">
-      <div className="sticky top-0 z-30 h-safe-top glass-light" />
-      <header className="sticky top-[env(safe-area-inset-top,0px)] z-30 flex items-center gap-2 border-b border-border glass-light px-2 py-2">
-        <Link to="/matches" className="grid size-10 place-items-center rounded-pill hover:bg-muted"><ChevronLeft className="size-5" /></Link>
+    <PageShell width="wide" className="flex flex-col md:grid md:grid-cols-[minmax(300px,360px)_minmax(0,1fr)] md:items-start">
+      {/* Desktop: lista de conversas fica visível ao lado (padrão master–detail). */}
+      <aside className="hidden h-svh overflow-y-auto border-r border-border md:block">
+        <ChatList activeId={chat.id} />
+      </aside>
+      <div className="flex min-h-svh min-w-0 flex-col">
+      <div className="sticky top-0 z-30 h-safe-top glass-light md:hidden" />
+      <header className="sticky top-[env(safe-area-inset-top,0px)] z-30 flex items-center gap-2 border-b border-border glass-light px-2 py-2 md:top-0">
+        <Link to="/matches" className="grid size-10 place-items-center rounded-pill hover:bg-muted md:hidden"><ChevronLeft className="size-5" /></Link>
+
         {other.avatar ? (
           <img src={other.avatar} className="size-10 rounded-pill object-cover" alt="" />
         ) : (
@@ -156,7 +164,7 @@ function ChatRoom() {
       <Link
         to="/explore/$id"
         params={{ id: listing.id }}
-        className="sticky top-14 z-20 mx-3 mt-3 flex items-center gap-3 rounded-xl border border-border bg-surface p-3 shadow-card"
+        className="sticky top-14 md:top-0 z-20 mx-3 mt-3 flex items-center gap-3 rounded-xl border border-border bg-surface p-3 shadow-card"
       >
         <img src={listing.photos[0]} className="size-12 rounded-md object-cover" alt="" />
         <div className="min-w-0 flex-1">
@@ -218,7 +226,8 @@ function ChatRoom() {
           </div>
         </Sheet>
       )}
-    </div>
+      </div>
+    </PageShell>
   );
 }
 
@@ -226,7 +235,7 @@ function Sheet({ title, children, onClose }: { title: string; children: React.Re
   return (
     <>
       <div onClick={onClose} className="fixed inset-0 z-40 bg-black/40" />
-      <div className="fixed inset-x-0 bottom-0 z-50 mx-auto max-w-[440px] rounded-t-[28px] bg-surface p-5 pb-safe">
+      <div className="fixed inset-x-0 bottom-0 z-50 mx-auto max-w-[440px] md:max-w-[760px] rounded-t-[28px] bg-surface p-5 pb-safe">
         <div className="mx-auto mb-3 h-1.5 w-12 rounded-pill bg-border" />
         <div className="flex items-center justify-between">
           <h2 className="font-display text-lg font-bold">{title}</h2>

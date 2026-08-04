@@ -1,3 +1,4 @@
+import { AuthLayout } from "@/components/AuthLayout";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
@@ -13,7 +14,7 @@ function LoginPage() {
   const [showPw, setShowPw] = useState(false);
 
   return (
-    <div className="mx-auto flex min-h-svh w-full max-w-[440px] flex-col bg-background px-6 pb-10 pt-20">
+    <AuthLayout className="px-6 pb-10 pt-20">
       <div className="mb-12 text-center">
         <h1 className="font-display text-4xl font-extrabold tracking-tight text-foreground">HomeMatch</h1>
         <p className="mt-2 text-sm text-muted-foreground">Encontra onde viver. Sem dramas.</p>
@@ -63,7 +64,7 @@ function LoginPage() {
         Ainda não tens conta?{" "}
         <Link to="/register" className="font-semibold text-primary">Criar →</Link>
       </p>
-    </div>
+    </AuthLayout>
   );
 }
 

@@ -91,7 +91,7 @@ function ExplorePage() {
   };
 
   return (
-    <AppShell fullHeight>
+    <AppShell fullHeight width="feed">
       <header className="z-30 shrink-0 glass-light">
         <div className="h-safe-top" />
         <div className="flex h-14 items-center justify-between gap-3 px-4">

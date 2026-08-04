@@ -1,3 +1,4 @@
+import { AuthLayout } from "@/components/AuthLayout";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Eye, EyeOff, ChevronLeft } from "lucide-react";
@@ -24,7 +25,7 @@ function RegisterPage() {
   const ok = validEmail && pw.length >= 8 && match && terms;
 
   return (
-    <div className="mx-auto flex min-h-svh w-full max-w-[440px] flex-col bg-background px-6 pb-10">
+    <AuthLayout className="px-6 pb-10">
       <header className="-mx-2 flex h-16 items-center justify-between">
         <Link to="/login" className="grid size-10 place-items-center rounded-full hover:bg-muted"><ChevronLeft className="size-5" /></Link>
         <span className="font-display text-base font-bold">HomeMatch</span>
@@ -92,6 +93,6 @@ function RegisterPage() {
       <p className="mt-8 text-center text-sm text-muted-foreground">
         Já tens conta? <Link to="/login" className="font-semibold text-primary">Entrar →</Link>
       </p>
-    </div>
+    </AuthLayout>
   );
 }
