@@ -32,7 +32,7 @@ function MatchesPage() {
   const totalStepIndex = matchSteps("rent").length; // o número de fases é igual nos dois tipos
 
   return (
-    <AppShell>
+    <AppShell wide>
       <PageHeader title={role === "landlord" ? "Candidaturas" : "Matches"} />
       <div className="px-4 pt-3 pb-2 text-xs text-muted-foreground">
         <span className="font-num font-bold text-foreground">{activeCount}</span> ativas ·{" "}
@@ -79,7 +79,7 @@ function MatchesPage() {
           </div>
         </div>
       ) : (
-        <ul className="flex flex-col gap-3 px-4 pt-4">
+        <ul className="flex flex-col gap-3 px-4 pt-4 lg:grid lg:grid-cols-2 lg:content-start">
           {items.map((m) => {
             const l = listings.find((x) => x.id === m.listingId);
             if (!l) return null;

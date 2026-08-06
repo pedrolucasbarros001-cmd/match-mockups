@@ -4,7 +4,9 @@ import { useState } from "react";
 import { PageHeader } from "@/components/AppShell";
 import { getState } from "@/lib/store";
 import { api } from "@/lib/api";
-import type { SpaceType } from "@/lib/mock-data";
+import type { SpaceType, ListingKind } from "@/lib/mock-data";
+import { priceAmount, priceRange, priceSuffix } from "@/lib/mock-data";
+import { spaceTypesFor } from "@/lib/listing-rules";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/preferences")({
@@ -12,31 +14,47 @@ export const Route = createFileRoute("/preferences")({
   component: PreferencesPage,
 });
 
-const TYPES: SpaceType[] = ["Quarto", "Suite", "Quarto Partilhado", "Estúdio", "T1", "T2", "T3", "T4+"];
-
 function PreferencesPage() {
   useRoleGuard("seeker");
   const nav = useNavigate();
   // Estado inicial vem do store real; guarda tudo de uma vez no fim.
   const prefs = getState().preferences;
-  // Este ecrã é do inquilino: edita sempre as preferências de arrendamento.
-  const kind = "rent" as const;
+  /**
+   * A pesquisa de arrendar e a de comprar são independentes: tipos, orçamento e
+   * requisitos não se traduzem de uma para a outra. Este ecrã edita a que
+   * estiver ativa, tal como o feed.
+   */
+  const [kind, setKind] = useState<ListingKind>(prefs.kind);
+  const sale = kind === "sale";
+  const range = priceRange(kind);
+
   const [city, setCity] = useState(prefs.city);
   const [radius, setRadius] = useState(prefs.maxDistanceKm);
-  const [types, setTypes] = useState<string[]>(prefs.spaceTypes[kind] ?? []);
-  const [max, setMax] = useState(prefs.maxPrice);
+  const [typesByKind, setTypesByKind] = useState(prefs.spaceTypes);
+  const [maxRent, setMaxRent] = useState(prefs.maxPrice);
+  const [maxSale, setMaxSale] = useState(prefs.maxSalePrice);
   const [moveIn, setMoveIn] = useState(prefs.moveInFrom);
   const [pets, setPets] = useState(prefs.pets);
   const [furnished, setFurnished] = useState(prefs.needsFurnished);
 
-  const toggle = (t: SpaceType) => setTypes(types.includes(t) ? types.filter((x) => x !== t) : [...types, t]);
+  const types = typesByKind[kind] ?? [];
+  const max = sale ? maxSale : maxRent;
+  const setMax = sale ? setMaxSale : setMaxRent;
+
+  const toggle = (t: SpaceType) =>
+    setTypesByKind((prev) => ({
+      ...prev,
+      [kind]: (prev[kind] ?? []).includes(t) ? (prev[kind] ?? []).filter((x) => x !== t) : [...(prev[kind] ?? []), t],
+    }));
 
   const save = async () => {
     await api.updatePreferences({
+      kind,
       city,
       maxDistanceKm: radius,
-      spaceTypes: { ...getState().preferences.spaceTypes, [kind]: types },
-      maxPrice: max,
+      spaceTypes: typesByKind,
+      maxPrice: maxRent,
+      maxSalePrice: maxSale,
       moveInFrom: moveIn,
       pets,
       needsFurnished: furnished,
@@ -50,11 +68,30 @@ function PreferencesPage() {
       <PageHeader title="Preferências" back="/profile" />
       <div className="space-y-6 px-5 pt-5">
         <p className="text-sm text-muted-foreground">
-          O que procuras <b>agora</b>. Isto muda a descoberta; não altera o teu perfil.
+          O teu perfil de procura. Os campos de tipo e preço são os mesmos dos
+          filtros do feed — aqui tens tudo, incluindo cidade e datas.
         </p>
 
+        {/* Arrendar e comprar são duas procuras distintas, cada uma com os seus valores. */}
+        <Field label="Estou a procurar">
+          <div className="grid grid-cols-2 gap-1 rounded-pill bg-muted p-1">
+            {(["rent", "sale"] as ListingKind[]).map((k) => (
+              <button
+                key={k}
+                onClick={() => setKind(k)}
+                className={cn(
+                  "h-9 rounded-pill text-sm font-bold transition",
+                  kind === k ? "bg-surface text-foreground shadow-card" : "text-muted-foreground",
+                )}
+              >
+                {k === "rent" ? "Arrendar" : "Comprar"}
+              </button>
+            ))}
+          </div>
+        </Field>
+
         <Field label="Cidade">
-          <input value={city} onChange={(e) => setCity(e.target.value)} className="h-12 w-full rounded-md border border-border bg-surface px-4 outline-none focus:border-primary" />
+          <input value={city} onChange={(e) => setCity(e.target.value)} placeholder="ex. Braga" className="h-12 w-full rounded-md border border-border bg-surface px-4 outline-none focus:border-primary" />
         </Field>
 
         <Field label={`Raio · ${radius} km`}>
@@ -63,29 +100,47 @@ function PreferencesPage() {
 
         <Field label="Tipos de espaço">
           <div className="flex flex-wrap gap-2">
-            {TYPES.map((t) => (
+            {spaceTypesFor(kind).map((t) => (
               <button key={t} onClick={() => toggle(t)} className={cn(
                 "h-9 rounded-pill border px-3 text-xs font-semibold transition",
                 types.includes(t) ? "border-primary bg-primary-soft text-primary" : "border-border bg-surface text-foreground",
               )}>{t}</button>
             ))}
           </div>
+          <p className="mt-1.5 text-[11px] text-muted-foreground">
+            {sale ? "Só unidades autónomas — um quarto não se compra." : "Inclui partes de casa (quarto, suite) e casas inteiras."}
+          </p>
         </Field>
 
-        <Field label={`Preço máximo · €${max}`}>
-          <input type="range" min={150} max={2000} step={10} value={max} onChange={(e) => setMax(+e.target.value)} className="w-full accent-[color:var(--primary)]" />
+        <Field label={`Preço máximo · ${priceAmount(max)} ${priceSuffix(kind)}`}>
+          <input
+            type="range"
+            min={range.min}
+            max={range.max}
+            step={range.step}
+            value={max}
+            onChange={(e) => setMax(+e.target.value)}
+            className="w-full accent-[color:var(--primary)]"
+          />
         </Field>
 
-        <Field label="Disponível a partir de">
-          <input value={moveIn} onChange={(e) => setMoveIn(e.target.value)} placeholder="ex. 1 Set 2026" className="h-12 w-full rounded-md border border-border bg-surface px-4 outline-none focus:border-primary" />
-        </Field>
+        {/* Data de entrada e requisitos de convivência só existem no arrendamento. */}
+        {!sale && (
+          <>
+            <Field label="Disponível a partir de">
+              <input value={moveIn} onChange={(e) => setMoveIn(e.target.value)} placeholder="ex. 1 Set 2026" className="h-12 w-full rounded-md border border-border bg-surface px-4 outline-none focus:border-primary" />
+            </Field>
 
-        <Field label="Preferências">
-          <ToggleRow label="Tenho / quero animais" v={pets} on={setPets} />
-          <ToggleRow label="Preciso de mobilado" v={furnished} on={setFurnished} />
-        </Field>
+            <Field label="Requisitos">
+              <ToggleRow label="Tem de aceitar animais" v={pets} on={setPets} />
+              <ToggleRow label="Tem de estar mobilado" v={furnished} on={setFurnished} />
+            </Field>
+          </>
+        )}
 
-        <button onClick={save} className="h-12 w-full rounded-lg bg-primary font-display font-semibold text-primary-foreground shadow-lift">Guardar</button>
+        <button onClick={save} className="h-12 w-full rounded-lg bg-primary font-display font-semibold text-primary-foreground shadow-lift transition active:scale-[0.98]">
+          Guardar e ver resultados
+        </button>
       </div>
     </div>
   );

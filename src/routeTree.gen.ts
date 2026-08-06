@@ -22,12 +22,10 @@ import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as ParaTiRouteImport } from './routes/para-ti'
 import { Route as PreferencesRouteImport } from './routes/preferences'
-import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as PublishRouteImport } from './routes/publish'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RoomsRouteImport } from './routes/rooms'
-import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SplashRouteImport } from './routes/splash'
 import { Route as SwitchUserRouteImport } from './routes/switch-user'
 import { Route as VisitsRouteImport } from './routes/visits'
@@ -44,8 +42,16 @@ import { Route as LegalPrivacyRouteImport } from './routes/legal.privacy'
 import { Route as LegalTermsRouteImport } from './routes/legal.terms'
 import { Route as MyListingsIndexRouteImport } from './routes/my-listings.index'
 import { Route as MyListingsNewRouteImport } from './routes/my-listings.new'
+import { Route as ProfileIndexRouteImport } from './routes/profile.index'
+import { Route as ProfileEditRouteImport } from './routes/profile.edit'
 import { Route as ProfileScoreRouteImport } from './routes/profile.score'
 import { Route as RentalCloseChatIdRouteImport } from './routes/rental-close.$chatId'
+import { Route as SettingsIndexRouteImport } from './routes/settings.index'
+import { Route as SettingsAccountRouteImport } from './routes/settings.account'
+import { Route as SettingsLanguageRouteImport } from './routes/settings.language'
+import { Route as SettingsNotificationsRouteImport } from './routes/settings.notifications'
+import { Route as SettingsPrivacyRouteImport } from './routes/settings.privacy'
+import { Route as MyListingsIdEditRouteImport } from './routes/my-listings.$id.edit'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -112,11 +118,6 @@ const PreferencesRoute = PreferencesRouteImport.update({
   path: '/preferences',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ProfileRoute = ProfileRouteImport.update({
-  id: '/profile',
-  path: '/profile',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const PublishRoute = PublishRouteImport.update({
   id: '/publish',
   path: '/publish',
@@ -135,11 +136,6 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
 const RoomsRoute = RoomsRouteImport.update({
   id: '/rooms',
   path: '/rooms',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SettingsRoute = SettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SplashRoute = SplashRouteImport.update({
@@ -222,14 +218,54 @@ const MyListingsNewRoute = MyListingsNewRouteImport.update({
   path: '/my-listings/new',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProfileIndexRoute = ProfileIndexRouteImport.update({
+  id: '/profile/',
+  path: '/profile/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileEditRoute = ProfileEditRouteImport.update({
+  id: '/profile/edit',
+  path: '/profile/edit',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProfileScoreRoute = ProfileScoreRouteImport.update({
-  id: '/score',
-  path: '/score',
-  getParentRoute: () => ProfileRoute,
+  id: '/profile/score',
+  path: '/profile/score',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const RentalCloseChatIdRoute = RentalCloseChatIdRouteImport.update({
   id: '/rental-close/$chatId',
   path: '/rental-close/$chatId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsIndexRoute = SettingsIndexRouteImport.update({
+  id: '/settings/',
+  path: '/settings/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsAccountRoute = SettingsAccountRouteImport.update({
+  id: '/settings/account',
+  path: '/settings/account',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsLanguageRoute = SettingsLanguageRouteImport.update({
+  id: '/settings/language',
+  path: '/settings/language',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsNotificationsRoute = SettingsNotificationsRouteImport.update({
+  id: '/settings/notifications',
+  path: '/settings/notifications',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsPrivacyRoute = SettingsPrivacyRouteImport.update({
+  id: '/settings/privacy',
+  path: '/settings/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MyListingsIdEditRoute = MyListingsIdEditRouteImport.update({
+  id: '/my-listings/$id/edit',
+  path: '/my-listings/$id/edit',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -247,12 +283,10 @@ export interface FileRoutesByFullPath {
   '/onboarding': typeof OnboardingRoute
   '/para-ti': typeof ParaTiRoute
   '/preferences': typeof PreferencesRoute
-  '/profile': typeof ProfileRouteWithChildren
   '/publish': typeof PublishRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/rooms': typeof RoomsRoute
-  '/settings': typeof SettingsRoute
   '/splash': typeof SplashRoute
   '/switch-user': typeof SwitchUserRoute
   '/visits': typeof VisitsRoute
@@ -265,12 +299,20 @@ export interface FileRoutesByFullPath {
   '/legal/privacy': typeof LegalPrivacyRoute
   '/legal/terms': typeof LegalTermsRoute
   '/my-listings/new': typeof MyListingsNewRoute
+  '/profile/edit': typeof ProfileEditRoute
   '/profile/score': typeof ProfileScoreRoute
   '/rental-close/$chatId': typeof RentalCloseChatIdRoute
+  '/settings/account': typeof SettingsAccountRoute
+  '/settings/language': typeof SettingsLanguageRoute
+  '/settings/notifications': typeof SettingsNotificationsRoute
+  '/settings/privacy': typeof SettingsPrivacyRoute
   '/candidates/': typeof CandidatesIndexRoute
   '/chats/': typeof ChatsIndexRoute
   '/explore/': typeof ExploreIndexRoute
   '/my-listings/': typeof MyListingsIndexRoute
+  '/profile/': typeof ProfileIndexRoute
+  '/settings/': typeof SettingsIndexRoute
+  '/my-listings/$id/edit': typeof MyListingsIdEditRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -286,12 +328,10 @@ export interface FileRoutesByTo {
   '/onboarding': typeof OnboardingRoute
   '/para-ti': typeof ParaTiRoute
   '/preferences': typeof PreferencesRoute
-  '/profile': typeof ProfileRouteWithChildren
   '/publish': typeof PublishRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/rooms': typeof RoomsRoute
-  '/settings': typeof SettingsRoute
   '/splash': typeof SplashRoute
   '/switch-user': typeof SwitchUserRoute
   '/visits': typeof VisitsRoute
@@ -304,12 +344,20 @@ export interface FileRoutesByTo {
   '/legal/privacy': typeof LegalPrivacyRoute
   '/legal/terms': typeof LegalTermsRoute
   '/my-listings/new': typeof MyListingsNewRoute
+  '/profile/edit': typeof ProfileEditRoute
   '/profile/score': typeof ProfileScoreRoute
   '/rental-close/$chatId': typeof RentalCloseChatIdRoute
+  '/settings/account': typeof SettingsAccountRoute
+  '/settings/language': typeof SettingsLanguageRoute
+  '/settings/notifications': typeof SettingsNotificationsRoute
+  '/settings/privacy': typeof SettingsPrivacyRoute
   '/candidates': typeof CandidatesIndexRoute
   '/chats': typeof ChatsIndexRoute
   '/explore': typeof ExploreIndexRoute
   '/my-listings': typeof MyListingsIndexRoute
+  '/profile': typeof ProfileIndexRoute
+  '/settings': typeof SettingsIndexRoute
+  '/my-listings/$id/edit': typeof MyListingsIdEditRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -326,12 +374,10 @@ export interface FileRoutesById {
   '/onboarding': typeof OnboardingRoute
   '/para-ti': typeof ParaTiRoute
   '/preferences': typeof PreferencesRoute
-  '/profile': typeof ProfileRouteWithChildren
   '/publish': typeof PublishRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/rooms': typeof RoomsRoute
-  '/settings': typeof SettingsRoute
   '/splash': typeof SplashRoute
   '/switch-user': typeof SwitchUserRoute
   '/visits': typeof VisitsRoute
@@ -344,12 +390,20 @@ export interface FileRoutesById {
   '/legal/privacy': typeof LegalPrivacyRoute
   '/legal/terms': typeof LegalTermsRoute
   '/my-listings/new': typeof MyListingsNewRoute
+  '/profile/edit': typeof ProfileEditRoute
   '/profile/score': typeof ProfileScoreRoute
   '/rental-close/$chatId': typeof RentalCloseChatIdRoute
+  '/settings/account': typeof SettingsAccountRoute
+  '/settings/language': typeof SettingsLanguageRoute
+  '/settings/notifications': typeof SettingsNotificationsRoute
+  '/settings/privacy': typeof SettingsPrivacyRoute
   '/candidates/': typeof CandidatesIndexRoute
   '/chats/': typeof ChatsIndexRoute
   '/explore/': typeof ExploreIndexRoute
   '/my-listings/': typeof MyListingsIndexRoute
+  '/profile/': typeof ProfileIndexRoute
+  '/settings/': typeof SettingsIndexRoute
+  '/my-listings/$id/edit': typeof MyListingsIdEditRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -367,12 +421,10 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/para-ti'
     | '/preferences'
-    | '/profile'
     | '/publish'
     | '/register'
     | '/reset-password'
     | '/rooms'
-    | '/settings'
     | '/splash'
     | '/switch-user'
     | '/visits'
@@ -385,12 +437,20 @@ export interface FileRouteTypes {
     | '/legal/privacy'
     | '/legal/terms'
     | '/my-listings/new'
+    | '/profile/edit'
     | '/profile/score'
     | '/rental-close/$chatId'
+    | '/settings/account'
+    | '/settings/language'
+    | '/settings/notifications'
+    | '/settings/privacy'
     | '/candidates/'
     | '/chats/'
     | '/explore/'
     | '/my-listings/'
+    | '/profile/'
+    | '/settings/'
+    | '/my-listings/$id/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -406,12 +466,10 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/para-ti'
     | '/preferences'
-    | '/profile'
     | '/publish'
     | '/register'
     | '/reset-password'
     | '/rooms'
-    | '/settings'
     | '/splash'
     | '/switch-user'
     | '/visits'
@@ -424,12 +482,20 @@ export interface FileRouteTypes {
     | '/legal/privacy'
     | '/legal/terms'
     | '/my-listings/new'
+    | '/profile/edit'
     | '/profile/score'
     | '/rental-close/$chatId'
+    | '/settings/account'
+    | '/settings/language'
+    | '/settings/notifications'
+    | '/settings/privacy'
     | '/candidates'
     | '/chats'
     | '/explore'
     | '/my-listings'
+    | '/profile'
+    | '/settings'
+    | '/my-listings/$id/edit'
   id:
     | '__root__'
     | '/'
@@ -445,12 +511,10 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/para-ti'
     | '/preferences'
-    | '/profile'
     | '/publish'
     | '/register'
     | '/reset-password'
     | '/rooms'
-    | '/settings'
     | '/splash'
     | '/switch-user'
     | '/visits'
@@ -463,12 +527,20 @@ export interface FileRouteTypes {
     | '/legal/privacy'
     | '/legal/terms'
     | '/my-listings/new'
+    | '/profile/edit'
     | '/profile/score'
     | '/rental-close/$chatId'
+    | '/settings/account'
+    | '/settings/language'
+    | '/settings/notifications'
+    | '/settings/privacy'
     | '/candidates/'
     | '/chats/'
     | '/explore/'
     | '/my-listings/'
+    | '/profile/'
+    | '/settings/'
+    | '/my-listings/$id/edit'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -485,12 +557,10 @@ export interface RootRouteChildren {
   OnboardingRoute: typeof OnboardingRoute
   ParaTiRoute: typeof ParaTiRoute
   PreferencesRoute: typeof PreferencesRoute
-  ProfileRoute: typeof ProfileRouteWithChildren
   PublishRoute: typeof PublishRoute
   RegisterRoute: typeof RegisterRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   RoomsRoute: typeof RoomsRoute
-  SettingsRoute: typeof SettingsRoute
   SplashRoute: typeof SplashRoute
   SwitchUserRoute: typeof SwitchUserRoute
   VisitsRoute: typeof VisitsRoute
@@ -503,11 +573,20 @@ export interface RootRouteChildren {
   LegalPrivacyRoute: typeof LegalPrivacyRoute
   LegalTermsRoute: typeof LegalTermsRoute
   MyListingsNewRoute: typeof MyListingsNewRoute
+  ProfileEditRoute: typeof ProfileEditRoute
+  ProfileScoreRoute: typeof ProfileScoreRoute
   RentalCloseChatIdRoute: typeof RentalCloseChatIdRoute
+  SettingsAccountRoute: typeof SettingsAccountRoute
+  SettingsLanguageRoute: typeof SettingsLanguageRoute
+  SettingsNotificationsRoute: typeof SettingsNotificationsRoute
+  SettingsPrivacyRoute: typeof SettingsPrivacyRoute
   CandidatesIndexRoute: typeof CandidatesIndexRoute
   ChatsIndexRoute: typeof ChatsIndexRoute
   ExploreIndexRoute: typeof ExploreIndexRoute
   MyListingsIndexRoute: typeof MyListingsIndexRoute
+  ProfileIndexRoute: typeof ProfileIndexRoute
+  SettingsIndexRoute: typeof SettingsIndexRoute
+  MyListingsIdEditRoute: typeof MyListingsIdEditRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -603,13 +682,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PreferencesRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/profile': {
-      id: '/profile'
-      path: '/profile'
-      fullPath: '/profile'
-      preLoaderRoute: typeof ProfileRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/publish': {
       id: '/publish'
       path: '/publish'
@@ -636,13 +708,6 @@ declare module '@tanstack/react-router' {
       path: '/rooms'
       fullPath: '/rooms'
       preLoaderRoute: typeof RoomsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/settings': {
-      id: '/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/splash': {
@@ -757,12 +822,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MyListingsNewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/profile/': {
+      id: '/profile/'
+      path: '/profile'
+      fullPath: '/profile/'
+      preLoaderRoute: typeof ProfileIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile/edit': {
+      id: '/profile/edit'
+      path: '/profile/edit'
+      fullPath: '/profile/edit'
+      preLoaderRoute: typeof ProfileEditRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/profile/score': {
       id: '/profile/score'
-      path: '/score'
+      path: '/profile/score'
       fullPath: '/profile/score'
       preLoaderRoute: typeof ProfileScoreRouteImport
-      parentRoute: typeof ProfileRoute
+      parentRoute: typeof rootRouteImport
     }
     '/rental-close/$chatId': {
       id: '/rental-close/$chatId'
@@ -771,19 +850,50 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RentalCloseChatIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/settings/': {
+      id: '/settings/'
+      path: '/settings'
+      fullPath: '/settings/'
+      preLoaderRoute: typeof SettingsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings/account': {
+      id: '/settings/account'
+      path: '/settings/account'
+      fullPath: '/settings/account'
+      preLoaderRoute: typeof SettingsAccountRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings/language': {
+      id: '/settings/language'
+      path: '/settings/language'
+      fullPath: '/settings/language'
+      preLoaderRoute: typeof SettingsLanguageRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings/notifications': {
+      id: '/settings/notifications'
+      path: '/settings/notifications'
+      fullPath: '/settings/notifications'
+      preLoaderRoute: typeof SettingsNotificationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings/privacy': {
+      id: '/settings/privacy'
+      path: '/settings/privacy'
+      fullPath: '/settings/privacy'
+      preLoaderRoute: typeof SettingsPrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/my-listings/$id/edit': {
+      id: '/my-listings/$id/edit'
+      path: '/my-listings/$id/edit'
+      fullPath: '/my-listings/$id/edit'
+      preLoaderRoute: typeof MyListingsIdEditRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
-
-interface ProfileRouteChildren {
-  ProfileScoreRoute: typeof ProfileScoreRoute
-}
-
-const ProfileRouteChildren: ProfileRouteChildren = {
-  ProfileScoreRoute: ProfileScoreRoute,
-}
-
-const ProfileRouteWithChildren =
-  ProfileRoute._addFileChildren(ProfileRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -799,12 +909,10 @@ const rootRouteChildren: RootRouteChildren = {
   OnboardingRoute: OnboardingRoute,
   ParaTiRoute: ParaTiRoute,
   PreferencesRoute: PreferencesRoute,
-  ProfileRoute: ProfileRouteWithChildren,
   PublishRoute: PublishRoute,
   RegisterRoute: RegisterRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   RoomsRoute: RoomsRoute,
-  SettingsRoute: SettingsRoute,
   SplashRoute: SplashRoute,
   SwitchUserRoute: SwitchUserRoute,
   VisitsRoute: VisitsRoute,
@@ -817,11 +925,20 @@ const rootRouteChildren: RootRouteChildren = {
   LegalPrivacyRoute: LegalPrivacyRoute,
   LegalTermsRoute: LegalTermsRoute,
   MyListingsNewRoute: MyListingsNewRoute,
+  ProfileEditRoute: ProfileEditRoute,
+  ProfileScoreRoute: ProfileScoreRoute,
   RentalCloseChatIdRoute: RentalCloseChatIdRoute,
+  SettingsAccountRoute: SettingsAccountRoute,
+  SettingsLanguageRoute: SettingsLanguageRoute,
+  SettingsNotificationsRoute: SettingsNotificationsRoute,
+  SettingsPrivacyRoute: SettingsPrivacyRoute,
   CandidatesIndexRoute: CandidatesIndexRoute,
   ChatsIndexRoute: ChatsIndexRoute,
   ExploreIndexRoute: ExploreIndexRoute,
   MyListingsIndexRoute: MyListingsIndexRoute,
+  ProfileIndexRoute: ProfileIndexRoute,
+  SettingsIndexRoute: SettingsIndexRoute,
+  MyListingsIdEditRoute: MyListingsIdEditRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

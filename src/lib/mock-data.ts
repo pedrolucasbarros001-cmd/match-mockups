@@ -3,6 +3,10 @@
 
 import { getState } from "./store";
 
+/**
+ * Nem todos existem nos dois tipos de negócio — ver spaceTypesFor() em
+ * listing-rules.ts, que é quem decide o que se pode arrendar e o que se vende.
+ */
 export type SpaceType =
   | "Quarto"
   | "Suite"
@@ -11,7 +15,8 @@ export type SpaceType =
   | "T1"
   | "T2"
   | "T3"
-  | "T4+";
+  | "T4+"
+  | "Moradia";
 
 export type ListingLifecycle =
   | "draft"

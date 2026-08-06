@@ -47,13 +47,57 @@ export type Profile = {
   email: string;
   avatar: string;
   bio: string;
+  /** Estudante, trabalhador, freelancer… — mostrado a quem vê o perfil. */
+  occupation: string;
   phone: string;
   nif: string;
   emailVerified: boolean;
   phoneVerified: boolean;
-  identityDeclared: boolean;
-  incomeDeclared: boolean;
+  /**
+   * Documento de identificação declarado. Ter qualquer um destes implica ter
+   * NIF, por isso o NIF não se pergunta em separado — seria perguntar duas
+   * vezes o mesmo facto.
+   */
+  documentType: DocumentType | null;
+  /** Reside em Portugal (afeta o tipo de documento esperado). */
+  residentInPortugal: boolean;
+  /**
+   * Rendimento e estudante são independentes, não alternativas: um estudante
+   * que vive sozinho tem quase sempre rendimento (bolsa, trabalho, apoio).
+   * Tratá-los como opostos obrigava a pessoa a esconder metade da verdade.
+   */
+  hasIncome: boolean;
+  isStudent: boolean;
+  /** Declarações de quem anuncia — não se aplicam a quem procura. */
+  authorizedToList: boolean;
+  propertyDocsInOrder: boolean;
   termsAccepted: boolean;
+};
+
+export type DocumentType = "cc" | "passaporte" | "titulo-residencia";
+
+export const DOCUMENT_LABELS: Record<DocumentType, string> = {
+  cc: "Cartão de Cidadão",
+  passaporte: "Passaporte",
+  "titulo-residencia": "Título de residência",
+};
+
+/** Uma chave por categoria de Notification — ver settings.notifications. */
+export type NotificationPrefs = {
+  interest: boolean;
+  conversation: boolean;
+  visit: boolean;
+  match: boolean;
+  marketplace: boolean;
+};
+
+export type PrivacyPrefs = {
+  /** Perfil visível a senhorios antes de enviares interesse. */
+  discoverable: boolean;
+  /** Mostrar "ativo agora" aos outros. */
+  showActivity: boolean;
+  /** Receber sugestões baseadas no que vais vendo. */
+  personalisedSuggestions: boolean;
 };
 
 export type StoreState = {
@@ -71,7 +115,12 @@ export type StoreState = {
   favorites: string[];
   deals: ClosedDeal[];
   reviews: Review[];
-  plan: "free" | "pro";
+  plan: PlanId;
+  billingPeriod: BillingPeriod;
+  notificationPrefs: NotificationPrefs;
+  /** Idioma da interface. A tradução real entra depois; a escolha já persiste. */
+  language: "pt" | "en";
+  privacy: PrivacyPrefs;
   profile: Profile;
   preferences: Preferences;
 };
@@ -81,12 +130,17 @@ const emptyProfile: Profile = {
   email: "",
   avatar: "",
   bio: "",
+  occupation: "",
   phone: "",
   nif: "",
   emailVerified: false,
   phoneVerified: false,
-  identityDeclared: false,
-  incomeDeclared: false,
+  documentType: null,
+  residentInPortugal: true,
+  hasIncome: false,
+  isStudent: false,
+  authorizedToList: false,
+  propertyDocsInOrder: false,
   termsAccepted: false,
 };
 
@@ -114,6 +168,10 @@ const initialState: StoreState = {
   deals: [],
   reviews: [],
   plan: "free",
+  billingPeriod: "monthly",
+  notificationPrefs: { interest: true, conversation: true, visit: true, match: true, marketplace: false },
+  language: "pt",
+  privacy: { discoverable: true, showActivity: true, personalisedSuggestions: true },
   profile: emptyProfile,
   preferences: emptyPreferences,
 };
@@ -125,10 +183,24 @@ function load(): StoreState {
   try {
     const raw = window.localStorage.getItem(KEY);
     if (!raw) return initialState;
-    return { ...initialState, ...JSON.parse(raw) };
+    return reconcile({ ...initialState, ...JSON.parse(raw) });
   } catch {
     return initialState;
   }
+}
+
+/**
+ * Corrige estados que a app proíbe mas que podem ter ficado guardados por uma
+ * versão anterior. Sem isto, "Free com 6 anúncios ativos" sobrevivia para
+ * sempre em localStorage e nenhum ecrã sabia como o mostrar honestamente.
+ * Um limite excedido só pode ter duas leituras — ou o plano está errado, ou os
+ * anúncios estão. Assumimos que os anúncios são o facto e corrigimos o plano.
+ */
+function reconcile(s: StoreState): StoreState {
+  const limit = PLANS[s.plan]?.maxActiveListings;
+  if (limit === null || limit === undefined) return s;
+  const active = s.listings.filter((l) => l.lifecycle === "published" || l.lifecycle === "negotiating").length;
+  return active > limit ? { ...s, plan: "pro" } : s;
 }
 
 function persist() {
@@ -177,7 +249,7 @@ const ago = () => "agora";
 export type ScoreItem = { label: string; pts: number; done: boolean; to?: string };
 
 /** Breakdown do Trust Score a partir do perfil real. Soma máxima = 100. */
-export function trustScoreBreakdown(s: StoreState = state): ScoreItem[] {
+export function trustScoreBreakdown(s: StoreState = state, role: "seeker" | "landlord" = "seeker"): ScoreItem[] {
   const p = s.profile;
   return [
     { label: "Conta criada", pts: 50, done: true },
@@ -186,15 +258,20 @@ export function trustScoreBreakdown(s: StoreState = state): ScoreItem[] {
     { label: "Telemóvel verificado", pts: 10, done: p.phoneVerified, to: "/onboarding" },
     { label: "Foto de perfil", pts: 5, done: p.avatar.length > 0, to: "/profile" },
     { label: "Bio preenchida", pts: 5, done: p.bio.trim().length > 0, to: "/profile" },
-    { label: "NIF declarado", pts: 5, done: p.nif.trim().length > 0, to: "/onboarding" },
-    { label: "Identificação declarada", pts: 5, done: p.identityDeclared, to: "/onboarding" },
-    { label: "Rendimento ou estudante", pts: 5, done: p.incomeDeclared, to: "/onboarding" },
+    // Documento vale mais porque é o que dá confiança real; o NIF deixou de ser
+    // um item à parte por ser consequência de ter qualquer um destes documentos.
+    { label: "Documento de identificação", pts: 10, done: p.documentType !== null, to: "/onboarding" },
+    // Cada papel pontua o que é relevante para o outro lado decidir: quem
+    // procura mostra que consegue pagar, quem anuncia mostra legitimidade.
+    role === "landlord"
+      ? { label: "Autorizado a anunciar", pts: 5, done: p.authorizedToList, to: "/onboarding" }
+      : { label: "Rendimento próprio", pts: 5, done: p.hasIncome, to: "/onboarding" },
     { label: "Termos aceites", pts: 5, done: p.termsAccepted, to: "/legal/terms" },
   ];
 }
 
-export function trustScore(s: StoreState = state): number {
-  return trustScoreBreakdown(s).reduce((acc, i) => acc + (i.done ? i.pts : 0), 0);
+export function trustScore(s: StoreState = state, role: "seeker" | "landlord" = "seeker"): number {
+  return trustScoreBreakdown(s, role).reduce((acc, i) => acc + (i.done ? i.pts : 0), 0);
 }
 
 /**
@@ -221,10 +298,59 @@ export function qualityScore(l: Partial<Listing>): number {
 }
 
 /** Limite de plano: Free = 1 anúncio ativo. */
+// ============ Plano: limites e invariantes ============
+
+export type PlanId = "free" | "pro";
+export type BillingPeriod = "monthly" | "annual";
+
+/**
+ * Limites por plano. `maxActiveListings: null` = sem limite.
+ * Esta é a única definição — ecrãs, guards e avisos leem daqui, por isso não
+ * pode existir um sítio que permita o que outro proíbe.
+ */
+export const PLANS: Record<PlanId, {
+  name: string;
+  maxActiveListings: number | null;
+  monthly: number;
+  annual: number;
+  features: string[];
+}> = {
+  free: {
+    name: "Free",
+    maxActiveListings: 1,
+    monthly: 0,
+    annual: 0,
+    features: ["1 anúncio ativo", "Candidatos ilimitados", "Conversas e visitas", "Trust Score"],
+  },
+  pro: {
+    name: "Pro",
+    maxActiveListings: null,
+    monthly: 9.99,
+    annual: 95.9, // ~2 meses grátis
+    features: ["Anúncios ilimitados", "Destaque na descoberta", "Estatísticas de candidatos", "Apoio prioritário"],
+  },
+};
+
+/** Um anúncio conta para o limite enquanto estiver visível ou em negociação. */
+export function activeListingCount(s: StoreState = state): number {
+  return s.listings.filter((l) => l.lifecycle === "published" || l.lifecycle === "negotiating").length;
+}
+
 export function canPublishAnother(s: StoreState = state): boolean {
-  if (s.plan === "pro") return true;
-  const active = s.listings.filter((l) => l.lifecycle === "published" || l.lifecycle === "negotiating").length;
-  return active < 1;
+  const limit = PLANS[s.plan].maxActiveListings;
+  return limit === null || activeListingCount(s) < limit;
+}
+
+/**
+ * Contrapositiva do limite: em vez de um booleano, diz quantos anúncios é
+ * preciso pausar para caber no plano de destino. `null` = pode mudar já.
+ * É o que impede o estado impossível "Free com 6 anúncios ativos" — a mudança
+ * de plano nunca acontece deixando os dados inválidos.
+ */
+export function blockersToSwitchPlan(to: PlanId, s: StoreState = state): number {
+  const limit = PLANS[to].maxActiveListings;
+  if (limit === null) return 0;
+  return Math.max(0, activeListingCount(s) - limit);
 }
 
 /** Avaliações do match — duplo-cego: só visíveis quando ambos submetem. */
@@ -295,9 +421,11 @@ export const store = {
         verifications: [
           { label: "Email verificado", ok: p.emailVerified },
           { label: "Telemóvel verificado", ok: p.phoneVerified },
-          { label: "NIF declarado", ok: p.nif.trim().length > 0 },
-          { label: "Identificação declarada", ok: p.identityDeclared },
-          { label: "Rendimento ou estudante", ok: p.incomeDeclared },
+          // Mostra o documento concreto — "identificação declarada" não diz nada
+          // a quem tem de decidir se confia.
+          { label: p.documentType ? DOCUMENT_LABELS[p.documentType] : "Documento", ok: p.documentType !== null },
+          { label: "Rendimento próprio", ok: p.hasIncome },
+          { label: "Estudante", ok: p.isStudent },
         ],
       },
     };
@@ -408,9 +536,33 @@ export const store = {
     set((s) => ({ ...s, preferences: { ...s.preferences, ...patch } }));
   },
 
-  // Plano
-  setPlan(plan: "free" | "pro") {
-    set((s) => ({ ...s, plan }));
+  /**
+   * Muda de plano. Recusa se o destino não comportar os anúncios ativos —
+   * a alternativa seria deixar o utilizador num estado que a app proíbe
+   * ("Free com 6 anúncios"), e depois já não haveria forma coerente de o ler.
+   * Devolve true se mudou.
+   *
+   * TODO(stripe): a mudança real passa a ser confirmada pelo webhook da
+   * subscrição; isto fica só a refletir o estado que o Stripe reportar.
+   */
+  setPlan(plan: PlanId, period: BillingPeriod = state.billingPeriod): boolean {
+    if (blockersToSwitchPlan(plan) > 0) return false;
+    set((s) => ({ ...s, plan, billingPeriod: period }));
+    return true;
+  },
+  setBillingPeriod(period: BillingPeriod) {
+    set((s) => ({ ...s, billingPeriod: period }));
+  },
+
+  // Definições
+  updateNotificationPrefs(patch: Partial<NotificationPrefs>) {
+    set((s) => ({ ...s, notificationPrefs: { ...s.notificationPrefs, ...patch } }));
+  },
+  updatePrivacy(patch: Partial<PrivacyPrefs>) {
+    set((s) => ({ ...s, privacy: { ...s.privacy, ...patch } }));
+  },
+  setLanguage(language: "pt" | "en") {
+    set((s) => ({ ...s, language }));
   },
 
   /**

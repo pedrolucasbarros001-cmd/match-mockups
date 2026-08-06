@@ -12,6 +12,8 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { seedIfEmpty } from "../lib/seed";
+import { useStore } from "../lib/store";
+import { useMode } from "../lib/mode";
 
 function NotFoundComponent() {
   return (
@@ -127,6 +129,10 @@ function RootComponent() {
   useEffect(() => {
     if (import.meta.env.DEV) seedIfEmpty();
   }, []);
+
+  // A app inteira muda de cor conforme se está a arrendar ou a comprar.
+  const kind = useStore((s) => s.preferences.kind);
+  useMode(kind);
 
   return (
     <QueryClientProvider client={queryClient}>

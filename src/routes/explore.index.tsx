@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { motion, useMotionValue, useTransform, AnimatePresence, type PanInfo } from "motion/react";
 import { Heart, X, Info, SlidersHorizontal, MapPin, BedDouble, RotateCcw, Map as MapIcon, Sparkles } from "lucide-react";
 import { compatibilityReasons, priceAmount, priceSuffix, priceRange, type Listing, type ListingKind } from "@/lib/mock-data";
+import { spaceTypesFor } from "@/lib/listing-rules";
 import { AppShell, CompatibilityReasons, ScoreBadge } from "@/components/AppShell";
 import { Toast, useToast } from "@/components/Toast";
 import { useStore } from "@/lib/store";
@@ -91,7 +92,7 @@ function ExplorePage() {
   };
 
   return (
-    <AppShell fullHeight>
+    <AppShell fullHeight aside={current ? <ListingPreview listing={current} /> : null}>
       <header className="z-30 shrink-0 glass-light">
         <div className="h-safe-top" />
         <div className="flex h-14 items-center justify-between gap-3 px-4">
@@ -127,9 +128,10 @@ function ExplorePage() {
         </div>
       </header>
 
-      {/* min-h-0: deixa o card encolher dentro do flex em vez de transbordar. */}
+      {/* min-h-0: deixa o card encolher dentro do flex em vez de transbordar.
+          Em desktop o card não estica até ao infinito — trava numa proporção de foto. */}
       <div className="flex min-h-0 flex-1 flex-col px-4 pt-3">
-        <div className="relative mx-auto min-h-0 w-full max-w-md flex-1">
+        <div className="relative mx-auto min-h-0 w-full max-w-md flex-1 lg:max-h-[600px]">
           {stack.length === 0 ? (
             <EmptyState
               hasAny={anyPublished}
@@ -183,6 +185,56 @@ function ExplorePage() {
       <FiltersSheet open={showFilters} onClose={() => setShowFilters(false)} />
       <Toast msg={msg} />
     </AppShell>
+  );
+}
+
+/**
+ * Painel de detalhe em desktop — o mesmo conteúdo que em telemóvel se vê em
+ * /explore/$id. Em ecrã grande não faz sentido esconder atrás de um toque.
+ */
+function ListingPreview({ listing }: { listing: Listing }) {
+  return (
+    <div className="rounded-2xl border border-border bg-surface p-5">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="flex items-end gap-1.5">
+            <span className="font-num text-2xl font-bold leading-none">{priceAmount(listing.price)}</span>
+            {priceSuffix(listing.kind) && <span className="text-sm text-muted-foreground">{priceSuffix(listing.kind)}</span>}
+          </div>
+          <h2 className="mt-1.5 font-display text-lg font-bold leading-tight">{listing.title}</h2>
+          <p className="mt-1 flex items-center gap-1 text-sm text-muted-foreground">
+            <MapPin className="size-4" /> {listing.neighborhood || listing.city} · {listing.city}
+          </p>
+        </div>
+        <ScoreBadge score={listing.owner.score} withIcon />
+      </div>
+
+      <p className="mt-4 line-clamp-6 text-sm leading-relaxed text-foreground/85">{listing.description}</p>
+
+      {listing.amenities.length > 0 && (
+        <div className="mt-4 flex flex-wrap gap-1.5">
+          {listing.amenities.map((a) => (
+            <span key={a} className="rounded-pill border border-border px-2.5 py-1 text-xs font-medium">{a}</span>
+          ))}
+        </div>
+      )}
+
+      <div className="mt-4 flex items-center gap-2.5 border-t border-border pt-4">
+        <img src={listing.owner.avatar} alt="" className="size-9 rounded-pill bg-muted object-cover" />
+        <div className="min-w-0 flex-1">
+          <div className="truncate text-sm font-semibold">{listing.owner.name}</div>
+          <div className="text-xs text-muted-foreground">{listing.owner.responds}</div>
+        </div>
+      </div>
+
+      <Link
+        to="/explore/$id"
+        params={{ id: listing.id }}
+        className="mt-4 flex h-11 items-center justify-center rounded-xl border border-border text-sm font-semibold transition hover:bg-muted"
+      >
+        Ver anúncio completo
+      </Link>
+    </div>
   );
 }
 
@@ -360,18 +412,21 @@ function EmptyState({ hasAny, filtersHide, onOpenFilters, onClearFilters, onRese
   );
 }
 
-const SPACE_TYPE_OPTIONS = ["Quarto", "Suite", "Estúdio", "T1", "T2", "T3", "T4+"];
-
 /**
  * Filtros ligados às preferências reais do store — o que se vê aqui é
  * exatamente o que o feed usa. (Antes eram estado local: mexer nos filtros
  * não mudava o feed, portanto controlo e efeito não eram equivalentes.)
+ *
+ * As opções de tipo vêm de spaceTypesFor(kind), o mesmo que o wizard de
+ * publicar usa — filtrar por "Quarto" numa pesquisa de compra seria procurar
+ * algo que nunca poderá existir.
  */
 function FiltersSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   const prefs = useStore((s) => s.preferences);
   const sale = prefs.kind === "sale";
   const range = priceRange(prefs.kind);
   const maxPrice = sale ? prefs.maxSalePrice : prefs.maxPrice;
+  const typeOptions = spaceTypesFor(prefs.kind);
 
   const types = prefs.spaceTypes[prefs.kind] ?? [];
 
@@ -402,7 +457,7 @@ function FiltersSheet({ open, onClose }: { open: boolean; onClose: () => void })
             <div className="mt-6">
               <div className="mb-2 text-sm font-semibold">Tipo de espaço</div>
               <div className="flex flex-wrap gap-2">
-                {SPACE_TYPE_OPTIONS.map((t) => (
+                {typeOptions.map((t) => (
                   <Chip key={t} active={types.includes(t)} onClick={() => toggleType(t)}>{t}</Chip>
                 ))}
               </div>
@@ -437,9 +492,13 @@ function FiltersSheet({ open, onClose }: { open: boolean; onClose: () => void })
               </div>
             )}
 
-            <button onClick={onClose} className="mt-8 mb-2 h-14 w-full rounded-xl bg-primary font-display text-base font-semibold text-primary-foreground shadow-lift transition active:scale-[0.98]">
+            <button onClick={onClose} className="mt-8 h-14 w-full rounded-xl bg-primary font-display text-base font-semibold text-primary-foreground shadow-lift transition active:scale-[0.98]">
               Aplicar
             </button>
+            {/* Mesma verdade, mais campos: cidade, raio, datas e ocupantes vivem no ecrã completo. */}
+            <Link to="/preferences" className="mb-2 mt-2 flex h-11 items-center justify-center text-sm font-semibold text-primary">
+              Preferências completas →
+            </Link>
           </motion.div>
         </>
       )}

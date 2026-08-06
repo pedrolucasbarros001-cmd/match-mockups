@@ -1,10 +1,11 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useMemo } from "react";
 import { AppShell, PageHeader, ScoreBadge } from "@/components/AppShell";
-import { useStore, trustScore } from "@/lib/store";
+import { useStore, getState, trustScoreBreakdown } from "@/lib/store";
 import { ChevronRight, Settings, Shield, Heart, LogOut, Edit3, Calendar, Crown, Sliders, User, Building2, Users } from "lucide-react";
 import { useRole, setSession } from "@/lib/user-state";
 
-export const Route = createFileRoute("/profile")({
+export const Route = createFileRoute("/profile/")({
   head: () => ({ meta: [{ title: "Perfil — HomeMatch" }] }),
   component: ProfilePage,
 });
@@ -14,7 +15,11 @@ function ProfilePage() {
   const role = useRole();
   // Lê do store.profile real (o que foi preenchido no onboarding).
   const profile = useStore((s) => s.profile);
-  const score = useStore((s) => trustScore(s));
+  const breakdown = useMemo(() => trustScoreBreakdown({ ...getState(), profile }), [profile]);
+  const score = breakdown.reduce((a, b) => a + (b.done ? b.pts : 0), 0);
+  const missingPts = breakdown.reduce((a, b) => a + (b.done ? 0 : b.pts), 0);
+  // Aponta o próximo passo concreto em vez de mandar "completar" às cegas.
+  const nextStep = breakdown.find((b) => !b.done)?.label.toLowerCase();
   const displayName = profile.name || "Sem nome";
   const displayEmail = profile.email || "Sem email";
   const displayBio = profile.bio || "Adiciona uma bio.";
@@ -42,23 +47,26 @@ function ProfilePage() {
             <div className="truncate text-xs text-muted-foreground">{displayEmail}</div>
             <div className="truncate text-xs text-muted-foreground">{displayBio}</div>
           </div>
-          <button className="grid size-10 place-items-center rounded-pill border border-border"><Edit3 className="size-4" /></button>
+          <Link to="/profile/edit" aria-label="Editar perfil" className="grid size-10 shrink-0 place-items-center rounded-pill border border-border transition active:scale-90">
+            <Edit3 className="size-4" />
+          </Link>
         </div>
 
-        <Link to="/switch-user" className="mt-3 flex items-center justify-between rounded-2xl border border-border bg-primary-soft p-4 text-sm transition active:scale-[0.98]">
-          <div>
-            <div className="font-display font-bold">A usar como: {role === "landlord" ? "Senhorio" : "Inquilino"}</div>
-            <div className="text-xs text-muted-foreground">Troca de utilizador para testar o outro lado.</div>
-          </div>
-          <span className="rounded-pill bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground">Trocar</span>
-        </Link>
-
+        {/* O cartão do score diz o que é verdade agora: convida a completar
+            enquanto falta algo, confirma quando já está tudo. Um "Completar
+            perfil" num perfil completo é uma instrução que contradiz o estado. */}
         <Link to="/profile/score" className="mt-3 flex items-center justify-between rounded-2xl border border-border bg-surface p-4">
           <div className="flex items-center gap-3">
-            <ScoreBadge score={score} />
+            <ScoreBadge score={score} withIcon />
             <div>
-              <div className="font-display text-sm font-bold">Completar perfil</div>
-              <div className="text-xs text-muted-foreground">Progresso interno de confiança.</div>
+              <div className="font-display text-sm font-bold">
+                {missingPts === 0 ? "Perfil completo" : "Completar perfil"}
+              </div>
+              <div className="text-xs text-muted-foreground">
+                {missingPts === 0
+                  ? "Tens todas as verificações feitas."
+                  : `Faltam ${missingPts} pontos — ${nextStep ?? "vê o que falta"}.`}
+              </div>
             </div>
           </div>
           <ChevronRight className="size-5 text-muted-foreground" />

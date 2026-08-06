@@ -24,7 +24,7 @@ function VisitsManager() {
   const items = visits.filter((v) => listings.some((l) => l.id === v.listingId));
 
   return (
-    <AppShell role="landlord">
+    <AppShell role="landlord" wide>
       <PageHeader title="Gerir visitas" back="/profile" />
       {items.length === 0 ? (
         <div className="p-8">
@@ -38,7 +38,7 @@ function VisitsManager() {
           </div>
         </div>
       ) : (
-        <ul className="flex flex-col gap-3 px-4 pt-4">
+        <ul className="flex flex-col gap-3 px-4 pt-4 lg:grid lg:grid-cols-2 lg:content-start">
           {items.map((v) => {
             const l = listings.find((x) => x.id === v.listingId);
             if (!l) return null;

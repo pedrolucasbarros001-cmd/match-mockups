@@ -2,10 +2,11 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { PageHeader } from "@/components/AppShell";
 import { Bell, Globe, Lock, FileText, Trash2, HelpCircle, ChevronRight, Sliders, Crown, UserCog, RefreshCcw } from "lucide-react";
 import { useRole, setRole, setSession } from "@/lib/user-state";
+import { useStore } from "@/lib/store";
 import { reseed } from "@/lib/seed";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/settings")({
+export const Route = createFileRoute("/settings/")({
   head: () => ({ meta: [{ title: "Definições — HomeMatch" }] }),
   component: SettingsPage,
 });
@@ -13,6 +14,8 @@ export const Route = createFileRoute("/settings")({
 function SettingsPage() {
   const nav = useNavigate();
   const role = useRole();
+  const plan = useStore((s) => s.plan);
+  const language = useStore((s) => s.language);
 
   const resetData = () => {
     if (confirm("Repor os dados de demonstração? (anúncios, matches, chats, visitas, notificações)")) {
@@ -52,10 +55,13 @@ function SettingsPage() {
           <Item icon={<Sliders className="size-5" />} label="Preferências" onClick={() => nav({ to: "/preferences" })} />
         </Group>
         <Group title="Conta">
-          <Item icon={<Lock className="size-5" />} label="Privacidade e segurança" />
-          <Item icon={<Bell className="size-5" />} label="Notificações" />
-          <Item icon={<Globe className="size-5" />} label="Idioma" hint="Português" />
-          <Item icon={<Crown className="size-5" />} label="Plano e faturação" onClick={() => nav({ to: "/account" })} />
+          <Item icon={<UserCog className="size-5" />} label="Email, password e telemóvel" onClick={() => nav({ to: "/settings/account" })} />
+          <Item icon={<Lock className="size-5" />} label="Privacidade e segurança" onClick={() => nav({ to: "/settings/privacy" })} />
+          <Item icon={<Bell className="size-5" />} label="Notificações" onClick={() => nav({ to: "/settings/notifications" })} />
+          <Item icon={<Globe className="size-5" />} label="Idioma" hint={language === "en" ? "English" : "Português"} onClick={() => nav({ to: "/settings/language" })} />
+          {role === "landlord" && (
+            <Item icon={<Crown className="size-5" />} label="Plano" hint={plan === "pro" ? "Pro" : "Free"} onClick={() => nav({ to: "/account" })} />
+          )}
         </Group>
         <Group title="Sobre">
           <Item icon={<FileText className="size-5" />} label="Termos de Uso" onClick={() => nav({ to: "/legal/terms" })} />

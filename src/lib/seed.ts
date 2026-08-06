@@ -3,7 +3,7 @@
 // Corre uma única vez (flag em localStorage); "Repor demo" nas Definições limpa e re-semeia.
 
 import { store, getState } from "./store";
-import type { Preferences } from "./store";
+import type { Preferences, Profile } from "./store";
 import type { Listing, Match, Chat, Visit, Notification, Candidate } from "./mock-data";
 
 const SEED_FLAG = "hm.seeded.v1";
@@ -189,9 +189,9 @@ export function seedIfEmpty() {
     verifications: [
       { label: "Email verificado", ok: true },
       { label: "Telemóvel verificado", ok: score >= 70 },
-      { label: "NIF declarado", ok: true },
-      { label: "Identificação declarada", ok: score >= 80 },
-      { label: "Rendimento ou estudante", ok: true },
+      { label: "Cartão de Cidadão", ok: score >= 80 },
+      { label: "Rendimento próprio", ok: true },
+      { label: "Estudante", ok: score < 80 },
     ],
   });
 
@@ -276,17 +276,23 @@ export function seedIfEmpty() {
   ];
 
   // Perfil de demonstração — sem isto o /profile e o Trust Score ficam a zero.
-  const profile = {
+  const profile: Profile = {
     name: "Pedro Barros",
     email: "pedro@exemplo.pt",
     avatar: face("pedro"),
     bio: "Procuro um sítio tranquilo em Braga. Não fumo, trabalho em casa e sou organizado.",
+    occupation: "Trabalhador",
     phone: "912 345 678",
     nif: "123456789",
     emailVerified: true,
     phoneVerified: true,
-    identityDeclared: true,
-    incomeDeclared: true,
+    documentType: "cc",
+    residentInPortugal: true,
+    hasIncome: true,
+    isStudent: false,
+    // O perfil de demonstração serve os dois papéis (o /switch-user alterna).
+    authorizedToList: true,
+    propertyDocsInOrder: true,
     termsAccepted: true,
   };
 
@@ -303,7 +309,10 @@ export function seedIfEmpty() {
     needsFurnished: true,
   };
 
-  store.importState({ listings, chats, matches, visits, notifications, profile, preferences });
+  // O plano tem de ser coerente com os dados: 6 anúncios ativos só existem no
+  // Pro. Semear Free com 6 anúncios criava um estado que a própria app proíbe,
+  // e trancava o wizard de publicar logo à primeira utilização.
+  store.importState({ listings, chats, matches, visits, notifications, profile, preferences, plan: "pro" });
   window.localStorage.setItem(SEED_FLAG, "1");
 }
 

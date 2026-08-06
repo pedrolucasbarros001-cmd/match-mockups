@@ -2,10 +2,16 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useRoleGuard } from "@/lib/user-state";
 import { useState } from "react";
 import { PageHeader } from "@/components/AppShell";
-import { ChevronLeft, ChevronRight, Camera, Check, Info, Crown, AlertTriangle } from "lucide-react";
+import { PhotoSlotPicker, type SlotPhoto } from "@/components/PhotoSlotPicker";
+import { ChevronLeft, ChevronRight, Camera, Check, Info, Crown, AlertTriangle, ShieldAlert } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { SpaceType, Listing, ListingKind } from "@/lib/mock-data";
 import { priceAmount, priceLabel, priceRange } from "@/lib/mock-data";
+import {
+  spaceTypesFor, SPACE_TYPE_DESC, isSpaceTypeAllowed, isRoomType,
+  photoPlanFor, missingEssentialPhotos, analyseListing, hasBlockingWarning,
+  type ListingWarning,
+} from "@/lib/listing-rules";
 import { api } from "@/lib/api";
 import { useStore, canPublishAnother, qualityScore, trustScore, type Profile } from "@/lib/store";
 
@@ -37,35 +43,9 @@ function stepsFor(kind: ListingKind | null): { key: StepKey; label: string }[] {
   return base;
 }
 
-const SPACE_TYPES: { key: SpaceType; desc: string; photos: string[] }[] = [
-  { key: "Quarto", desc: "Um quarto numa casa partilhada.", photos: ["Quarto", "Cozinha", "Casa de banho"] },
-  { key: "Suite", desc: "Quarto com casa de banho privativa.", photos: ["Suite", "Casa de banho", "Cozinha"] },
-  { key: "Quarto Partilhado", desc: "Cama num quarto partilhado.", photos: ["Quarto", "Cozinha"] },
-  { key: "Estúdio", desc: "Espaço aberto individual.", photos: ["Sala/quarto", "Cozinha", "Casa de banho"] },
-  { key: "T1", desc: "1 quarto separado.", photos: ["Sala", "Cozinha", "Quarto", "Casa de banho"] },
-  { key: "T2", desc: "2 quartos.", photos: ["Sala", "Cozinha", "Quarto principal", "Casa de banho"] },
-  { key: "T3", desc: "3 quartos.", photos: ["Sala", "Cozinha", "Quarto principal", "Casa de banho"] },
-  { key: "T4+", desc: "4 ou mais quartos.", photos: ["Sala", "Cozinha", "Quarto principal", "Casa de banho"] },
-];
-
-const AMENITIES = ["Wi-Fi", "Cozinha", "Aquecimento", "Mobilado", "Varanda", "Elevador"];
-
-// ---- Anti-abuso (avisos em tempo real no step 2) ----
-
-/** Deteta tentativas de anunciar vários espaços num só anúncio. */
-function detectMultipleSpaces(text: string): boolean {
-  return /\b([2-9]|dois|duas|três|tres|quatro|vários|varias|vários)\s+(quartos?|suites?|estúdios?|estudios?|espaços?|espacos?|vagas?)\b/i.test(text)
-    || /\bquartos? dispon[ií]veis\b/i.test(text);
-}
-
-/** Deteta partilha de contacto direto (email/telefone/WhatsApp/links). */
-function detectDirectContact(text: string): boolean {
-  return /\b9\d{2}[\s.-]?\d{3}[\s.-]?\d{3}\b/.test(text) // telemóvel PT
-    || /\+?\d{9,}/.test(text.replace(/[\s.-]/g, ""))
-    || /[\w.+-]+@[\w-]+\.[\w.]+/.test(text)
-    || /whats?app|telegram|zap\b/i.test(text)
-    || /https?:\/\/|www\./i.test(text);
-}
+/** Comodidades que fazem sentido em cada negócio — quem compra não procura "mobilado". */
+const AMENITIES_RENT = ["Wi-Fi", "Cozinha equipada", "Aquecimento", "Mobilado", "Varanda", "Elevador", "Lavandaria"];
+const AMENITIES_SALE = ["Garagem", "Elevador", "Varanda", "Terraço", "Aquecimento central", "Ar condicionado", "Arrecadação"];
 
 function PublishWizard() {
   useRoleGuard("landlord");
@@ -118,12 +98,66 @@ function WizardInner({ nav, profile }: { nav: ReturnType<typeof useNavigate>; pr
   const [students, setStudents] = useState(true);
   const [moveIn, setMoveIn] = useState("");
   const [visitSlots, setVisitSlots] = useState<string[]>([]);
+  /** Fotos reais, por slot. O upload para storage entra em api.uploadPhoto. */
+  const [slotPhotos, setSlotPhotos] = useState<SlotPhoto[]>([]);
+  const photos = slotPhotos.map((p) => p.key);
 
-  const selected = SPACE_TYPES.find((t) => t.key === type);
+  const addPhoto = (key: string, file: File) =>
+    setSlotPhotos((prev) => {
+      // Substituir liberta o object URL antigo para não deixar memória presa.
+      const old = prev.find((p) => p.key === key);
+      if (old) URL.revokeObjectURL(old.url);
+      return [...prev.filter((p) => p.key !== key), { key, url: URL.createObjectURL(file), file }];
+    });
+
+  const removePhoto = (key: string) =>
+    setSlotPhotos((prev) => {
+      const old = prev.find((p) => p.key === key);
+      if (old) URL.revokeObjectURL(old.url);
+      return prev.filter((p) => p.key !== key);
+    });
+
+  const clearPhotos = () =>
+    setSlotPhotos((prev) => {
+      prev.forEach((p) => URL.revokeObjectURL(p.url));
+      return [];
+    });
+
+  /**
+   * Trocar de negócio pode invalidar o tipo escolhido (ninguém vende um quarto).
+   * Em vez de deixar o wizard num estado impossível, limpa a escolha — e o
+   * mesmo para as comodidades, que também mudam de lista.
+   */
+  const pickKind = (k: ListingKind) => {
+    setKind(k);
+    setPrice(k === "sale" ? 180_000 : 450);
+    if (type && !isSpaceTypeAllowed(k, type)) setType(null);
+    setAmenities([]);
+    clearPhotos();
+    setTimeout(() => setStep(1), 250);
+  };
+
+  /** Mudar de tipo muda o plano de fotos — as que já lá estavam deixam de fazer sentido. */
+  const pickType = (t: SpaceType) => {
+    if (t !== type) clearPhotos();
+    setType(t);
+  };
+
   const sale = kind === "sale";
   const STEPS = stepsFor(kind);
   const stepKey = STEPS[step]?.key ?? "kind";
   const range = priceRange(kind ?? "rent");
+
+  // Tipos, comodidades e plano de fotos vêm todos do tipo de negócio/espaço —
+  // o ecrã nunca oferece uma opção que as regras não permitam.
+  const typeOptions = spaceTypesFor(kind ?? "rent");
+  const amenityOptions = sale ? AMENITIES_SALE : AMENITIES_RENT;
+  const photoPlan = photoPlanFor(type);
+  const missingPhotos = missingEssentialPhotos(type, photos);
+
+  // Análise em tempo real: burla, incoerências e contactos diretos.
+  const warnings = analyseListing({ title, description: desc, price, kind: kind ?? "rent", spaceType: type });
+  const blocked = hasBlockingWarning(warnings);
 
   /**
    * Contrapositiva: em vez de um booleano, devolve a RAZÃO por que não se pode
@@ -140,11 +174,15 @@ function WizardInner({ nav, profile }: { nav: ReturnType<typeof useNavigate>; pr
       case "place":
         return city.trim().length > 1 ? null : "Indica a cidade.";
       case "about":
-        return title.trim().length > 3 ? null : "Dá um título ao anúncio (mín. 4 caracteres).";
+        if (title.trim().length <= 3) return "Dá um título ao anúncio (mín. 4 caracteres).";
+        // Só o que é ilegal ou destrói confiança impede avançar. O resto avisa.
+        return blocked ? "Corrige o que está assinalado a vermelho para continuar." : null;
       case "price":
         return price >= range.min ? null : `Define um valor a partir de ${priceAmount(range.min)}.`;
       case "availability":
         return visitSlots.length > 0 ? null : "Escolhe pelo menos um horário para visitas.";
+      case "review":
+        return blocked ? "Há avisos por resolver no passo das características." : null;
       default:
         return null;
     }
@@ -164,14 +202,9 @@ function WizardInner({ nav, profile }: { nav: ReturnType<typeof useNavigate>; pr
     visitAvailability: visitSlots,
   });
 
-  // Avisos anti-abuso em tempo real sobre título + descrição
-  const abuseText = `${title} ${desc}`;
-  const warnMultiple = detectMultipleSpaces(abuseText);
-  const warnContact = detectDirectContact(abuseText);
-
   /** Capacidade implícita no tipo de espaço — não se pergunta o que já se sabe. */
   const capacityFor = (t: SpaceType | null): number =>
-    t === "T4+" ? 6 : t === "T3" ? 5 : t === "T2" ? 4 : t === "T1" || t === "Estúdio" ? 2 : 1;
+    t === "Moradia" ? 6 : t === "T4+" ? 6 : t === "T3" ? 5 : t === "T2" ? 4 : t === "T1" || t === "Estúdio" ? 2 : 1;
 
   const publish = async () => {
     const listing: Omit<Listing, "id"> = {
@@ -198,7 +231,12 @@ function WizardInner({ nav, profile }: { nav: ReturnType<typeof useNavigate>; pr
       rules: sale
         ? "Escritura e condições a combinar entre as partes."
         : `${students ? "Aceita estudantes. " : ""}${pets ? "Aceita animais. " : "Sem animais. "}${smoke ? "Fumadores ok." : "Sem fumo."}`,
-      photos: ["https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&auto=format&fit=crop"],
+      // Ordem do plano de fotos, não a ordem em que foram anexadas — a primeira
+      // é sempre a divisão principal, que é a que aparece no card do feed.
+      // TODO(storage): substituir os object URLs pelos URLs devolvidos pelo upload.
+      photos: photoPlan
+        .map((s) => slotPhotos.find((p) => p.key === s.key)?.url)
+        .filter((u): u is string => !!u),
       owner: {
         name: profile.name || "O meu anúncio",
         avatar: profile.avatar || "https://api.dicebear.com/7.x/initials/svg?seed=" + encodeURIComponent(profile.name || "Eu"),
@@ -234,18 +272,18 @@ function WizardInner({ nav, profile }: { nav: ReturnType<typeof useNavigate>; pr
           <Step title="O que queres fazer com este espaço?" sub="Isto define o resto do anúncio.">
             <div className="flex flex-col gap-2.5">
               <button
-                onClick={() => { setKind("rent"); setPrice(450); setTimeout(() => setStep(1), 250); }}
+                onClick={() => pickKind("rent")}
                 className={cn("rounded-2xl border-2 bg-surface p-4 text-left transition", kind === "rent" ? "border-primary bg-primary-soft" : "border-border")}
               >
                 <div className="font-display text-base font-bold">Arrendar</div>
-                <div className="mt-1 text-xs leading-snug text-muted-foreground">Renda mensal, com regras de convivência e data de entrada.</div>
+                <div className="mt-1 text-xs leading-snug text-muted-foreground">Renda mensal, com regras de convivência e data de entrada. Podes anunciar a casa inteira ou só um quarto.</div>
               </button>
               <button
-                onClick={() => { setKind("sale"); setPrice(180_000); setTimeout(() => setStep(1), 250); }}
+                onClick={() => pickKind("sale")}
                 className={cn("rounded-2xl border-2 bg-surface p-4 text-left transition", kind === "sale" ? "border-primary bg-primary-soft" : "border-border")}
               >
                 <div className="font-display text-base font-bold">Vender</div>
-                <div className="mt-1 text-xs leading-snug text-muted-foreground">Valor total pedido. Sem regras de convivência nem prazo de contrato.</div>
+                <div className="mt-1 text-xs leading-snug text-muted-foreground">Valor total pedido. Só unidades autónomas — um quarto de uma casa não se vende.</div>
               </button>
             </div>
             <Tip>O HomeMatch liga-te a interessados e regista o que combinarem. A escritura e o contrato são tratados entre as partes, fora da app.</Tip>
@@ -253,20 +291,28 @@ function WizardInner({ nav, profile }: { nav: ReturnType<typeof useNavigate>; pr
         )}
 
         {stepKey === "type" && (
-          <Step title="Que tipo de espaço estás a anunciar?" sub="Um anúncio representa exatamente um espaço.">
+          <Step
+            title="Que tipo de espaço estás a anunciar?"
+            sub={sale
+              ? "Só unidades autónomas — o que se vende tem de ser independente."
+              : "Um anúncio representa exatamente um espaço."}
+          >
             <div className="grid grid-cols-2 gap-2.5">
-              {SPACE_TYPES.map((t) => (
-                <button key={t.key} onClick={() => setType(t.key)} className={cn(
-                  "rounded-2xl border-2 bg-surface p-4 text-left",
-                  type === t.key ? "border-primary bg-primary-soft" : "border-border",
+              {typeOptions.map((t) => (
+                <button key={t} onClick={() => pickType(t)} className={cn(
+                  "rounded-2xl border-2 bg-surface p-4 text-left transition",
+                  type === t ? "border-primary bg-primary-soft" : "border-border",
                 )}>
-                  <div className="font-display text-base font-bold">{t.key}</div>
-                  <div className="mt-1 text-[11px] leading-snug text-muted-foreground">{t.desc}</div>
+                  <div className="font-display text-base font-bold">{t}</div>
+                  <div className="mt-1 text-[11px] leading-snug text-muted-foreground">{SPACE_TYPE_DESC[t]}</div>
                 </button>
               ))}
             </div>
-            {(type === "T2" || type === "T3" || type === "T4+") && (
-              <Tip>Escolhe {type} apenas se arrendas o apartamento inteiro. Para arrendar um quarto, escolhe <b>Quarto</b>.</Tip>
+            {!sale && type && !isRoomType(type) && type !== "Estúdio" && (
+              <Tip>Escolhe {type} apenas se arrendas o espaço inteiro. Para arrendar só um quarto dessa casa, volta atrás e escolhe <b>Quarto</b>.</Tip>
+            )}
+            {sale && (
+              <Tip>Para vender um quarto isolado não há anúncio possível — o que se vende é sempre a fração ou a casa completa.</Tip>
             )}
           </Step>
         )}
@@ -287,33 +333,57 @@ function WizardInner({ nav, profile }: { nav: ReturnType<typeof useNavigate>; pr
             <textarea value={desc} onChange={(e) => setDesc(e.target.value)} placeholder="Descrição (mín. 50 caracteres)" rows={6}
               className="w-full resize-none rounded-md border border-border bg-surface p-4 outline-none focus:border-primary" />
             <div className="text-xs text-muted-foreground">{desc.length} caracteres · sugerido &gt; 50</div>
-            {warnMultiple && (
-              <Warn>Parece que estás a anunciar <b>vários espaços</b> num só anúncio. Um anúncio representa exatamente um espaço — cria um anúncio por espaço.</Warn>
-            )}
-            {warnContact && (
-              <Warn>Detetámos um <b>contacto direto</b> (telefone, email, link ou WhatsApp). Por segurança, os contactos só são partilhados dentro da plataforma após aceitares um candidato.</Warn>
-            )}
-            <div className="grid grid-cols-3 gap-2">
-              {AMENITIES.map((a) => (
-                <button key={a} onClick={() => toggleAmenity(a)} className={cn(
-                  "rounded-pill border px-3 py-1.5 text-center text-xs",
-                  amenities.includes(a) ? "border-primary bg-primary-soft text-primary" : "border-border bg-surface",
-                )}>{a}</button>
-              ))}
+
+            {/* Análise em tempo real: burla, discriminação, contactos, incoerências. */}
+            <WarningList warnings={warnings} />
+
+            <div>
+              <div className="mb-2 text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                {sale ? "O que o imóvel tem" : "O que está incluído"}
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                {amenityOptions.map((a) => (
+                  <button key={a} onClick={() => toggleAmenity(a)} className={cn(
+                    "rounded-pill border px-3 py-2 text-center text-xs font-medium transition",
+                    amenities.includes(a) ? "border-primary bg-primary-soft text-primary" : "border-border bg-surface",
+                  )}>{a}</button>
+                ))}
+              </div>
             </div>
           </Step>
         )}
 
         {stepKey === "photos" && (
-          <Step title="Fotos" sub={selected ? `Recomendado para ${selected.key}: ${selected.photos.join(" · ")}` : "Escolhe primeiro o tipo."}>
-            <div className="grid grid-cols-3 gap-2">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <button key={i} className="grid aspect-square place-items-center rounded-xl border-2 border-dashed border-border bg-surface text-muted-foreground hover:border-primary hover:text-primary">
-                  <Camera className="size-6" />
-                </button>
-              ))}
-            </div>
-            <Tip>Upload real fica quando ligarmos o backend. Vamos usar uma foto genérica para testares o fluxo.</Tip>
+          <Step
+            title="Fotos"
+            sub={
+              type
+                ? isRoomType(type)
+                  ? "Mostra o espaço que arrendas e as áreas que vão ser usadas — é o que evita visitas desperdiçadas."
+                  : "Uma foto por divisão principal. Podes publicar sem todas."
+                : "Escolhe primeiro o tipo de espaço."
+            }
+          >
+            {/* Slots derivados do tipo: um quarto pede quarto+cozinha+wc, uma
+                suite pede a casa de banho privativa, um T2 pede sala e quartos.
+                Nenhum é obrigatório — as essenciais só avisam. */}
+            <PhotoSlotPicker slots={photoPlan} photos={slotPhotos} onAdd={addPhoto} onRemove={removePhoto} />
+
+            {/* Contrapositiva suave: diz o que falta, mas nunca tranca o passo. */}
+            {missingPhotos.length > 0 ? (
+              <Warn>
+                Faltam fotos de <b>{missingPhotos.map((s) => s.label.toLowerCase()).join(", ")}</b>. Podes publicar
+                à mesma — mas anúncios sem estas recebem menos contactos e geram visitas que não avançam.
+              </Warn>
+            ) : (
+              photoPlan.length > 0 && (
+                <div className="flex items-start gap-2 rounded-xl border border-success/30 bg-success/5 p-3 text-xs">
+                  <Check className="mt-0.5 size-4 shrink-0 text-success" strokeWidth={3} />
+                  <div className="text-foreground/85">Tens todas as fotos essenciais. Quem procura consegue decidir sem ter de perguntar.</div>
+                </div>
+              )
+            )}
+            <Tip>As fotos ficam no teu dispositivo enquanto o storage não estiver ligado — ao publicares, o anúncio usa-as tal como as anexaste nesta sessão.</Tip>
           </Step>
         )}
 
@@ -430,6 +500,41 @@ function Step({ title, sub, children }: { title: string; sub?: string; children:
         {sub && <p className="mt-1 text-sm text-muted-foreground">{sub}</p>}
       </div>
       {children}
+    </div>
+  );
+}
+
+/**
+ * Avisos com dois pesos visuais distintos: vermelho impede publicar (ilegal ou
+ * burla), âmbar apenas alerta. A cor diz o peso sem ser preciso ler — e é a
+ * mesma informação que o botão de continuar usa para se bloquear.
+ */
+function WarningList({ warnings }: { warnings: ListingWarning[] }) {
+  if (warnings.length === 0) return null;
+  return (
+    <div className="flex flex-col gap-2">
+      {warnings.map((w) => {
+        const block = w.level === "block";
+        return (
+          <div
+            key={w.id}
+            className={cn(
+              "flex items-start gap-2 rounded-xl border p-3 text-xs",
+              block ? "border-danger/40 bg-danger/8" : "border-warning/40 bg-warning/10",
+            )}
+          >
+            {block ? (
+              <ShieldAlert className="mt-0.5 size-4 shrink-0 text-danger" />
+            ) : (
+              <AlertTriangle className="mt-0.5 size-4 shrink-0 text-warning" />
+            )}
+            <div>
+              <div className={cn("font-bold", block ? "text-danger" : "text-warning")}>{w.title}</div>
+              <div className="mt-0.5 text-foreground/85">{w.body}</div>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }

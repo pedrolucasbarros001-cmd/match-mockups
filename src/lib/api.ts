@@ -65,9 +65,22 @@ export const api = {
   // TODO(backend): POST /api/deals/:id/confirm
   confirmDealSeeker: (dealId: string) => asAsync(store.confirmDealSeeker(dealId)),
 
-  // ---------- Plano ----------
-  // TODO(backend): POST /api/billing/plan (Stripe fica para depois)
-  setPlan: (plan: "free" | "pro") => asAsync(store.setPlan(plan)),
+  // ---------- Plano / subscrição ----------
+  // TODO(stripe): createCheckoutSession(plan, period) → redirect; o plano só
+  // muda quando o webhook `customer.subscription.updated` confirmar.
+  // Devolve false se o plano de destino não comportar os anúncios ativos.
+  setPlan: (plan: import("./store").PlanId, period?: import("./store").BillingPeriod) =>
+    asAsync(store.setPlan(plan, period)),
+  // TODO(stripe): alterar o price da subscrição existente.
+  setBillingPeriod: (period: import("./store").BillingPeriod) => asAsync(store.setBillingPeriod(period)),
+
+  // ---------- Definições ----------
+  // TODO(backend): PATCH /api/me/notification-prefs
+  updateNotificationPrefs: (patch: Partial<import("./store").NotificationPrefs>) =>
+    asAsync(store.updateNotificationPrefs(patch)),
+  // TODO(backend): PATCH /api/me/privacy
+  updatePrivacy: (patch: Partial<import("./store").PrivacyPrefs>) => asAsync(store.updatePrivacy(patch)),
+  setLanguage: (l: "pt" | "en") => asAsync(store.setLanguage(l)),
 
   // ---------- Profile / Preferences ----------
   // TODO(backend): PATCH /api/me

@@ -18,12 +18,12 @@ function FavoritesPage() {
   const items = listings.filter((l) => favorites.includes(l.id));
 
   return (
-    <AppShell>
+    <AppShell wide>
       <PageHeader title="Favoritos" back="/profile" />
       {items.length === 0 ? (
         <Empty />
       ) : (
-        <ul className="grid grid-cols-2 gap-3 px-4 pt-4">
+        <ul className="grid grid-cols-2 gap-3 px-4 pt-4 lg:grid-cols-4">
           {items.map((l) => (
             <li key={l.id}>
               <Link to="/explore/$id" params={{ id: l.id }} className="block overflow-hidden rounded-2xl border border-border bg-surface">

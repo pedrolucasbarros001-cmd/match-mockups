@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useRoleGuard } from "@/lib/user-state";
 import { AppShell, PageHeader, ScoreBadge } from "@/components/AppShell";
-import { useStore, trustScore } from "@/lib/store";
+import { useStore, trustScore, PLANS } from "@/lib/store";
 import { cn } from "@/lib/utils";
 import { Plus, ChevronRight, Users, Calendar, MessageCircle } from "lucide-react";
 
@@ -17,6 +17,7 @@ function Dashboard() {
   const visits = useStore((s) => s.visits);
   const profile = useStore((s) => s.profile);
   const plan = useStore((s) => s.plan);
+  const planLimit = PLANS[plan].maxActiveListings;
   // Score real calculado do perfil (o bug de precedência anterior somava sempre tudo).
   const profileScore = useStore((s) => trustScore(s));
 
@@ -38,10 +39,15 @@ function Dashboard() {
         <Link to="/profile/score" className="mt-4 flex items-center gap-4 rounded-2xl border border-border bg-surface p-4">
           <ScoreBadge score={profileScore} size="md" />
           <div className="flex-1">
-            <div className="text-sm font-semibold">Completar perfil</div>
-            <div className="mt-1 h-2 overflow-hidden rounded-pill bg-muted">
-              <div className="h-full bg-primary" style={{ width: `${profileScore}%` }} />
-            </div>
+            {/* Um perfil a 100 não pede para ser completado. */}
+            <div className="text-sm font-semibold">{profileScore >= 100 ? "Perfil completo" : "Completar perfil"}</div>
+            {profileScore >= 100 ? (
+              <div className="mt-0.5 text-xs text-muted-foreground">Todas as verificações feitas.</div>
+            ) : (
+              <div className="mt-1 h-2 overflow-hidden rounded-pill bg-muted">
+                <div className="h-full bg-primary" style={{ width: `${profileScore}%` }} />
+              </div>
+            )}
           </div>
           <ChevronRight className="size-5 text-muted-foreground" />
         </Link>
@@ -65,7 +71,11 @@ function Dashboard() {
         )}
 
         <div className="mt-4 rounded-2xl border border-border bg-primary-soft p-4 text-sm">
-          <div className="font-semibold">{plan === "pro" ? "Plano: Pro · anúncios ilimitados" : `Plano: Free · ${activeListings}/1 anúncios`}</div>
+          <div className="font-semibold">
+            {planLimit === null
+              ? `Plano Pro · ${activeListings} ${activeListings === 1 ? "anúncio ativo" : "anúncios ativos"}`
+              : `Plano Free · ${activeListings} de ${planLimit} ${planLimit === 1 ? "anúncio ativo" : "anúncios ativos"}`}
+          </div>
           <Link to="/account" className="mt-1 inline-block text-xs font-semibold text-primary">Ver plano →</Link>
         </div>
       </div>

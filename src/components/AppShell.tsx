@@ -21,10 +21,22 @@ const landlordNav: NavItem[] = [
   { to: "/profile", label: "Eu", Icon: User },
 ];
 
-export function AppShell({ children, role, maxWidth = "max-w-[440px]", fullHeight = false }: {
+export function AppShell({ children, role, maxWidth = "max-w-[440px]", fullHeight = false, aside, wide = false }: {
   children: ReactNode; role?: Role; maxWidth?: string;
   /** Ecrãs que preenchem o ecrã (feed de swipe) gerem a própria altura. */
   fullHeight?: boolean;
+  /**
+   * Segunda coluna, só em desktop. Em telemóvel é ignorada de propósito: o
+   * mesmo conteúdo já vive no seu ecrã próprio, alcançável por navegação.
+   * Mesmo destino, caminhos diferentes conforme o espaço disponível.
+   */
+  aside?: ReactNode;
+  /**
+   * Listas usam a largura toda em desktop e refluem em grelha; formulários e
+   * leitura ficam estreitos porque linhas longas cansam. Em telemóvel os dois
+   * são iguais — é a mesma UI, só com mais espaço disponível.
+   */
+  wide?: boolean;
 }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const hookRole = useRole();
@@ -32,12 +44,32 @@ export function AppShell({ children, role, maxWidth = "max-w-[440px]", fullHeigh
   const nav = activeRole === "landlord" ? landlordNav : seekerNav;
 
   return (
-    <div className="min-h-svh bg-background">
-      {/* pb-32: espaço para a nav flutuante não tapar o fim do conteúdo. */}
-      <div className={cn("mx-auto w-full bg-background", fullHeight ? "flex h-svh flex-col" : "pb-32", maxWidth)}>{children}</div>
+    <div className="min-h-svh bg-background lg:flex">
+      {/* Desktop: a mesma navegação, servida como sidebar em vez de pill. */}
+      <DesktopSidebar nav={nav} pathname={pathname} />
 
-      {/* Nav flutuante em pill — assenta acima do home indicator. */}
-      <nav className="pointer-events-none fixed inset-x-0 bottom-0 z-40 pb-safe">
+      <div className={cn("min-w-0 flex-1 lg:flex lg:gap-6 lg:px-6", wide ? "lg:justify-start" : "lg:justify-center")}>
+        {/* pb-32: espaço para a nav flutuante não tapar o fim do conteúdo (só em mobile). */}
+        <div
+          className={cn(
+            "mx-auto w-full bg-background lg:mx-0",
+            fullHeight ? "flex h-svh flex-col lg:h-svh" : "pb-32 lg:pb-8",
+            maxWidth,
+            aside ? "lg:max-w-[460px]" : wide ? "lg:max-w-5xl" : "lg:max-w-[560px]",
+          )}
+        >
+          {children}
+        </div>
+
+        {aside && (
+          <aside className="hidden min-w-0 flex-1 py-6 lg:block lg:max-w-[520px]">
+            <div className="sticky top-6">{aside}</div>
+          </aside>
+        )}
+      </div>
+
+      {/* Nav flutuante em pill — assenta acima do home indicator. Só em mobile. */}
+      <nav className="pointer-events-none fixed inset-x-0 bottom-0 z-40 pb-safe lg:hidden">
         <div className={cn("mx-auto px-4 pb-2", maxWidth)}>
           <ul
             className={cn(
@@ -79,6 +111,44 @@ export function AppShell({ children, role, maxWidth = "max-w-[440px]", fullHeigh
         </div>
       </nav>
     </div>
+  );
+}
+
+/** Mesma lista de navegação da pill, noutra forma. */
+function DesktopSidebar({ nav, pathname }: { nav: NavItem[]; pathname: string }) {
+  return (
+    <aside className="sticky top-0 hidden h-svh w-[240px] shrink-0 flex-col border-r border-border bg-surface px-3 py-5 lg:flex">
+      <div className="px-3 pb-6 font-display text-[21px] font-extrabold tracking-tight">HomeMatch</div>
+      <ul className="flex flex-col gap-1">
+        {nav.map(({ to, label, Icon }) => {
+          const active = pathname === to || pathname.startsWith(to + "/");
+          const isPublish = to === "/publish";
+          return (
+            <li key={to}>
+              <Link
+                to={to}
+                className={cn(
+                  "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition",
+                  isPublish
+                    ? "bg-primary text-primary-foreground shadow-lift hover:brightness-105"
+                    : active
+                      ? "bg-primary-soft text-primary"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                )}
+              >
+                <Icon className={cn("size-5", active && !isPublish && "stroke-[2.6]")} />
+                {label}
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+      <div className="mt-auto px-3">
+        <Link to="/settings" className="flex items-center gap-3 rounded-xl px-0 py-2 text-xs font-semibold text-muted-foreground transition hover:text-foreground">
+          Definições
+        </Link>
+      </div>
+    </aside>
   );
 }
 

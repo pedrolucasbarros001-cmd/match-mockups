@@ -43,11 +43,16 @@ function HelpPage() {
             <div className="text-sm font-bold">Email</div>
             <div className="text-xs text-muted-foreground">ola@homematch.pt</div>
           </a>
-          <button className="flex flex-col items-start gap-2 rounded-2xl border border-border bg-surface p-4 text-left">
+          {/* Sem equipa de suporte a atender, um botão de chat seria uma porta
+              que não abre. Enquanto não existir, encaminha para onde há resposta. */}
+          <a
+            href="mailto:ola@homematch.pt?subject=Pedido%20de%20ajuda"
+            className="flex flex-col items-start gap-2 rounded-2xl border border-border bg-surface p-4"
+          >
             <MessageCircle className="size-5 text-primary" />
-            <div className="text-sm font-bold">Chat</div>
-            <div className="text-xs text-muted-foreground">Seg–Sex · 9h–18h</div>
-          </button>
+            <div className="text-sm font-bold">Falar com alguém</div>
+            <div className="text-xs text-muted-foreground">Resposta em ~1 dia útil</div>
+          </a>
         </div>
       </div>
     </div>

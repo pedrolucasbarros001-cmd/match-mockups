@@ -94,6 +94,35 @@
   --radius: 1rem;
 }
 
+/*
+  Modo de descoberta: arrendar (azul) vs comprar (verde-esmeralda).
+  Trocar o modo repinta a app inteira porque tudo lê os mesmos tokens —
+  o utilizador sabe em que modo está sem ter de ler o seletor.
+  Aplicado com data-mode="sale" no <html>.
+*/
+[data-mode="sale"] {
+  --primary: oklch(0.55 0.14 168);        /* esmeralda — comprar */
+  --primary-soft: oklch(0.95 0.04 168);
+  --accent: oklch(0.93 0.05 168);
+  --accent-foreground: oklch(0.30 0.08 168);
+  --like: oklch(0.55 0.14 168);
+  --ring: oklch(0.55 0.14 168);
+  --score-blue: oklch(0.45 0.14 170);
+}
+
+/* Ações de plano: subir é positivo, descer é destrutivo — cores fixas,
+   independentes do modo, porque o significado não muda com o contexto. */
+:root {
+  --upgrade: oklch(0.58 0.16 150);        /* verde — ganhar capacidade */
+  --downgrade: oklch(0.58 0.22 27);       /* vermelho — perder capacidade */
+}
+@utility bg-upgrade { background-color: var(--upgrade); }
+@utility text-upgrade { color: var(--upgrade); }
+@utility border-upgrade { border-color: var(--upgrade); }
+@utility bg-downgrade { background-color: var(--downgrade); }
+@utility text-downgrade { color: var(--downgrade); }
+@utility border-downgrade { border-color: var(--downgrade); }
+
 .dark {
   --background: oklch(0.16 0.02 260);
   --surface: oklch(0.21 0.02 260);
