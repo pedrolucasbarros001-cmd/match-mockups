@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { PageHeader } from "@/components/AppShell";
+import { PageHeader, PageShell } from "@/components/AppShell";
 
 export const Route = createFileRoute("/legal/privacy")({
   head: () => ({ meta: [{ title: "Política de Privacidade — HomeMatch" }] }),
@@ -8,7 +8,7 @@ export const Route = createFileRoute("/legal/privacy")({
 
 function PrivacyPage() {
   return (
-    <div className="mx-auto min-h-svh w-full max-w-[440px] bg-background pb-10">
+    <PageShell width="list" className="pb-10">
       <PageHeader title="Privacidade" back="/settings" />
       <article className="prose prose-sm max-w-none px-4 pt-4 text-sm leading-relaxed text-foreground">
         <p className="text-xs text-muted-foreground">Última atualização: Junho 2026</p>
@@ -23,6 +23,6 @@ function PrivacyPage() {
         <h2 className="mt-4 font-display text-base font-bold">Contacto</h2>
         <p className="mt-1 text-muted-foreground">Encarregado de proteção de dados: privacidade@homematch.pt</p>
       </article>
-    </div>
+    </PageShell>
   );
 }

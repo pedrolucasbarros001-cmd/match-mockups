@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { PageHeader } from "@/components/AppShell";
+import { PageHeader, PageShell } from "@/components/AppShell";
 import { Bell, Globe, Lock, FileText, Trash2, HelpCircle, ChevronRight, Sliders, Crown, UserCog, RefreshCcw } from "lucide-react";
 import { useRole, setRole, setSession } from "@/lib/user-state";
 import { useStore } from "@/lib/store";
@@ -25,7 +25,7 @@ function SettingsPage() {
   };
 
   return (
-    <div className="mx-auto min-h-svh w-full max-w-[440px] bg-background pb-10">
+    <PageShell width="list" className="pb-10">
       <PageHeader title="Definições" back="/profile" />
       <div className="px-4 pt-4">
         <Group title="Utilizador (teste)">
@@ -75,7 +75,7 @@ function SettingsPage() {
         </Group>
         <p className="mt-8 text-center text-xs text-muted-foreground">HomeMatch v1.0</p>
       </div>
-    </div>
+    </PageShell>
   );
 }
 

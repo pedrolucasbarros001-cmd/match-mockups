@@ -70,7 +70,7 @@ function NotificationsPage() {
       <div className="px-4 pt-3 pb-2 text-xs text-muted-foreground">
         Log de eventos da tua atividade — {role === "landlord" ? "candidatos, visitas e mercado." : "descoberta, matches e visitas."}
       </div>
-      <div className="sticky top-14 z-20 grid grid-cols-4 gap-1 border-b border-border bg-surface/95 px-3 py-2 backdrop-blur">
+      <div className="sticky top-14 md:top-0 z-20 grid grid-cols-4 gap-1 border-b border-border bg-surface/95 px-3 py-2 backdrop-blur">
         {FILTERS.map((f) => (
           <button
             key={f.key}

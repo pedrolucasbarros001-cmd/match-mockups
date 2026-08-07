@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useRoleGuard } from "@/lib/user-state";
 import { useState } from "react";
-import { PageHeader } from "@/components/AppShell";
+import { PageHeader, PageShell } from "@/components/AppShell";
 import { getState } from "@/lib/store";
 import { api } from "@/lib/api";
 import type { SpaceType, ListingKind } from "@/lib/mock-data";
@@ -64,7 +64,7 @@ function PreferencesPage() {
   };
 
   return (
-    <div className="mx-auto min-h-svh w-full max-w-[440px] bg-background pb-24">
+    <PageShell width="list" className="pb-24">
       <PageHeader title="Preferências" back="/profile" />
       <div className="space-y-6 px-5 pt-5">
         <p className="text-sm text-muted-foreground">
@@ -142,7 +142,7 @@ function PreferencesPage() {
           Guardar e ver resultados
         </button>
       </div>
-    </div>
+    </PageShell>
   );
 }
 

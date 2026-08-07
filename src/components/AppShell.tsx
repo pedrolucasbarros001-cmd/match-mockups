@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Home, MessageCircle, Bell, User, LayoutDashboard, Building2, PlusSquare, BadgeCheck, ShieldCheck } from "lucide-react";
+import { Home, MessageCircle, Bell, User, LayoutDashboard, Building2, PlusSquare, BadgeCheck, ShieldCheck, Settings, Heart, Calendar, Users } from "lucide-react";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { useRole, type Role } from "@/lib/user-state";
@@ -42,6 +42,7 @@ export function AppShell({ children, role, maxWidth = "max-w-[440px]", fullHeigh
   const hookRole = useRole();
   const activeRole: Role = role ?? hookRole;
   const nav = activeRole === "landlord" ? landlordNav : seekerNav;
+  const contentWidth = maxWidth ?? widthClass[width];
 
   return (
     <div className="min-h-svh bg-background lg:flex">
@@ -77,7 +78,7 @@ export function AppShell({ children, role, maxWidth = "max-w-[440px]", fullHeigh
             )}
           >
             {nav.map(({ to, label, Icon }) => {
-              const active = pathname === to || pathname.startsWith(to + "/");
+              const active = isActivePath(pathname, to);
               const isPublish = to === "/publish";
               if (isPublish) {
                 return (
@@ -154,23 +155,24 @@ function DesktopSidebar({ nav, pathname }: { nav: NavItem[]; pathname: string })
 
 export function PageHeader({ title, right, back }: { title: string; right?: ReactNode; back?: string }) {
   return (
-    <header className="sticky top-0 z-30 border-b border-border/70 glass-light">
+    <header className="sticky top-0 z-30 border-b border-border/70 glass-light md:static md:border-b-0 md:bg-transparent md:backdrop-blur-none">
       {/* Recuo da status bar do telefone. */}
-      <div className="h-safe-top" />
-      <div className="flex h-14 items-center justify-between gap-3 px-4">
+      <div className="h-safe-top md:hidden" />
+      <div className="flex h-14 items-center justify-between gap-3 px-4 md:h-20 md:px-6">
         <div className="flex min-w-0 items-center gap-2">
           {back && (
-            <Link to={back} className="-ml-2 grid size-10 shrink-0 place-items-center rounded-pill transition active:scale-90 hover:bg-muted">
+            <Link to={back} className="-ml-2 grid size-10 shrink-0 place-items-center rounded-pill transition active:scale-90 hover:bg-muted md:hidden">
               <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M15 18l-6-6 6-6" /></svg>
             </Link>
           )}
-          <h1 className="truncate font-display text-[19px] font-bold tracking-tight">{title}</h1>
+          <h1 className="truncate font-display text-[19px] font-bold tracking-tight md:text-[30px]">{title}</h1>
         </div>
         {right}
       </div>
     </header>
   );
 }
+
 
 export function ScoreBadge({ score, size = "sm", withIcon = false }: { score: number; size?: "sm" | "md"; withIcon?: boolean }) {
   const color = score >= 80 ? "bg-score-blue" : score >= 60 ? "bg-score-green" : score >= 40 ? "bg-score-amber" : "bg-score-red";

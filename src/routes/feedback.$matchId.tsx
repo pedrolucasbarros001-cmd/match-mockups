@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate, useParams } from "@tanstack/react-router";
 import { useState } from "react";
-import { PageHeader } from "@/components/AppShell";
+import { PageHeader, PageShell } from "@/components/AppShell";
 import { useStore, store, reviewsVisible } from "@/lib/store";
 import { useRole } from "@/lib/user-state";
 import { Star, Check, EyeOff } from "lucide-react";
@@ -44,7 +44,7 @@ function FeedbackPage() {
   };
 
   return (
-    <div className="mx-auto min-h-svh w-full max-w-[440px] bg-background pb-16">
+    <PageShell width="list" className="pb-16">
       <PageHeader title="Feedback" back="/matches" />
       <div className="space-y-5 px-5 pt-5">
         <div className="flex items-center gap-3">
@@ -118,6 +118,6 @@ function FeedbackPage() {
           </>
         )}
       </div>
-    </div>
+    </PageShell>
   );
 }

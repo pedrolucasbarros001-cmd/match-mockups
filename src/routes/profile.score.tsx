@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { PageHeader, ScoreBadge } from "@/components/AppShell";
+import { PageHeader, ScoreBadge, PageShell } from "@/components/AppShell";
 import { useMemo } from "react";
 import { useStore, getState, trustScoreBreakdown } from "@/lib/store";
 import { Check, Plus } from "lucide-react";
@@ -26,7 +26,7 @@ function ScorePage() {
   const max = breakdown.reduce((a, b) => a + b.pts, 0);
 
   return (
-    <div className="mx-auto min-h-svh w-full max-w-[440px] bg-background pb-10">
+    <PageShell width="list" className="pb-10">
       <PageHeader title="Trust Score" back="/profile" />
       <div className="px-5 pt-6">
         <div className="flex flex-col items-center text-center">
@@ -63,6 +63,6 @@ function ScorePage() {
           ))}
         </ul>
       </div>
-    </div>
+    </PageShell>
   );
 }

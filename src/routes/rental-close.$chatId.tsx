@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate, useParams } from "@tanstack/react-router";
 import { useState } from "react";
-import { PageHeader } from "@/components/AppShell";
+import { PageHeader, PageShell } from "@/components/AppShell";
 import { useRoleGuard } from "@/lib/user-state";
 import { useStore, store } from "@/lib/store";
 import type { CloseReason } from "@/lib/mock-data";
@@ -103,7 +103,7 @@ function RentalCloseWizard() {
   }
 
   return (
-    <div className="mx-auto flex min-h-svh w-full max-w-[440px] flex-col bg-background">
+    <PageShell width="list" className="flex flex-col">
       <PageHeader title={sale ? "Registar proposta" : "Fechar este espaço"} back={`/chats/${chatId}`} />
       <div className="px-4 pt-3">
         <div className="flex gap-1.5">
@@ -233,7 +233,7 @@ function RentalCloseWizard() {
           </button>
         </div>
       )}
-    </div>
+    </PageShell>
   );
 }
 

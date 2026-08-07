@@ -1,60 +1,46 @@
-## Problema
+# Feed desktop + Definições completas + Preferências vs Filtros
 
-Duas dores no mesmo tema — separação de papéis (hóspede vs senhorio) e separação semântica entre ecrãs parecidos:
+## Diagnóstico da navegação atual (verificado no código)
 
-1. **Perfil do hóspede continua a mostrar "ÁREA SENHORIO"** (Gerir visitas), o que não deve existir para quem está em modo hóspede. Simétrico: senhorio não deve ver "Favoritos" nem "As minhas visitas" do hóspede.
-2. **Matches e Avisos parecem o mesmo ecrã** — mesmos chips (Todos / Interesse / Em conversa / Visita) e mesma leitura visual. São coisas diferentes: Matches é a lista de **relações ativas** (uma conversa por candidatura); Avisos é o **histórico de eventos** (log).
-3. Vários ecrãs ainda misturam papéis por baixo: `visits-manager` importa mocks antigos, `notifications` mostra tudo a toda a gente, `matches` no lado senhorio deveria mostrar candidatos-por-anúncio e não anúncios-por-candidato.
+O que já existe e está coerente:
+- Inquilino: `/explore` (feed), `/explore/mapa`, `/explore/$id`, `/para-ti`, `/favorites`, `/matches`, `/chats`, `/visits`, `/interests`, `/feedback/$matchId`, `/preferences`, `/profile`, `/profile/score`.
+- Senhorio: `/dashboard`, `/my-listings`, `/my-listings/new`, `/publish`, `/candidates`, `/candidates/$requestId`, `/visits-manager`, `/inbox`, `/account`, `/rental-close/$chatId`.
+- Transversal: `/splash`, `/login`, `/register`, `/reset-password`, `/onboarding`, `/settings`, `/help`, `/legal/terms`, `/legal/privacy`, `/switch-user`.
+- Store única (`src/lib/store.ts`) + fachada `src/lib/api.ts` já isolam os dados — boa base para ligar backend depois.
 
-## Objetivo
+Lacunas encontradas:
+1. **Feed preso ao formato telemóvel.** `AppShell width="feed"` fixa `max-w-[440px]` e o card usa `max-w-md`, por isso em desktop sobra ecrã vazio à direita (é exatamente o que se vê na captura).
+2. **Definições com itens mortos.** Em `/settings`, "Privacidade e segurança", "Notificações" e "Idioma" não navegam para lado nenhum (não existem rotas).
+3. **Plano só existe para senhorio.** `/account` está protegida por `useRoleGuard("landlord")` e só é alcançável pelo dashboard/definições; o inquilino não tem onde ver/gerir plano. Não há downgrade explicado nem comparação de planos.
+4. **Preferências vs Filtros sobrepostos e desalinhados.** `/preferences` só edita arrendamento (`kind` fixo em `"rent"`, sem preço de compra, sem `kind`), enquanto o painel de filtros do feed escreve nos mesmos campos do store, incluindo compra. Resultado: dois ecrãs a editar a mesma coisa com campos diferentes (raio e data só existem nas preferências; tipos e preço existem nos dois).
 
-Cada ecrã tem um único papel dono e mostra só o que faz sentido nesse papel; ecrãs que sobrevivem em ambos os papéis (Matches, Avisos, Chats) têm variantes visuais e conteúdo filtrado. Nada de campos do outro lado.
+## O que vai ser feito
 
-## Alterações
+### 1. Feed em desktop (`/explore`)
+- Nova largura `feedWide` no `AppShell`: continua estreito em mobile, mas em `md+` passa a um layout de duas colunas dentro da área de conteúdo:
+  - coluna esquerda: card de swipe centrado com altura confortável;
+  - coluna direita (só `lg+`): painel fixo de filtros sempre visível (o mesmo estado do store), mais o resumo da pesquisa ativa e atalhos Mapa / Para Ti.
+- Em `md+` o bottom sheet de filtros deixa de ser usado (o painel lateral substitui-o); em mobile mantém-se igual.
+- Cabeçalho do feed alinhado à grelha do desktop (sem barra colada à esquerda) e botões de ação com estados hover.
 
-### 1. Perfil (`src/routes/profile.tsx`)
-- Reforçar o `role === "seeker"` vs `role === "landlord"` (já existe; auditar e garantir que **nenhum** bloco senhorio renderiza em modo hóspede).
-- Hóspede: Identidade → Completar perfil → **O que procuro agora** (Preferências) → **Atividade** (Verificações, Favoritos, As minhas visitas) → Definições / Sair.
-- Senhorio: Identidade → Completar perfil → **Área senhorio** (Meus anúncios, Candidatos, Gerir visitas, Conta e plano) → **Confiança** (Verificações) → Definições / Sair. Sem Favoritos, sem "As minhas visitas", sem Preferências de descoberta.
+### 2. Definições completas
+Reorganizar `/settings` em grupos claros e criar as telas em falta:
+- `/settings/account` — dados da conta (nome, email, telefone, alterar password), verificações.
+- `/settings/notifications` — toggles por canal (push/email) e por tipo (matches, mensagens, visitas, avisos do sistema).
+- `/settings/privacy` — visibilidade do perfil, quem pode contactar, bloqueios, sessões, apagar conta.
+- `/settings/language` — idioma e região/moeda.
+- `/settings/plan` — ver e gerir plano para **ambos os papéis**: comparação Free vs Pro, estado atual, upgrade, downgrade com ecrã de confirmação (o que se perde), e histórico de faturação. `/account` do senhorio passa a reencaminhar para aqui, mantendo os dados fiscais como secção própria.
+- Grupos finais em Definições: Conta · Notificações · Privacidade · Plano e faturação · Descoberta (preferências) · Idioma · Sobre/Ajuda/Legal · Zona perigosa (repor dados de demo, terminar sessão).
+- Todas as telas usam `PageShell` (sidebar em desktop) e escrevem no store via `api`.
 
-### 2. Matches (`src/routes/matches.tsx`) — diferenciar de Avisos
-- **Header próprio**: subtítulo "As tuas negociações ativas" + contador ("3 ativas · 1 fechada"). Distingue-se logo do topo de Avisos.
-- **Substituir chips por segmented control de estado do funil** (Ativas / Visita / Fechadas) — 3 grupos, não 7. As sub-fases (interesse, conversa, visita marcada, visita feita, arrendado) aparecem como *badge* dentro do cartão, não como aba.
-- **Cartão richer**: foto + título + linha da timeline mini ("● ● ● ○ ○") + próxima ação em bold + CTA "Abrir conversa". Diferente do estilo de linha de log dos Avisos.
-- **Variante por papel**:
-  - Hóspede: uma linha por *listing* candidatado (é o que já faz).
-  - Senhorio: uma linha por *candidato × anúncio*; foto do candidato, não do imóvel; título = nome do candidato, subtítulo = anúncio.
+### 3. Preferências vs Filtros — divisão lógica
+Regra única e explícita:
+- **Preferências** (`/preferences`) = o meu perfil de procura, duradouro: objetivo (Arrendar/Comprar), cidade, raio, data de entrada, orçamento por objetivo, tipos de espaço por objetivo, animais e mobilado. Passa a suportar os dois objetivos com separador Arrendar/Comprar, em vez de assumir arrendamento.
+- **Filtros** (feed) = ajuste rápido da sessão sobre o mesmo store, com apenas: tipo de espaço, preço máximo e os toggles de convivência, mais um botão "Guardar como preferências" e "Repor às minhas preferências".
+- Cada campo aparece uma só vez com o mesmo nome, mesma unidade e mesmos limites nos dois sítios, e o feed reage a ambos (já reage).
 
-### 3. Avisos (`src/routes/notifications.tsx`) — assumir-se como log
-- Manter chips, mas mudar rótulos e ordem para **eventos** (Todas / Não lidas / Hoje / Esta semana) em vez de replicar os estados de Matches. As categorias (Interesse, Match, Visita…) passam a ser só o *pill* dentro do item, não a navegação.
-- **Filtrar por papel**: hóspede não vê categorias `marketplace` de senhorio (novo candidato, anúncio expirou); senhorio não vê categorias de descoberta (novo match sugerido, imóvel novo perto). Adicionar campo `audience: "seeker" | "landlord" | "both"` nos eventos (já parcialmente presente via `category`; mapear).
-- Estilo denso de linha temporal com timestamps proeminentes — visualmente diferente do cartão-conversa de Matches.
-
-### 4. Visitas
-- **Hóspede** (`/visits`): já OK, só afinar cabeçalho ("As minhas visitas") e remover se abrir em modo senhorio (redirect para `/visits-manager`).
-- **Senhorio** (`/visits-manager`): trocar imports de `mock-data` (`visits`, `listings`) por `useStore` e filtrar apenas visitas dos anúncios do próprio senhorio. Botões Confirmar/Recusar ligados a `api.confirmVisit` / `api.cancelVisit`.
-
-### 5. Guardas de rota (papel)
-Adicionar um pequeno hook `useRoleGuard(expected)` em `src/lib/user-state.ts` e aplicar:
-- `seeker`: `/explore`, `/explore/$id`, `/explore/mapa`, `/favorites`, `/visits`, `/preferences`, `/para-ti`.
-- `landlord`: `/dashboard`, `/my-listings`, `/my-listings/new`, `/publish`, `/candidates`, `/candidates/$requestId`, `/visits-manager`, `/account`.
-- Ambos: `/matches`, `/chats`, `/notifications`, `/profile`, `/settings`, `/onboarding`, páginas legais/help.
-
-Se o papel não bate, redireciona para o home do papel atual (`/explore` ou `/dashboard`) — evita URLs "cruzados" que confundem o teste.
-
-### 6. AppShell
-Já reage a `useRole()`. Só validar que o nav do senhorio não tem "Avisos" duplicado com "Matches" e vice-versa — manter os dois separados nos dois papéis.
-
-## Fora do âmbito
-
-Sem alterações a tokens/CSS, sem novo backend, sem novos componentes de design system, sem mexer em Cloud.
-
-## Ordem de execução
-
-1. `store.ts` — expor helpers `visitsForLandlord()`, `matchesForLandlord()` (candidato×anúncio) e `notificationsForRole(role)`.
-2. `profile.tsx` — auditar e limpar mistura de papéis.
-3. `matches.tsx` — novo header, 3 grupos, variante senhorio.
-4. `notifications.tsx` — filtro por papel + chips reformulados (log style).
-5. `visits-manager.tsx` — passar a usar store + ações reais.
-6. `user-state.ts` — `useRoleGuard`; aplicar nas rotas listadas.
-7. Passagem final: abrir cada rota nos dois papéis e confirmar que nada "vaza".
+## Notas técnicas
+- Sem backend: tudo continua em `src/lib/store.ts` + `src/lib/api.ts`; as novas definições acrescentam campos ao estado persistido (`notifications`, `privacy`, `locale`, `account`) com valores por defeito para não partir estados guardados.
+- `plan` já existe no store; downgrade reutiliza `api.setPlan`.
+- Guardas: as novas rotas de definições são neutras quanto ao papel (sem `useRoleGuard`), exceto a secção de dados fiscais, visível só a senhorio.
+- Cada rota nova define `head()` próprio com título e descrição.

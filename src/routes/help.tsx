@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { PageHeader } from "@/components/AppShell";
+import { PageHeader, PageShell } from "@/components/AppShell";
 import { ChevronDown, Mail, MessageCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -20,7 +20,7 @@ const FAQ = [
 function HelpPage() {
   const [open, setOpen] = useState<number | null>(0);
   return (
-    <div className="mx-auto min-h-svh w-full max-w-[440px] bg-background pb-10">
+    <PageShell width="list" className="pb-10">
       <PageHeader title="Ajuda" back="/settings" />
       <div className="px-4 pt-4">
         <div className="mb-4 font-display text-sm font-bold uppercase tracking-wide text-muted-foreground">Perguntas frequentes</div>
@@ -55,6 +55,6 @@ function HelpPage() {
           </a>
         </div>
       </div>
-    </div>
+    </PageShell>
   );
 }

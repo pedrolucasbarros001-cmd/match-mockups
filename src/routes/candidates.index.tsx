@@ -99,7 +99,7 @@ function Candidates() {
             </div>
           )}
 
-          <div className="sticky top-14 z-20 border-b border-border bg-surface/95 backdrop-blur">
+          <div className="sticky top-14 md:top-0 z-20 border-b border-border bg-surface/95 backdrop-blur">
             <div className="grid grid-cols-4 gap-1 px-3 py-2">
               {SUB_TABS.map((t) => (
                 <button

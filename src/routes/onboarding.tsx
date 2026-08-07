@@ -1,3 +1,4 @@
+import { AuthLayout } from "@/components/AuthLayout";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useRef, useState } from "react";
 import { ChevronLeft, Search, Home, MapPin, Camera, ImagePlus, Info, Check, Sparkles } from "lucide-react";
@@ -83,7 +84,7 @@ function Onboarding() {
   };
 
   return (
-    <div className="mx-auto flex min-h-svh w-full max-w-[440px] flex-col bg-background px-5 pb-10">
+    <AuthLayout className="px-5 pb-10">
       <header className="-mx-1 flex h-14 items-center justify-between">
         {step > 1 ? (
           <button onClick={prev} className="grid size-10 place-items-center rounded-full hover:bg-muted">
@@ -366,7 +367,7 @@ function Onboarding() {
           </div>
         </Section>
       )}
-    </div>
+    </AuthLayout>
   );
 }
 

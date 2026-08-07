@@ -13,7 +13,7 @@ function MapaPage() {
   const [selected, setSelected] = useState<string | null>("3");
   const active = listings.find((l) => l.id === selected);
   return (
-    <AppShell>
+    <AppShell width="wide">
       <PageHeader
         title="Mapa · Bragança"
         right={
