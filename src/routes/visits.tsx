@@ -23,7 +23,7 @@ function VisitsPage() {
   const listings = useStore((s) => s.listings);
 
   return (
-    <AppShell wide>
+    <AppShell width="wide">
       <PageHeader title="As minhas visitas" back="/profile" />
       {visits.length === 0 ? (
         <div className="p-8">

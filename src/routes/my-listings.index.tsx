@@ -40,7 +40,7 @@ function MyListings() {
   };
 
   return (
-    <AppShell role="landlord" wide>
+    <AppShell role="landlord" width="wide">
       {/* Com o limite atingido o botão deixa de prometer o que não pode dar:
           mostra-se como caminho de upgrade, em verde e com raio. */}
       <PageHeader title="Anúncios" right={

@@ -176,6 +176,40 @@ const initialState: StoreState = {
   preferences: emptyPreferences,
 };
 
+// ============ Plano: limites e invariantes ============
+
+export type PlanId = "free" | "pro";
+export type BillingPeriod = "monthly" | "annual";
+
+/**
+ * Limites por plano. `maxActiveListings: null` = sem limite.
+ * Esta é a única definição — ecrãs, guards e avisos leem daqui, por isso não
+ * pode existir um sítio que permita o que outro proíbe.
+ */
+export const PLANS: Record<PlanId, {
+  name: string;
+  maxActiveListings: number | null;
+  monthly: number;
+  annual: number;
+  features: string[];
+}> = {
+  free: {
+    name: "Free",
+    maxActiveListings: 1,
+    monthly: 0,
+    annual: 0,
+    features: ["1 anúncio ativo", "Candidatos ilimitados", "Conversas e visitas", "Trust Score"],
+  },
+  pro: {
+    name: "Pro",
+    maxActiveListings: null,
+    monthly: 9.99,
+    annual: 95.9, // ~2 meses grátis
+    features: ["Anúncios ilimitados", "Destaque na descoberta", "Estatísticas de candidatos", "Apoio prioritário"],
+  },
+};
+
+
 let state: StoreState = load();
 
 function load(): StoreState {
@@ -296,40 +330,6 @@ export function qualityScore(l: Partial<Listing>): number {
   if ((l.visitAvailability ?? []).length > 0) q += 10;
   return Math.min(100, q);
 }
-
-/** Limite de plano: Free = 1 anúncio ativo. */
-// ============ Plano: limites e invariantes ============
-
-export type PlanId = "free" | "pro";
-export type BillingPeriod = "monthly" | "annual";
-
-/**
- * Limites por plano. `maxActiveListings: null` = sem limite.
- * Esta é a única definição — ecrãs, guards e avisos leem daqui, por isso não
- * pode existir um sítio que permita o que outro proíbe.
- */
-export const PLANS: Record<PlanId, {
-  name: string;
-  maxActiveListings: number | null;
-  monthly: number;
-  annual: number;
-  features: string[];
-}> = {
-  free: {
-    name: "Free",
-    maxActiveListings: 1,
-    monthly: 0,
-    annual: 0,
-    features: ["1 anúncio ativo", "Candidatos ilimitados", "Conversas e visitas", "Trust Score"],
-  },
-  pro: {
-    name: "Pro",
-    maxActiveListings: null,
-    monthly: 9.99,
-    annual: 95.9, // ~2 meses grátis
-    features: ["Anúncios ilimitados", "Destaque na descoberta", "Estatísticas de candidatos", "Apoio prioritário"],
-  },
-};
 
 /** Um anúncio conta para o limite enquanto estiver visível ou em negociação. */
 export function activeListingCount(s: StoreState = state): number {

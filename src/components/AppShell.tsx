@@ -21,22 +21,96 @@ const landlordNav: NavItem[] = [
   { to: "/profile", label: "Eu", Icon: User },
 ];
 
-export function AppShell({ children, role, maxWidth = "max-w-[440px]", fullHeight = false, aside, wide = false }: {
-  children: ReactNode; role?: Role; maxWidth?: string;
+/** Atalhos extra que só cabem no desktop (no telemóvel vivem dentro do Perfil). */
+const seekerExtra: NavItem[] = [
+  { to: "/favorites", label: "Favoritos", Icon: Heart },
+  { to: "/visits", label: "Visitas", Icon: Calendar },
+];
+const landlordExtra: NavItem[] = [
+  { to: "/candidates", label: "Candidatos", Icon: Users },
+  { to: "/visits-manager", label: "Visitas", Icon: Calendar },
+  { to: "/notifications", label: "Avisos", Icon: Bell },
+];
+
+/** Larguras de conteúdo por tipo de ecrã — o feed mantém-se estreito por design. */
+const widthClass = {
+  feed: "max-w-[440px]",
+  list: "max-w-[440px] md:max-w-[760px]",
+  wide: "max-w-[440px] md:max-w-[1200px]",
+} as const;
+export type ShellWidth = keyof typeof widthClass;
+
+function isActivePath(pathname: string, to: string) {
+  return pathname === to || pathname.startsWith(to + "/");
+}
+
+/** Sidebar de desktop — substitui a bottom nav a partir de md. */
+export function DesktopSidebar({ role }: { role?: Role }) {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const hookRole = useRole();
+  const activeRole: Role = role ?? hookRole;
+  const nav = activeRole === "landlord" ? landlordNav : seekerNav;
+  const extra = activeRole === "landlord" ? landlordExtra : seekerExtra;
+
+  return (
+    <aside className="fixed inset-y-0 left-0 z-40 hidden w-[76px] flex-col border-r border-border bg-surface lg:w-[240px] md:flex">
+      <Link to="/" className="flex h-16 items-center gap-2 px-4 lg:px-5">
+        <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-primary font-display text-base font-black text-primary-foreground">H</span>
+        <span className="hidden font-display text-lg font-black tracking-tight lg:inline">HomeMatch</span>
+      </Link>
+
+      <nav className="flex-1 overflow-y-auto px-2 pb-4 lg:px-3">
+        <ul className="space-y-1">
+          {nav.map(({ to, label, Icon }) => (
+            <SideLink key={to} to={to} label={label} Icon={Icon} active={isActivePath(pathname, to)} />
+          ))}
+        </ul>
+        {extra.length > 0 && (
+          <>
+            <div className="mt-5 hidden px-3 text-[11px] font-bold uppercase tracking-wide text-muted-foreground lg:block">Atalhos</div>
+            <ul className="mt-2 space-y-1">
+              {extra.map(({ to, label, Icon }) => (
+                <SideLink key={to} to={to} label={label} Icon={Icon} active={isActivePath(pathname, to)} />
+              ))}
+            </ul>
+          </>
+        )}
+      </nav>
+
+      <div className="border-t border-border px-2 py-3 lg:px-3">
+        <ul>
+          <SideLink to="/settings" label="Definições" Icon={Settings} active={isActivePath(pathname, "/settings")} />
+        </ul>
+      </div>
+    </aside>
+  );
+}
+
+/** Ecrãs de detalhe/sub-página: sidebar em desktop, sem bottom nav (têm barras próprias). */
+export function PageShell({ children, role, width = "list", className }: {
+  children: ReactNode; role?: Role; width?: ShellWidth; className?: string;
+}) {
+  return (
+    <div className="min-h-svh bg-background md:pl-[76px] lg:pl-[240px]">
+      <DesktopSidebar role={role} />
+      <div className={cn("mx-auto min-h-svh w-full bg-background", widthClass[width], className)}>{children}</div>
+    </div>
+  );
+}
+
+export function AppShell({ children, role, maxWidth, width = "list", fullHeight = false, aside }: {
+  children: ReactNode; role?: Role;
+  /** Override manual (legado). Preferir `width`. */
+  maxWidth?: string;
+  width?: ShellWidth;
   /** Ecrãs que preenchem o ecrã (feed de swipe) gerem a própria altura. */
   fullHeight?: boolean;
   /**
-   * Segunda coluna, só em desktop. Em telemóvel é ignorada de propósito: o
-   * mesmo conteúdo já vive no seu ecrã próprio, alcançável por navegação.
+   * Painel de detalhe, só em desktop. Em telemóvel é ignorado de propósito:
+   * o mesmo conteúdo já vive no seu ecrã próprio, alcançável por navegação.
    * Mesmo destino, caminhos diferentes conforme o espaço disponível.
    */
   aside?: ReactNode;
-  /**
-   * Listas usam a largura toda em desktop e refluem em grelha; formulários e
-   * leitura ficam estreitos porque linhas longas cansam. Em telemóvel os dois
-   * são iguais — é a mesma UI, só com mais espaço disponível.
-   */
-  wide?: boolean;
 }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const hookRole = useRole();
@@ -45,20 +119,18 @@ export function AppShell({ children, role, maxWidth = "max-w-[440px]", fullHeigh
   const contentWidth = maxWidth ?? widthClass[width];
 
   return (
-    <div className="min-h-svh bg-background lg:flex">
-      {/* Desktop: a mesma navegação, servida como sidebar em vez de pill. */}
-      <DesktopSidebar nav={nav} pathname={pathname} />
+    <div className="min-h-svh bg-background md:pl-[76px] lg:pl-[240px]">
+      <DesktopSidebar role={role} />
 
-      <div className={cn("min-w-0 flex-1 lg:flex lg:gap-6 lg:px-6", wide ? "lg:justify-start" : "lg:justify-center")}>
-        {/* pb-32: espaço para a nav flutuante não tapar o fim do conteúdo (só em mobile). */}
-        <div
-          className={cn(
-            "mx-auto w-full bg-background lg:mx-0",
-            fullHeight ? "flex h-svh flex-col lg:h-svh" : "pb-32 lg:pb-8",
-            maxWidth,
-            aside ? "lg:max-w-[460px]" : wide ? "lg:max-w-5xl" : "lg:max-w-[560px]",
-          )}
-        >
+      {/* Com painel lateral, as duas colunas partilham o espaço; sem ele, o
+          conteúdo fica centrado como em qualquer outro ecrã. */}
+      <div className={cn(aside && "lg:flex lg:justify-center lg:gap-6 lg:px-6")}>
+        {/* pb-32: espaço para a nav flutuante não tapar o fim do conteúdo (só mobile). */}
+        <div className={cn(
+          "mx-auto w-full bg-background",
+          fullHeight ? "flex h-svh flex-col" : "pb-32 md:pb-10",
+          aside ? "lg:mx-0 lg:max-w-[460px]" : contentWidth,
+        )}>
           {children}
         </div>
 
@@ -69,9 +141,10 @@ export function AppShell({ children, role, maxWidth = "max-w-[440px]", fullHeigh
         )}
       </div>
 
-      {/* Nav flutuante em pill — assenta acima do home indicator. Só em mobile. */}
-      <nav className="pointer-events-none fixed inset-x-0 bottom-0 z-40 pb-safe lg:hidden">
-        <div className={cn("mx-auto px-4 pb-2", maxWidth)}>
+
+      {/* Nav flutuante em pill — assenta acima do home indicator. */}
+      <nav className="pointer-events-none fixed inset-x-0 bottom-0 z-40 pb-safe md:hidden">
+        <div className="mx-auto max-w-[440px] px-4 pb-2">
           <ul
             className={cn(
               "pointer-events-auto flex items-center justify-around rounded-pill border border-border/60 px-1.5 py-1.5 shadow-action glass-light",
@@ -115,41 +188,22 @@ export function AppShell({ children, role, maxWidth = "max-w-[440px]", fullHeigh
   );
 }
 
-/** Mesma lista de navegação da pill, noutra forma. */
-function DesktopSidebar({ nav, pathname }: { nav: NavItem[]; pathname: string }) {
+function SideLink({ to, label, Icon, active }: NavItem & { active: boolean }) {
   return (
-    <aside className="sticky top-0 hidden h-svh w-[240px] shrink-0 flex-col border-r border-border bg-surface px-3 py-5 lg:flex">
-      <div className="px-3 pb-6 font-display text-[21px] font-extrabold tracking-tight">HomeMatch</div>
-      <ul className="flex flex-col gap-1">
-        {nav.map(({ to, label, Icon }) => {
-          const active = pathname === to || pathname.startsWith(to + "/");
-          const isPublish = to === "/publish";
-          return (
-            <li key={to}>
-              <Link
-                to={to}
-                className={cn(
-                  "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition",
-                  isPublish
-                    ? "bg-primary text-primary-foreground shadow-lift hover:brightness-105"
-                    : active
-                      ? "bg-primary-soft text-primary"
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground",
-                )}
-              >
-                <Icon className={cn("size-5", active && !isPublish && "stroke-[2.6]")} />
-                {label}
-              </Link>
-            </li>
-          );
-        })}
-      </ul>
-      <div className="mt-auto px-3">
-        <Link to="/settings" className="flex items-center gap-3 rounded-xl px-0 py-2 text-xs font-semibold text-muted-foreground transition hover:text-foreground">
-          Definições
-        </Link>
-      </div>
-    </aside>
+    <li>
+      <Link
+        to={to}
+        title={label}
+        className={cn(
+          "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition",
+          "justify-center lg:justify-start",
+          active ? "bg-primary-soft text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground",
+        )}
+      >
+        <Icon className={cn("size-5 shrink-0", active && "stroke-[2.6]")} />
+        <span className="hidden min-w-0 truncate lg:inline">{label}</span>
+      </Link>
+    </li>
   );
 }
 

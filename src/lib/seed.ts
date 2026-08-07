@@ -296,17 +296,23 @@ export function seedIfEmpty() {
     termsAccepted: true,
   };
 
+  /**
+   * Filtros de demonstração deliberadamente largos: uma demo que abre com o
+   * feed vazio por causa dos próprios filtros semeados dá a impressão de que a
+   * app está partida. Quem quiser apertar, aperta — mas o estado inicial tem
+   * de mostrar conteúdo.
+   */
   const preferences: Preferences = {
     kind: "rent",
     city: "Braga",
-    maxDistanceKm: 10,
-    spaceTypes: { rent: ["Quarto", "Estúdio"], sale: [] },
+    maxDistanceKm: 25,
+    spaceTypes: { rent: [], sale: [] },
     minPrice: 0,
-    maxPrice: 700,
+    maxPrice: 2000,
     maxSalePrice: 400_000,
     moveInFrom: "1 Set 2026",
     pets: false,
-    needsFurnished: true,
+    needsFurnished: false,
   };
 
   // O plano tem de ser coerente com os dados: 6 anúncios ativos só existem no

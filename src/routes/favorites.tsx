@@ -18,7 +18,7 @@ function FavoritesPage() {
   const items = listings.filter((l) => favorites.includes(l.id));
 
   return (
-    <AppShell wide>
+    <AppShell width="wide">
       <PageHeader title="Favoritos" back="/profile" />
       {items.length === 0 ? (
         <Empty />

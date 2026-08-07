@@ -58,7 +58,7 @@ function NotificationsPage() {
   const items = scoped.filter((n) => matchesFilter(n, filter));
 
   return (
-    <AppShell wide>
+    <AppShell width="wide">
       <PageHeader
         title="Avisos"
         right={

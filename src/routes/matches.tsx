@@ -32,7 +32,7 @@ function MatchesPage() {
   const totalStepIndex = matchSteps("rent").length; // o número de fases é igual nos dois tipos
 
   return (
-    <AppShell wide>
+    <AppShell width="wide">
       <PageHeader title={role === "landlord" ? "Candidaturas" : "Matches"} />
       <div className="px-4 pt-3 pb-2 text-xs text-muted-foreground">
         <span className="font-num font-bold text-foreground">{activeCount}</span> ativas ·{" "}

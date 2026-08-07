@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useRoleGuard } from "@/lib/user-state";
 import { useState } from "react";
-import { PageHeader } from "@/components/AppShell";
+import { PageHeader, PageShell } from "@/components/AppShell";
 import { PhotoSlotPicker, type SlotPhoto } from "@/components/PhotoSlotPicker";
 import { ChevronLeft, ChevronRight, Camera, Check, Info, Crown, AlertTriangle, ShieldAlert } from "lucide-react";
 import { cn } from "@/lib/utils";

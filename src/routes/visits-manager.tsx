@@ -24,7 +24,7 @@ function VisitsManager() {
   const items = visits.filter((v) => listings.some((l) => l.id === v.listingId));
 
   return (
-    <AppShell role="landlord" wide>
+    <AppShell role="landlord" width="wide">
       <PageHeader title="Gerir visitas" back="/profile" />
       {items.length === 0 ? (
         <div className="p-8">

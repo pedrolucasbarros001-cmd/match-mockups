@@ -60,7 +60,7 @@ function Candidates() {
   const ignore = (m: Match) => store.setMatchState(m.id, "closed");
 
   return (
-    <AppShell role="landlord" wide>
+    <AppShell role="landlord" width="wide">
       <PageHeader title="Candidatos" back="/dashboard" />
 
       {all.length === 0 ? (
