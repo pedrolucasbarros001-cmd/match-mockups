@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell, PageHeader } from "@/components/AppShell";
 import { useStore } from "@/lib/store";
+import { formatVisitDate, visitIsPast } from "@/lib/mock-data";
 import { api } from "@/lib/api";
 import { Check, X, Calendar, Clock, User } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -11,9 +12,10 @@ export const Route = createFileRoute("/visits-manager")({
 });
 
 const STATUS: Record<string, { label: string; cls: string }> = {
-  pending: { label: "Pendente", cls: "bg-warning/15 text-warning" },
-  confirmed: { label: "Confirmada", cls: "bg-success/15 text-success" },
-  done: { label: "Concluída", cls: "bg-muted text-muted-foreground" },
+  pending: { label: "Por responder", cls: "bg-warning/15 text-warning" },
+  accepted: { label: "Combinada", cls: "bg-primary/15 text-primary" },
+  declined: { label: "Recusada", cls: "bg-muted text-muted-foreground" },
+  done: { label: "Realizada", cls: "bg-success/15 text-success" },
   cancelled: { label: "Cancelada", cls: "bg-danger/15 text-danger" },
 };
 
@@ -60,35 +62,56 @@ function VisitsManager() {
                     </div>
                     <div className="truncate text-xs text-muted-foreground">{l.title}</div>
                     <div className="mt-1 flex items-center gap-3 text-xs">
-                      <span className="inline-flex items-center gap-1 font-num font-semibold"><Calendar className="size-3.5" /> {v.date}</span>
+                      <span className="inline-flex items-center gap-1 font-num font-semibold"><Calendar className="size-3.5" /> {formatVisitDate(v.date)}</span>
                       <span className="inline-flex items-center gap-1 font-num font-semibold"><Clock className="size-3.5" /> {v.time}</span>
                     </div>
                   </div>
                 </div>
-                {v.status === "pending" && (
+                {/* Só se responde a propostas do OUTRO lado; as minhas, retiram-se. */}
+                {v.status === "pending" && v.proposedBy === "seeker" && (
                   <div className="mt-3 grid grid-cols-2 gap-2">
                     <button
-                      onClick={() => api.setVisitStatus(v.id, "cancelled")}
+                      onClick={() => api.declineVisit(v.id)}
                       className="flex h-10 items-center justify-center gap-1 rounded-pill border border-border text-sm font-semibold"
                     >
                       <X className="size-4" /> Recusar
                     </button>
                     <button
-                      onClick={() => api.setVisitStatus(v.id, "confirmed")}
+                      onClick={() => api.acceptVisit(v.id)}
                       className="flex h-10 items-center justify-center gap-1 rounded-pill bg-primary text-sm font-semibold text-white"
                     >
-                      <Check className="size-4" /> Confirmar
+                      <Check className="size-4" /> Aceitar
                     </button>
                   </div>
                 )}
-                {/* Depois de confirmada e realizada: fecha o ciclo e destrava "Fechar este espaço" no chat. */}
-                {v.status === "confirmed" && (
-                  <button
-                    onClick={() => api.setVisitStatus(v.id, "done")}
-                    className="mt-3 flex h-10 w-full items-center justify-center gap-1 rounded-pill bg-primary text-sm font-semibold text-white"
-                  >
-                    <Check className="size-4" /> Marcar visita como concluída
-                  </button>
+                {v.status === "pending" && v.proposedBy === "landlord" && (
+                  <div className="mt-3">
+                    <p className="mb-2 text-xs text-muted-foreground">Proposta tua, à espera de resposta.</p>
+                    <button
+                      onClick={() => api.cancelVisit(v.id)}
+                      className="flex h-10 w-full items-center justify-center gap-1 rounded-pill border border-border text-sm font-semibold"
+                    >
+                      Retirar proposta
+                    </button>
+                  </div>
+                )}
+                {/* Combinada: só depois da hora é que faz sentido dizer que aconteceu. */}
+                {v.status === "accepted" && (
+                  <div className="mt-3 grid grid-cols-2 gap-2">
+                    <button
+                      onClick={() => api.cancelVisit(v.id)}
+                      className="flex h-10 items-center justify-center gap-1 rounded-pill border border-border text-sm font-semibold text-danger"
+                    >
+                      <X className="size-4" /> Cancelar
+                    </button>
+                    <button
+                      onClick={() => api.markVisitDone(v.id)}
+                      disabled={!visitIsPast(v)}
+                      className="flex h-10 items-center justify-center gap-1 rounded-pill bg-primary text-sm font-semibold text-white disabled:bg-muted disabled:text-muted-foreground"
+                    >
+                      <Check className="size-4" /> Realizada
+                    </button>
+                  </div>
                 )}
               </li>
             );

@@ -236,7 +236,9 @@ export function seedIfEmpty() {
       id: "m1",
       listingId: "l1",
       chatId: "c1",
-      state: "visit_scheduled",
+      // A visita v1 está PROPOSTA, não aceite — logo ainda se está em conversa.
+      // Um match em "visita marcada" com proposta pendente seria contraditório.
+      state: "conversation",
       updatedAt: "10:24",
       reasons: ["Dentro do orçamento"],
       message: "Olá! O quarto ainda está disponível para setembro?",
@@ -264,9 +266,26 @@ export function seedIfEmpty() {
     },
   ];
 
+  // Datas relativas a hoje para o estado da demo nunca ficar no passado.
+  const iso = (daysFromNow: number) => {
+    const d = new Date();
+    d.setDate(d.getDate() + daysFromNow);
+    return d.toISOString().slice(0, 10);
+  };
+
   const visits: Visit[] = [
-    { id: "v1", listingId: "l1", matchId: "m1", who: "Tiago Costa", whoAvatar: face("tiago"), date: "Sáb 27 Jul", time: "10:00", status: "pending" },
-    { id: "v2", listingId: "l3", matchId: "m3", who: "Miguel Santos", whoAvatar: face("miguel"), date: "Seg 21 Jul", time: "18:00", status: "done" },
+    // Proposta do candidato à espera de resposta do senhorio.
+    {
+      id: "v1", listingId: "l1", matchId: "m1", proposedBy: "seeker",
+      who: "Tiago Costa", whoAvatar: face("tiago"),
+      date: iso(3), time: "10:00", status: "pending", createdAt: new Date().toISOString(),
+    },
+    // Visita que já aconteceu — destravou o fecho do negócio.
+    {
+      id: "v2", listingId: "l3", matchId: "m3", proposedBy: "landlord",
+      who: "Ana Ribeiro", whoAvatar: face("ana"),
+      date: iso(-4), time: "18:00", status: "done", createdAt: new Date().toISOString(),
+    },
   ];
 
   const notifications: Notification[] = [

@@ -5,7 +5,7 @@
 
 import { store, getState } from "./store";
 import type { Preferences, Profile } from "./store";
-import type { Listing, Match, MatchState, Chat, Visit, VisitState, Notification } from "./mock-data";
+import type { Listing, Match, MatchState, Chat, Visit, Notification } from "./mock-data";
 
 const asAsync = <T,>(v: T): Promise<T> => Promise.resolve(v);
 
@@ -42,10 +42,20 @@ export const api = {
 
   // ---------- Visits ----------
   // TODO(backend): POST /api/visits
-  proposeVisit: (listingId: string, matchId: string, slot: string) =>
-    asAsync(store.proposeVisit(listingId, matchId, slot)),
-  // TODO(backend): PATCH /api/visits/:id
-  setVisitStatus: (id: string, status: VisitState) => asAsync(store.setVisitStatus(id, status)),
+  proposeVisit: (matchId: string, when: { date: string; time: string }, by: "seeker" | "landlord", counterOf?: string) =>
+    asAsync(store.proposeVisit(matchId, when, by, counterOf)),
+  acceptVisit: (id: string) => asAsync(store.acceptVisit(id)),
+  declineVisit: (id: string, note?: string) => asAsync(store.declineVisit(id, note)),
+  cancelVisit: (id: string, note?: string) => asAsync(store.cancelVisit(id, note)),
+  markVisitDone: (id: string) => asAsync(store.markVisitDone(id)),
+
+  // ---------- Ações da conversa ----------
+  // TODO(backend): PATCH /api/chats/:id
+  setChatFlag: (chatId: string, patch: { muted?: boolean; archived?: boolean; blocked?: boolean }) =>
+    asAsync(store.setChatFlag(chatId, patch)),
+  // TODO(backend): POST /api/reports
+  submitReport: (target: "chat" | "listing" | "user", targetId: string, reason: import("./mock-data").ReportReason, detail?: string) =>
+    asAsync(store.submitReport(target, targetId, reason, detail)),
 
   // ---------- Notifications ----------
   // TODO(backend): PATCH /api/notifications/:id
@@ -92,4 +102,4 @@ export const api = {
   reset: () => asAsync(store.reset()),
 };
 
-export type { Listing, Match, MatchState, Chat, Visit, VisitState, Notification, Preferences, Profile };
+export type { Listing, Match, MatchState, Chat, Visit, Notification, Preferences, Profile };

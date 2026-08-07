@@ -1,10 +1,12 @@
 import { PageShell } from "@/components/AppShell";
 import { ChatList } from "@/components/ChatList";
 import { createFileRoute, Link, useNavigate, useParams } from "@tanstack/react-router";
-import { useState } from "react";
-import { nextActionFor, priceLabel } from "@/lib/mock-data";
+import { useMemo, useState } from "react";
+import { nextActionFor, priceLabel, formatVisitWhen, REPORT_REASONS } from "@/lib/mock-data";
 import { NegotiationTimeline } from "@/components/NegotiationTimeline";
-import { ChevronLeft, Send, MoreVertical, Calendar, Check, Star, User, X, MessageCircle, Hourglass } from "lucide-react";
+import { VisitCard } from "@/components/VisitCard";
+import { VisitSheet } from "@/components/VisitSheet";
+import { ChevronLeft, Send, MoreVertical, Calendar, Check, Star, User, X, MessageCircle, Hourglass, Home, Bell, BellOff, Archive, Flag, Ban } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useStore, store } from "@/lib/store";
 import { api } from "@/lib/api";
@@ -23,17 +25,29 @@ function ChatRoom() {
   const listing = useStore((s) => (chat ? s.listings.find((l) => l.id === chat.listingId) : undefined));
   const match = useStore((s) => (chat ? s.matches.find((m) => m.chatId === chat.id) : undefined));
   const deal = useStore((s) => (match ? s.deals.find((d) => d.matchId === match.id) : undefined));
-  // Visita mais recente deste match — é ela que decide se há "visita feita" por marcar.
-  const visit = useStore((s) => (match ? s.visits.find((v) => v.matchId === match.id) : undefined));
+  // Visitas deste match, mais recente primeiro. A negociação lê-se daqui.
+  const allVisits = useStore((s) => s.visits);
+  const visits = useMemo(
+    () => (match ? allVisits.filter((v) => v.matchId === match.id) : []),
+    [allVisits, match],
+  );
+  // A que está em jogo agora: pendente ou combinada. Se não houver, a última.
+  const visit = visits.find((v) => v.status === "pending" || v.status === "accepted") ?? visits[0];
 
   const [text, setText] = useState("");
   const [showVisitSheet, setShowVisitSheet] = useState(false);
+  /** Quando definido, a folha abre em modo contraproposta da visita indicada. */
+  const [counterOf, setCounterOf] = useState<string | null>(null);
+  const [showMenu, setShowMenu] = useState(false);
+  const [reporting, setReporting] = useState(false);
 
   const state = match?.state ?? "conversation";
   const kind = listing?.kind ?? "rent";
   const sale = kind === "sale";
   const rented = state === "rental_confirmed";
   const archived = rented || state === "closed";
+  // Já há proposta em jogo? Se sim, o banner não oferece propor outra.
+  const hasOpenVisit = !!visit && (visit.status === "pending" || visit.status === "accepted");
   const action = nextActionFor(state, role === "landlord" ? "landlord" : "tenant", kind);
 
   if (!chat || !listing) {
@@ -62,17 +76,43 @@ function ChatRoom() {
     await api.sendMessage(chat.id, text.trim());
     setText("");
   };
-  const proposeVisit = async (slot: string) => {
+  // Quem está a ver é sempre um dos dois lados — as ações da visita dependem disso.
+  const side: "seeker" | "landlord" = role === "landlord" ? "landlord" : "seeker";
+
+  const submitVisit = async (when: { date: string; time: string }) => {
     if (!match) return;
-    await api.sendMessage(chat.id, `Proposta de visita: ${slot}`);
-    await api.proposeVisit(listing.id, match.id, slot);
+    await api.proposeVisit(match.id, when, side, counterOf ?? undefined);
+    store.sendMessage(
+      chat.id,
+      `${counterOf ? "Nova data proposta" : "Visita proposta"}: ${formatVisitWhen(when)} ✅`,
+      "them",
+    );
     setShowVisitSheet(false);
+    setCounterOf(null);
+  };
+  const acceptVisit = () => {
+    if (!visit) return;
+    api.acceptVisit(visit.id);
+    store.sendMessage(chat.id, `Visita combinada para ${formatVisitWhen(visit)} ✅`, "them");
+  };
+  const declineVisit = () => {
+    if (!visit) return;
+    api.declineVisit(visit.id);
+    store.sendMessage(chat.id, "Proposta de visita recusada ✅", "them");
+  };
+  const cancelVisit = () => {
+    if (!visit) return;
+    api.cancelVisit(visit.id);
+    store.sendMessage(chat.id, "Visita cancelada ✅", "them");
+  };
+  const counterVisit = () => {
+    if (!visit) return;
+    setCounterOf(visit.id);
+    setShowVisitSheet(true);
   };
   const markVisitDone = () => {
-    // Passa sempre pelo mesmo caminho que /visits-manager: setVisitStatus já
-    // empurra o match para "visit_done" automaticamente (ver store.ts).
     if (!visit) return;
-    store.setVisitStatus(visit.id, "done");
+    api.markVisitDone(visit.id);
     store.sendMessage(chat.id, "Visita marcada como realizada ✅", "them");
   };
   const confirmAsSeeker = () => {
@@ -101,7 +141,13 @@ function ChatRoom() {
           <div className="truncate font-display text-base font-bold">{other.name}</div>
           <div className="truncate text-xs text-muted-foreground">{listing.title}</div>
         </div>
-        <button className="grid size-10 place-items-center rounded-pill hover:bg-muted"><MoreVertical className="size-5" /></button>
+        <button
+          onClick={() => setShowMenu(true)}
+          aria-label="Ações da conversa"
+          className="grid size-10 place-items-center rounded-pill transition hover:bg-muted active:scale-90"
+        >
+          <MoreVertical className="size-5" />
+        </button>
       </header>
 
       <NegotiationTimeline state={state} kind={kind} />
@@ -134,16 +180,12 @@ function ChatRoom() {
               <Hourglass className="size-3.5" /> Aguardar
             </span>
           )}
-          {state === "conversation" && (
-            <button onClick={() => setShowVisitSheet(true)} className="inline-flex items-center gap-1 rounded-pill bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground">
+          {state === "conversation" && !hasOpenVisit && (
+            <button onClick={() => { setCounterOf(null); setShowVisitSheet(true); }} className="inline-flex items-center gap-1 rounded-pill bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground">
               <Calendar className="size-3.5" /> Propor visita
             </button>
           )}
-          {state === "visit_scheduled" && role === "landlord" && (
-            <button onClick={markVisitDone} className="inline-flex items-center gap-1 rounded-pill bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground">
-              <Check className="size-3.5" /> Visita feita
-            </button>
-          )}
+
           {state === "visit_done" && role === "landlord" && (
             <button
               onClick={() => nav({ to: "/rental-close/$chatId", params: { chatId: chat.id } })}
@@ -172,6 +214,19 @@ function ChatRoom() {
           <div className="font-num text-xs text-muted-foreground">{priceLabel(listing)} · {listing.city}</div>
         </div>
       </Link>
+
+      {/* Negociação da visita: quem propôs, o que cada lado pode fazer agora. */}
+      {visit && !archived && (
+        <VisitCard
+          visit={visit}
+          mine={visit.proposedBy === side}
+          onAccept={acceptVisit}
+          onDecline={declineVisit}
+          onCounter={counterVisit}
+          onCancel={cancelVisit}
+          onMarkDone={markVisitDone}
+        />
+      )}
 
       <div className="flex flex-1 flex-col gap-2 overflow-y-auto p-4">
         {chat.messages.length === 0 && (
@@ -202,32 +257,89 @@ function ChatRoom() {
 
       <div className="sticky bottom-0 border-t border-border bg-surface px-3 py-3 pb-safe">
         <form onSubmit={(e) => { e.preventDefault(); send(); }} className="flex items-center gap-2">
-          <input value={text} onChange={(e) => setText(e.target.value)} placeholder={archived ? "Conversa arquivada" : "Escreve uma mensagem…"} disabled={archived}
+          <input value={text} onChange={(e) => setText(e.target.value)} placeholder={chat.blocked ? "Conversa bloqueada" : archived ? "Conversa arquivada" : "Escreve uma mensagem…"} disabled={archived || !!chat.blocked}
             className="h-12 flex-1 rounded-pill border border-border bg-background px-4 outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 disabled:bg-muted" />
-          <button type="submit" disabled={!text.trim() || archived} className="grid size-12 place-items-center rounded-pill bg-primary text-primary-foreground active:scale-95 disabled:bg-muted disabled:text-muted-foreground">
+          <button type="submit" disabled={!text.trim() || archived || !!chat.blocked} className="grid size-12 place-items-center rounded-pill bg-primary text-primary-foreground active:scale-95 disabled:bg-muted disabled:text-muted-foreground">
             <Send className="size-5" />
           </button>
         </form>
       </div>
 
-      {showVisitSheet && (
-        <Sheet onClose={() => setShowVisitSheet(false)} title="Propor visita">
-          <p className="text-sm text-muted-foreground">Escolhe um horário disponível.</p>
+      <VisitSheet
+        open={showVisitSheet}
+        onClose={() => { setShowVisitSheet(false); setCounterOf(null); }}
+        onSubmit={submitVisit}
+        title={counterOf ? "Propor outra data" : "Propor visita"}
+        cta={counterOf ? "Enviar nova data" : "Enviar proposta"}
+        suggestedTimes={listing.visitAvailability}
+      />
+
+      {showMenu && (
+        <Sheet onClose={() => setShowMenu(false)} title="Ações">
+          <div className="flex flex-col">
+            <MenuItem icon={<Home className="size-4" />} label="Ver anúncio" onClick={() => { setShowMenu(false); nav({ to: "/explore/$id", params: { id: listing.id } }); }} />
+            <MenuItem
+              icon={chat.muted ? <Bell className="size-4" /> : <BellOff className="size-4" />}
+              label={chat.muted ? "Reativar notificações" : "Silenciar conversa"}
+              hint={chat.muted ? "Voltas a ser avisado das mensagens." : "Continuas a receber, deixas de ser avisado."}
+              onClick={() => { api.setChatFlag(chat.id, { muted: !chat.muted }); setShowMenu(false); }}
+            />
+            <MenuItem
+              icon={<Archive className="size-4" />}
+              label={chat.archived ? "Desarquivar" : "Arquivar conversa"}
+              hint={chat.archived ? "Volta à lista principal." : "Sai da lista principal, não se perde."}
+              onClick={() => { api.setChatFlag(chat.id, { archived: !chat.archived }); setShowMenu(false); }}
+            />
+            <MenuItem icon={<Flag className="size-4" />} label="Denunciar" hint="Burla, anúncio falso ou comportamento abusivo." onClick={() => { setShowMenu(false); setReporting(true); }} danger />
+            <MenuItem
+              icon={<Ban className="size-4" />}
+              label={chat.blocked ? "Desbloquear" : "Bloquear"}
+              hint={chat.blocked ? "Voltam a poder falar." : "Ninguém volta a escrever nesta conversa."}
+              onClick={() => { api.setChatFlag(chat.id, { blocked: !chat.blocked }); setShowMenu(false); }}
+              danger
+            />
+          </div>
+        </Sheet>
+      )}
+
+      {reporting && (
+        <Sheet onClose={() => setReporting(false)} title="Denunciar conversa">
+          <p className="text-sm text-muted-foreground">O que se passou? A denúncia é confidencial.</p>
           <div className="mt-3 flex flex-col gap-2">
-            {listing.visitAvailability.length === 0 && (
-              <p className="rounded-xl border border-dashed border-border p-4 text-center text-xs text-muted-foreground">Sem horários definidos pelo senhorio.</p>
-            )}
-            {listing.visitAvailability.map((s) => (
-              <button key={s} onClick={() => proposeVisit(s)} className="flex items-center justify-between rounded-xl border border-border bg-surface px-4 py-3 text-left">
-                <span className="font-semibold">{s}</span>
-                <Calendar className="size-4 text-muted-foreground" />
+            {REPORT_REASONS.map((r) => (
+              <button
+                key={r.id}
+                onClick={() => {
+                  api.submitReport("chat", chat.id, r.id);
+                  setReporting(false);
+                  store.sendMessage(chat.id, "Denúncia enviada para revisão ✅", "them");
+                }}
+                className="rounded-xl border border-border bg-surface p-3 text-left transition active:scale-[0.98]"
+              >
+                <div className="text-sm font-semibold">{r.label}</div>
+                <div className="mt-0.5 text-xs text-muted-foreground">{r.hint}</div>
               </button>
             ))}
           </div>
         </Sheet>
       )}
+
       </div>
     </PageShell>
+  );
+}
+
+function MenuItem({ icon, label, hint, onClick, danger }: {
+  icon: React.ReactNode; label: string; hint?: string; onClick: () => void; danger?: boolean;
+}) {
+  return (
+    <button onClick={onClick} className="flex items-start gap-3 rounded-xl p-3 text-left transition active:bg-muted">
+      <span className={cn("mt-0.5 shrink-0", danger ? "text-danger" : "text-muted-foreground")}>{icon}</span>
+      <span className="min-w-0 flex-1">
+        <span className={cn("block text-sm font-semibold", danger && "text-danger")}>{label}</span>
+        {hint && <span className="mt-0.5 block text-xs text-muted-foreground">{hint}</span>}
+      </span>
+    </button>
   );
 }
 

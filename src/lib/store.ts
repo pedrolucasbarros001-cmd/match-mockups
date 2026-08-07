@@ -10,13 +10,16 @@ import type {
   Chat,
   ChatMessage,
   Visit,
-  VisitState,
+  VisitStatus,
   Notification,
   ClosedDeal,
   Review,
+  Report,
+  ReportReason,
   CloseReason,
   ListingKind,
 } from "./mock-data";
+import { formatVisitWhen } from "./mock-data";
 
 const KEY = "hm.store.v1";
 const EVENT = "hm.store";
@@ -115,6 +118,8 @@ export type StoreState = {
   favorites: string[];
   deals: ClosedDeal[];
   reviews: Review[];
+  /** Denúncias feitas por este utilizador. */
+  reports: Report[];
   plan: PlanId;
   billingPeriod: BillingPeriod;
   notificationPrefs: NotificationPrefs;
@@ -167,6 +172,7 @@ const initialState: StoreState = {
   favorites: [],
   deals: [],
   reviews: [],
+  reports: [],
   plan: "free",
   billingPeriod: "monthly",
   notificationPrefs: { interest: true, conversation: true, visit: true, match: true, marketplace: false },
@@ -480,44 +486,117 @@ export const store = {
   },
 
   // Visits
-  proposeVisit(listingId: string, matchId: string, slot: string) {
+  /**
+   * Propor visita. Quem propõe não aceita — fica à espera do outro lado.
+   * O match só avança para "visita marcada" quando a proposta for ACEITE,
+   * não quando é feita: propor não é combinar.
+   */
+  proposeVisit(
+    matchId: string,
+    when: { date: string; time: string },
+    by: "seeker" | "landlord",
+    counterOf?: string,
+  ): Visit | undefined {
+    const m = state.matches.find((x) => x.id === matchId);
+    if (!m) return undefined;
+    const listing = state.listings.find((l) => l.id === m.listingId);
+
+    // Quem propõe identifica-se com o nome que o outro lado vê.
+    const who = by === "landlord" ? listing?.owner.name ?? "Proprietário" : m.candidate?.name ?? state.profile.name ?? "Interessado";
+    const whoAvatar = by === "landlord" ? listing?.owner.avatar ?? "" : m.candidate?.avatar ?? state.profile.avatar ?? "";
+
     const v: Visit = {
       id: uid(),
-      listingId,
+      listingId: m.listingId,
       matchId,
-      who: "Interessado",
-      whoAvatar: "",
-      date: slot,
-      time: slot,
+      proposedBy: by,
+      who,
+      whoAvatar,
+      date: when.date,
+      time: when.time,
       status: "pending",
+      counterOf,
+      createdAt: nowISO(),
     };
+
+    const notif: Notification = {
+      id: uid(),
+      category: "visit",
+      icon: "reminder",
+      title: counterOf ? "Nova data proposta" : "Proposta de visita",
+      body: `${who} propôs ${formatVisitWhen(v)} para "${listing?.title ?? "o espaço"}".`,
+      ago: ago(),
+      unread: true,
+      to: `/chats/${m.chatId}`,
+    };
+
     set((s) => ({
       ...s,
-      visits: [v, ...s.visits],
-      matches: s.matches.map((m) => (m.id === matchId ? { ...m, state: "visit_scheduled", updatedAt: ago() } : m)),
+      // Uma contraproposta recusa automaticamente a que veio substituir.
+      visits: [v, ...s.visits.map((x) => (counterOf && x.id === counterOf ? { ...x, status: "declined" as VisitStatus } : x))],
+      notifications: [notif, ...s.notifications],
     }));
     return v;
   },
-  /**
-   * P → Q: o status da visita é a causa, o estado do match é a consequência —
-   * andam sempre juntos, sem passo manual extra em cada ecrã que toca visitas.
-   * done → match "visit_done" (destrava o fecho do espaço)
-   * cancelled → match volta a "conversation" (liberta para propor nova visita)
-   */
-  setVisitStatus(id: string, status: VisitState) {
+
+  /** Aceitar a proposta do outro lado → a visita fica combinada. */
+  acceptVisit(id: string) {
     const v = state.visits.find((x) => x.id === id);
+    if (!v || v.status !== "pending") return;
     set((s) => ({
       ...s,
-      visits: s.visits.map((x) => (x.id === id ? { ...x, status: status as Visit["status"] } : x)),
-      matches: !v
-        ? s.matches
-        : s.matches.map((m) => {
-            if (m.id !== v.matchId) return m;
-            if (status === "done") return { ...m, state: "visit_done", updatedAt: ago() };
-            if (status === "cancelled" && m.state === "visit_scheduled") return { ...m, state: "conversation", updatedAt: ago() };
-            return m;
-          }),
+      visits: s.visits.map((x) => (x.id === id ? { ...x, status: "accepted" } : x)),
+      matches: s.matches.map((m) => (m.id === v.matchId ? { ...m, state: "visit_scheduled", updatedAt: ago() } : m)),
     }));
+  },
+
+  /** Recusar sem propor alternativa — volta à conversa. */
+  declineVisit(id: string, note = "") {
+    const v = state.visits.find((x) => x.id === id);
+    if (!v) return;
+    set((s) => ({
+      ...s,
+      visits: s.visits.map((x) => (x.id === id ? { ...x, status: "declined", note } : x)),
+      matches: s.matches.map((m) =>
+        m.id === v.matchId && m.state === "visit_scheduled" ? { ...m, state: "conversation", updatedAt: ago() } : m,
+      ),
+    }));
+  },
+
+  /** Desmarcar uma visita já combinada. Liberta para propor outra data. */
+  cancelVisit(id: string, note = "") {
+    const v = state.visits.find((x) => x.id === id);
+    if (!v) return;
+    set((s) => ({
+      ...s,
+      visits: s.visits.map((x) => (x.id === id ? { ...x, status: "cancelled", note } : x)),
+      matches: s.matches.map((m) =>
+        m.id === v.matchId && m.state === "visit_scheduled" ? { ...m, state: "conversation", updatedAt: ago() } : m,
+      ),
+    }));
+  },
+
+  /** A visita aconteceu — destrava o fecho do negócio. */
+  markVisitDone(id: string) {
+    const v = state.visits.find((x) => x.id === id);
+    if (!v) return;
+    set((s) => ({
+      ...s,
+      visits: s.visits.map((x) => (x.id === id ? { ...x, status: "done" } : x)),
+      matches: s.matches.map((m) => (m.id === v.matchId ? { ...m, state: "visit_done", updatedAt: ago() } : m)),
+    }));
+  },
+
+  // ---- Ações da conversa ----
+  setChatFlag(chatId: string, patch: Partial<Pick<Chat, "muted" | "archived" | "blocked">>) {
+    set((s) => ({ ...s, chats: s.chats.map((c) => (c.id === chatId ? { ...c, ...patch } : c)) }));
+  },
+
+  /** Denúncia registada. O backend fará a revisão; aqui fica o registo local. */
+  submitReport(target: Report["target"], targetId: string, reason: ReportReason, detail = "") {
+    const r: Report = { id: uid(), target, targetId, reason, detail, at: nowISO() };
+    set((s) => ({ ...s, reports: [r, ...s.reports] }));
+    return r;
   },
 
   // Notifications

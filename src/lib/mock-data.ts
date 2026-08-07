@@ -132,8 +132,42 @@ export type Chat = {
   lastMessage: string;
   lastAt: string;
   messages: ChatMessage[];
+  /** Silenciada: continua a receber, deixa de notificar. */
+  muted?: boolean;
+  /** Arquivada: sai da lista principal mas não se perde. */
+  archived?: boolean;
+  /** Bloqueada: ninguém escreve mais. Só o próprio pode desbloquear. */
+  blocked?: boolean;
 };
 export const chats: Chat[] = [];
+
+/** Denúncia feita por um utilizador. Fica registada para revisão. */
+export type Report = {
+  id: string;
+  /** O que está a ser denunciado. */
+  target: "chat" | "listing" | "user";
+  targetId: string;
+  reason: ReportReason;
+  detail: string;
+  at: string;
+};
+
+export type ReportReason =
+  | "scam"
+  | "fake_listing"
+  | "offensive"
+  | "discrimination"
+  | "off_platform_payment"
+  | "other";
+
+export const REPORT_REASONS: { id: ReportReason; label: string; hint: string }[] = [
+  { id: "scam", label: "Tentativa de burla", hint: "Pediu dinheiro antecipado, sinal ou transferência." },
+  { id: "fake_listing", label: "Anúncio falso", hint: "O espaço não existe ou as fotos não são reais." },
+  { id: "off_platform_payment", label: "Quer sair da plataforma", hint: "Insiste em tratar tudo fora da app." },
+  { id: "offensive", label: "Comportamento ofensivo", hint: "Linguagem agressiva, assédio ou ameaças." },
+  { id: "discrimination", label: "Discriminação", hint: "Recusa ou trata mal por origem, género, etnia ou religião." },
+  { id: "other", label: "Outro motivo", hint: "Descreve o que se passou." },
+];
 
 export type Candidate = {
   name: string;
@@ -308,18 +342,59 @@ export function scoreColor(score: number): string {
 export type Room = { id: string; listingId: string; name: string; price: number; status: "available" | "reserved" | "occupied"; tenant?: string };
 export const rooms: Room[] = [];
 
+/**
+ * Uma visita é uma negociação, não um facto: alguém propõe uma data, o outro
+ * lado aceita, recusa ou contrapropõe. Guardamos cada proposta como um registo
+ * próprio — assim há histórico e nunca se perde quem propôs o quê.
+ *
+ * pending   → à espera de resposta do OUTRO lado
+ * accepted  → data combinada; a visita vai acontecer
+ * declined  → recusada (normalmente seguida de contraproposta)
+ * done      → aconteceu; destrava o fecho do negócio
+ * cancelled → estava combinada e foi desmarcada
+ */
+export type VisitStatus = "pending" | "accepted" | "declined" | "done" | "cancelled";
+
 export type Visit = {
   id: string;
   listingId: string;
   /** Liga a visita ao match — é o que permite ao status da visita empurrar o estado do match automaticamente. */
   matchId: string;
+  /** Quem fez esta proposta. Ninguém aceita a sua própria proposta. */
+  proposedBy: "seeker" | "landlord";
   who: string;
   whoAvatar: string;
+  /** Data ISO (YYYY-MM-DD) — comparável e ordenável, ao contrário de texto livre. */
   date: string;
+  /** Hora HH:MM. */
   time: string;
-  status: "pending" | "confirmed" | "done" | "cancelled";
+  status: VisitStatus;
+  /** Proposta que esta veio substituir, quando é contraproposta. */
+  counterOf?: string;
+  /** Motivo dado ao recusar ou cancelar. */
+  note?: string;
+  createdAt: string;
 };
 export const visits: Visit[] = [];
+
+/** Formata uma data ISO para leitura humana: "Sáb, 27 jul". */
+export function formatVisitDate(iso: string): string {
+  if (!iso) return "";
+  const d = new Date(`${iso}T00:00:00`);
+  if (Number.isNaN(d.getTime())) return iso;
+  return d.toLocaleDateString("pt-PT", { weekday: "short", day: "numeric", month: "short" });
+}
+
+/** Data + hora prontas a mostrar. */
+export function formatVisitWhen(v: Pick<Visit, "date" | "time">): string {
+  return [formatVisitDate(v.date), v.time].filter(Boolean).join(" · ");
+}
+
+/** Já passou a hora marcada? Usado para só então oferecer "marcar como feita". */
+export function visitIsPast(v: Pick<Visit, "date" | "time">): boolean {
+  if (!v.date) return false;
+  return new Date(`${v.date}T${v.time || "23:59"}`).getTime() < Date.now();
+}
 
 export const favoriteIds: string[] = [];
 
