@@ -308,13 +308,13 @@ export const remote = {
     if (!id) return;
     const row = profileToRow(patch);
     if (!Object.keys(row).length) return;
-    log("saveProfile", (await supabase.from("profiles").update(row).eq("id", id)).error);
+    log("saveProfile", (await supabase.from("profiles").update(row as never).eq("id", id)).error);
   },
 
   async savePreferences() {
     const id = await uid();
     if (!id) return;
-    log("savePreferences", (await supabase.from("user_preferences").update(preferencesToRow(getState().preferences)).eq("user_id", id)).error);
+    log("savePreferences", (await supabase.from("user_preferences").update(preferencesToRow(getState().preferences) as never).eq("user_id", id)).error);
   },
 
   async saveSettings(patch: { notificationPrefs?: Partial<NotificationPrefs>; privacy?: Partial<PrivacyPrefs> }) {
@@ -344,7 +344,7 @@ export const remote = {
   async upsertListing(l: Listing) {
     const id = await uid();
     if (!id) return;
-    log("upsertListing", (await supabase.from("listings").upsert(listingToRow(l, id)).select().maybeSingle()).error);
+    log("upsertListing", (await supabase.from("listings").upsert(listingToRow(l, id) as never).select().maybeSingle()).error);
   },
 
   async deleteListing(listingId: string) {
@@ -417,11 +417,11 @@ export const remote = {
   },
 
   async upsertVisit(v: Visit) {
-    log("visit", (await supabase.from("visits").upsert(visitToRow(v)).select().maybeSingle()).error);
+    log("visit", (await supabase.from("visits").upsert(visitToRow(v) as never).select().maybeSingle()).error);
   },
 
   async updateVisit(v: Visit) {
-    log("visitUpdate", (await supabase.from("visits").update(visitToRow(v)).eq("id", v.id)).error);
+    log("visitUpdate", (await supabase.from("visits").update(visitToRow(v) as never).eq("id", v.id)).error);
   },
 
   async markNotifications(ids: string[], unread: boolean) {
@@ -453,8 +453,8 @@ export const remote = {
       id: deal.id,
       match_id: deal.matchId,
       listing_id: deal.listingId,
-      kind: deal.kind,
-      reason,
+      kind: deal.kind as "rent" | "sale",
+      reason: reason as "homematch" | "outside" | "paused" | "rework",
       move_in: deal.moveIn,
       months: deal.months,
       amount: deal.amount,
