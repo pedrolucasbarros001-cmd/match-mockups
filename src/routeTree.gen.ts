@@ -9,143 +9,53 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as AccountRouteImport } from './routes/account'
-import { Route as DashboardRouteImport } from './routes/dashboard'
-import { Route as FavoritesRouteImport } from './routes/favorites'
-import { Route as HelpRouteImport } from './routes/help'
-import { Route as InboxRouteImport } from './routes/inbox'
-import { Route as InterestsRouteImport } from './routes/interests'
-import { Route as LoginRouteImport } from './routes/login'
-import { Route as MatchesRouteImport } from './routes/matches'
-import { Route as NotificationsRouteImport } from './routes/notifications'
-import { Route as OnboardingRouteImport } from './routes/onboarding'
-import { Route as ParaTiRouteImport } from './routes/para-ti'
-import { Route as PreferencesRouteImport } from './routes/preferences'
-import { Route as PublishRouteImport } from './routes/publish'
-import { Route as RegisterRouteImport } from './routes/register'
-import { Route as ResetPasswordRouteImport } from './routes/reset-password'
-import { Route as RoomsRouteImport } from './routes/rooms'
-import { Route as SplashRouteImport } from './routes/splash'
-import { Route as SwitchUserRouteImport } from './routes/switch-user'
-import { Route as VisitsRouteImport } from './routes/visits'
 import { Route as VisitsManagerRouteImport } from './routes/visits-manager'
-import { Route as CandidatesIndexRouteImport } from './routes/candidates.index'
-import { Route as CandidatesRequestIdRouteImport } from './routes/candidates.$requestId'
-import { Route as ChatsIndexRouteImport } from './routes/chats.index'
-import { Route as ChatsIdRouteImport } from './routes/chats.$id'
-import { Route as ExploreIndexRouteImport } from './routes/explore.index'
-import { Route as ExploreIdRouteImport } from './routes/explore.$id'
-import { Route as ExploreMapaRouteImport } from './routes/explore.mapa'
-import { Route as FeedbackMatchIdRouteImport } from './routes/feedback.$matchId'
-import { Route as LegalPrivacyRouteImport } from './routes/legal.privacy'
-import { Route as LegalTermsRouteImport } from './routes/legal.terms'
-import { Route as MyListingsIndexRouteImport } from './routes/my-listings.index'
-import { Route as MyListingsNewRouteImport } from './routes/my-listings.new'
-import { Route as ProfileIndexRouteImport } from './routes/profile.index'
-import { Route as ProfileEditRouteImport } from './routes/profile.edit'
-import { Route as ProfileScoreRouteImport } from './routes/profile.score'
-import { Route as RentalCloseChatIdRouteImport } from './routes/rental-close.$chatId'
+import { Route as VisitsRouteImport } from './routes/visits'
+import { Route as SwitchUserRouteImport } from './routes/switch-user'
+import { Route as SplashRouteImport } from './routes/splash'
+import { Route as RoomsRouteImport } from './routes/rooms'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as RegisterRouteImport } from './routes/register'
+import { Route as PublishRouteImport } from './routes/publish'
+import { Route as PreferencesRouteImport } from './routes/preferences'
+import { Route as ParaTiRouteImport } from './routes/para-ti'
+import { Route as OnboardingRouteImport } from './routes/onboarding'
+import { Route as NotificationsRouteImport } from './routes/notifications'
+import { Route as MatchesRouteImport } from './routes/matches'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as InterestsRouteImport } from './routes/interests'
+import { Route as InboxRouteImport } from './routes/inbox'
+import { Route as HelpRouteImport } from './routes/help'
+import { Route as FavoritesRouteImport } from './routes/favorites'
+import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as AccountRouteImport } from './routes/account'
+import { Route as IndexRouteImport } from './routes/index'
 import { Route as SettingsIndexRouteImport } from './routes/settings.index'
-import { Route as SettingsAccountRouteImport } from './routes/settings.account'
-import { Route as SettingsLanguageRouteImport } from './routes/settings.language'
-import { Route as SettingsNotificationsRouteImport } from './routes/settings.notifications'
+import { Route as ProfileIndexRouteImport } from './routes/profile.index'
+import { Route as MyListingsIndexRouteImport } from './routes/my-listings.index'
+import { Route as ExploreIndexRouteImport } from './routes/explore.index'
+import { Route as ChatsIndexRouteImport } from './routes/chats.index'
+import { Route as CandidatesIndexRouteImport } from './routes/candidates.index'
 import { Route as SettingsPrivacyRouteImport } from './routes/settings.privacy'
+import { Route as SettingsNotificationsRouteImport } from './routes/settings.notifications'
+import { Route as SettingsLanguageRouteImport } from './routes/settings.language'
+import { Route as SettingsAccountRouteImport } from './routes/settings.account'
+import { Route as RentalCloseChatIdRouteImport } from './routes/rental-close.$chatId'
+import { Route as ProfileScoreRouteImport } from './routes/profile.score'
+import { Route as ProfileEditRouteImport } from './routes/profile.edit'
+import { Route as MyListingsNewRouteImport } from './routes/my-listings.new'
+import { Route as LegalTermsRouteImport } from './routes/legal.terms'
+import { Route as LegalPrivacyRouteImport } from './routes/legal.privacy'
+import { Route as FeedbackMatchIdRouteImport } from './routes/feedback.$matchId'
+import { Route as ExploreMapaRouteImport } from './routes/explore.mapa'
+import { Route as ExploreIdRouteImport } from './routes/explore.$id'
+import { Route as ChatsIdRouteImport } from './routes/chats.$id'
+import { Route as CandidatesRequestIdRouteImport } from './routes/candidates.$requestId'
 import { Route as MyListingsIdEditRouteImport } from './routes/my-listings.$id.edit'
 
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AccountRoute = AccountRouteImport.update({
-  id: '/account',
-  path: '/account',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DashboardRoute = DashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const FavoritesRoute = FavoritesRouteImport.update({
-  id: '/favorites',
-  path: '/favorites',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const HelpRoute = HelpRouteImport.update({
-  id: '/help',
-  path: '/help',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const InboxRoute = InboxRouteImport.update({
-  id: '/inbox',
-  path: '/inbox',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const InterestsRoute = InterestsRouteImport.update({
-  id: '/interests',
-  path: '/interests',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LoginRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MatchesRoute = MatchesRouteImport.update({
-  id: '/matches',
-  path: '/matches',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const NotificationsRoute = NotificationsRouteImport.update({
-  id: '/notifications',
-  path: '/notifications',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const OnboardingRoute = OnboardingRouteImport.update({
-  id: '/onboarding',
-  path: '/onboarding',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ParaTiRoute = ParaTiRouteImport.update({
-  id: '/para-ti',
-  path: '/para-ti',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PreferencesRoute = PreferencesRouteImport.update({
-  id: '/preferences',
-  path: '/preferences',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PublishRoute = PublishRouteImport.update({
-  id: '/publish',
-  path: '/publish',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RegisterRoute = RegisterRouteImport.update({
-  id: '/register',
-  path: '/register',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ResetPasswordRoute = ResetPasswordRouteImport.update({
-  id: '/reset-password',
-  path: '/reset-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RoomsRoute = RoomsRouteImport.update({
-  id: '/rooms',
-  path: '/rooms',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SplashRoute = SplashRouteImport.update({
-  id: '/splash',
-  path: '/splash',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SwitchUserRoute = SwitchUserRouteImport.update({
-  id: '/switch-user',
-  path: '/switch-user',
+const VisitsManagerRoute = VisitsManagerRouteImport.update({
+  id: '/visits-manager',
+  path: '/visits-manager',
   getParentRoute: () => rootRouteImport,
 } as any)
 const VisitsRoute = VisitsRouteImport.update({
@@ -153,89 +63,99 @@ const VisitsRoute = VisitsRouteImport.update({
   path: '/visits',
   getParentRoute: () => rootRouteImport,
 } as any)
-const VisitsManagerRoute = VisitsManagerRouteImport.update({
-  id: '/visits-manager',
-  path: '/visits-manager',
+const SwitchUserRoute = SwitchUserRouteImport.update({
+  id: '/switch-user',
+  path: '/switch-user',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CandidatesIndexRoute = CandidatesIndexRouteImport.update({
-  id: '/candidates/',
-  path: '/candidates/',
+const SplashRoute = SplashRouteImport.update({
+  id: '/splash',
+  path: '/splash',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CandidatesRequestIdRoute = CandidatesRequestIdRouteImport.update({
-  id: '/candidates/$requestId',
-  path: '/candidates/$requestId',
+const RoomsRoute = RoomsRouteImport.update({
+  id: '/rooms',
+  path: '/rooms',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ChatsIndexRoute = ChatsIndexRouteImport.update({
-  id: '/chats/',
-  path: '/chats/',
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ChatsIdRoute = ChatsIdRouteImport.update({
-  id: '/chats/$id',
-  path: '/chats/$id',
+const RegisterRoute = RegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ExploreIndexRoute = ExploreIndexRouteImport.update({
-  id: '/explore/',
-  path: '/explore/',
+const PublishRoute = PublishRouteImport.update({
+  id: '/publish',
+  path: '/publish',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ExploreIdRoute = ExploreIdRouteImport.update({
-  id: '/explore/$id',
-  path: '/explore/$id',
+const PreferencesRoute = PreferencesRouteImport.update({
+  id: '/preferences',
+  path: '/preferences',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ExploreMapaRoute = ExploreMapaRouteImport.update({
-  id: '/explore/mapa',
-  path: '/explore/mapa',
+const ParaTiRoute = ParaTiRouteImport.update({
+  id: '/para-ti',
+  path: '/para-ti',
   getParentRoute: () => rootRouteImport,
 } as any)
-const FeedbackMatchIdRoute = FeedbackMatchIdRouteImport.update({
-  id: '/feedback/$matchId',
-  path: '/feedback/$matchId',
+const OnboardingRoute = OnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
   getParentRoute: () => rootRouteImport,
 } as any)
-const LegalPrivacyRoute = LegalPrivacyRouteImport.update({
-  id: '/legal/privacy',
-  path: '/legal/privacy',
+const NotificationsRoute = NotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
   getParentRoute: () => rootRouteImport,
 } as any)
-const LegalTermsRoute = LegalTermsRouteImport.update({
-  id: '/legal/terms',
-  path: '/legal/terms',
+const MatchesRoute = MatchesRouteImport.update({
+  id: '/matches',
+  path: '/matches',
   getParentRoute: () => rootRouteImport,
 } as any)
-const MyListingsIndexRoute = MyListingsIndexRouteImport.update({
-  id: '/my-listings/',
-  path: '/my-listings/',
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const MyListingsNewRoute = MyListingsNewRouteImport.update({
-  id: '/my-listings/new',
-  path: '/my-listings/new',
+const InterestsRoute = InterestsRouteImport.update({
+  id: '/interests',
+  path: '/interests',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ProfileIndexRoute = ProfileIndexRouteImport.update({
-  id: '/profile/',
-  path: '/profile/',
+const InboxRoute = InboxRouteImport.update({
+  id: '/inbox',
+  path: '/inbox',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ProfileEditRoute = ProfileEditRouteImport.update({
-  id: '/profile/edit',
-  path: '/profile/edit',
+const HelpRoute = HelpRouteImport.update({
+  id: '/help',
+  path: '/help',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ProfileScoreRoute = ProfileScoreRouteImport.update({
-  id: '/profile/score',
-  path: '/profile/score',
+const FavoritesRoute = FavoritesRouteImport.update({
+  id: '/favorites',
+  path: '/favorites',
   getParentRoute: () => rootRouteImport,
 } as any)
-const RentalCloseChatIdRoute = RentalCloseChatIdRouteImport.update({
-  id: '/rental-close/$chatId',
-  path: '/rental-close/$chatId',
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AccountRoute = AccountRouteImport.update({
+  id: '/account',
+  path: '/account',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SettingsIndexRoute = SettingsIndexRouteImport.update({
@@ -243,14 +163,34 @@ const SettingsIndexRoute = SettingsIndexRouteImport.update({
   path: '/settings/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SettingsAccountRoute = SettingsAccountRouteImport.update({
-  id: '/settings/account',
-  path: '/settings/account',
+const ProfileIndexRoute = ProfileIndexRouteImport.update({
+  id: '/profile/',
+  path: '/profile/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SettingsLanguageRoute = SettingsLanguageRouteImport.update({
-  id: '/settings/language',
-  path: '/settings/language',
+const MyListingsIndexRoute = MyListingsIndexRouteImport.update({
+  id: '/my-listings/',
+  path: '/my-listings/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExploreIndexRoute = ExploreIndexRouteImport.update({
+  id: '/explore/',
+  path: '/explore/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ChatsIndexRoute = ChatsIndexRouteImport.update({
+  id: '/chats/',
+  path: '/chats/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CandidatesIndexRoute = CandidatesIndexRouteImport.update({
+  id: '/candidates/',
+  path: '/candidates/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsPrivacyRoute = SettingsPrivacyRouteImport.update({
+  id: '/settings/privacy',
+  path: '/settings/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SettingsNotificationsRoute = SettingsNotificationsRouteImport.update({
@@ -258,9 +198,69 @@ const SettingsNotificationsRoute = SettingsNotificationsRouteImport.update({
   path: '/settings/notifications',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SettingsPrivacyRoute = SettingsPrivacyRouteImport.update({
-  id: '/settings/privacy',
-  path: '/settings/privacy',
+const SettingsLanguageRoute = SettingsLanguageRouteImport.update({
+  id: '/settings/language',
+  path: '/settings/language',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsAccountRoute = SettingsAccountRouteImport.update({
+  id: '/settings/account',
+  path: '/settings/account',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RentalCloseChatIdRoute = RentalCloseChatIdRouteImport.update({
+  id: '/rental-close/$chatId',
+  path: '/rental-close/$chatId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileScoreRoute = ProfileScoreRouteImport.update({
+  id: '/profile/score',
+  path: '/profile/score',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileEditRoute = ProfileEditRouteImport.update({
+  id: '/profile/edit',
+  path: '/profile/edit',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MyListingsNewRoute = MyListingsNewRouteImport.update({
+  id: '/my-listings/new',
+  path: '/my-listings/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LegalTermsRoute = LegalTermsRouteImport.update({
+  id: '/legal/terms',
+  path: '/legal/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LegalPrivacyRoute = LegalPrivacyRouteImport.update({
+  id: '/legal/privacy',
+  path: '/legal/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FeedbackMatchIdRoute = FeedbackMatchIdRouteImport.update({
+  id: '/feedback/$matchId',
+  path: '/feedback/$matchId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExploreMapaRoute = ExploreMapaRouteImport.update({
+  id: '/explore/mapa',
+  path: '/explore/mapa',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExploreIdRoute = ExploreIdRouteImport.update({
+  id: '/explore/$id',
+  path: '/explore/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ChatsIdRoute = ChatsIdRouteImport.update({
+  id: '/chats/$id',
+  path: '/chats/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CandidatesRequestIdRoute = CandidatesRequestIdRouteImport.update({
+  id: '/candidates/$requestId',
+  path: '/candidates/$requestId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MyListingsIdEditRoute = MyListingsIdEditRouteImport.update({
@@ -591,137 +591,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/account': {
-      id: '/account'
-      path: '/account'
-      fullPath: '/account'
-      preLoaderRoute: typeof AccountRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dashboard': {
-      id: '/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof DashboardRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/favorites': {
-      id: '/favorites'
-      path: '/favorites'
-      fullPath: '/favorites'
-      preLoaderRoute: typeof FavoritesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/help': {
-      id: '/help'
-      path: '/help'
-      fullPath: '/help'
-      preLoaderRoute: typeof HelpRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/inbox': {
-      id: '/inbox'
-      path: '/inbox'
-      fullPath: '/inbox'
-      preLoaderRoute: typeof InboxRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/interests': {
-      id: '/interests'
-      path: '/interests'
-      fullPath: '/interests'
-      preLoaderRoute: typeof InterestsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/matches': {
-      id: '/matches'
-      path: '/matches'
-      fullPath: '/matches'
-      preLoaderRoute: typeof MatchesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/notifications': {
-      id: '/notifications'
-      path: '/notifications'
-      fullPath: '/notifications'
-      preLoaderRoute: typeof NotificationsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/onboarding': {
-      id: '/onboarding'
-      path: '/onboarding'
-      fullPath: '/onboarding'
-      preLoaderRoute: typeof OnboardingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/para-ti': {
-      id: '/para-ti'
-      path: '/para-ti'
-      fullPath: '/para-ti'
-      preLoaderRoute: typeof ParaTiRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/preferences': {
-      id: '/preferences'
-      path: '/preferences'
-      fullPath: '/preferences'
-      preLoaderRoute: typeof PreferencesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/publish': {
-      id: '/publish'
-      path: '/publish'
-      fullPath: '/publish'
-      preLoaderRoute: typeof PublishRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/register': {
-      id: '/register'
-      path: '/register'
-      fullPath: '/register'
-      preLoaderRoute: typeof RegisterRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/reset-password': {
-      id: '/reset-password'
-      path: '/reset-password'
-      fullPath: '/reset-password'
-      preLoaderRoute: typeof ResetPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/rooms': {
-      id: '/rooms'
-      path: '/rooms'
-      fullPath: '/rooms'
-      preLoaderRoute: typeof RoomsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/splash': {
-      id: '/splash'
-      path: '/splash'
-      fullPath: '/splash'
-      preLoaderRoute: typeof SplashRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/switch-user': {
-      id: '/switch-user'
-      path: '/switch-user'
-      fullPath: '/switch-user'
-      preLoaderRoute: typeof SwitchUserRouteImport
+    '/visits-manager': {
+      id: '/visits-manager'
+      path: '/visits-manager'
+      fullPath: '/visits-manager'
+      preLoaderRoute: typeof VisitsManagerRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/visits': {
@@ -731,123 +605,137 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof VisitsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/visits-manager': {
-      id: '/visits-manager'
-      path: '/visits-manager'
-      fullPath: '/visits-manager'
-      preLoaderRoute: typeof VisitsManagerRouteImport
+    '/switch-user': {
+      id: '/switch-user'
+      path: '/switch-user'
+      fullPath: '/switch-user'
+      preLoaderRoute: typeof SwitchUserRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/candidates/': {
-      id: '/candidates/'
-      path: '/candidates'
-      fullPath: '/candidates/'
-      preLoaderRoute: typeof CandidatesIndexRouteImport
+    '/splash': {
+      id: '/splash'
+      path: '/splash'
+      fullPath: '/splash'
+      preLoaderRoute: typeof SplashRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/candidates/$requestId': {
-      id: '/candidates/$requestId'
-      path: '/candidates/$requestId'
-      fullPath: '/candidates/$requestId'
-      preLoaderRoute: typeof CandidatesRequestIdRouteImport
+    '/rooms': {
+      id: '/rooms'
+      path: '/rooms'
+      fullPath: '/rooms'
+      preLoaderRoute: typeof RoomsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/chats/': {
-      id: '/chats/'
-      path: '/chats'
-      fullPath: '/chats/'
-      preLoaderRoute: typeof ChatsIndexRouteImport
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/chats/$id': {
-      id: '/chats/$id'
-      path: '/chats/$id'
-      fullPath: '/chats/$id'
-      preLoaderRoute: typeof ChatsIdRouteImport
+    '/register': {
+      id: '/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof RegisterRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/explore/': {
-      id: '/explore/'
-      path: '/explore'
-      fullPath: '/explore/'
-      preLoaderRoute: typeof ExploreIndexRouteImport
+    '/publish': {
+      id: '/publish'
+      path: '/publish'
+      fullPath: '/publish'
+      preLoaderRoute: typeof PublishRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/explore/$id': {
-      id: '/explore/$id'
-      path: '/explore/$id'
-      fullPath: '/explore/$id'
-      preLoaderRoute: typeof ExploreIdRouteImport
+    '/preferences': {
+      id: '/preferences'
+      path: '/preferences'
+      fullPath: '/preferences'
+      preLoaderRoute: typeof PreferencesRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/explore/mapa': {
-      id: '/explore/mapa'
-      path: '/explore/mapa'
-      fullPath: '/explore/mapa'
-      preLoaderRoute: typeof ExploreMapaRouteImport
+    '/para-ti': {
+      id: '/para-ti'
+      path: '/para-ti'
+      fullPath: '/para-ti'
+      preLoaderRoute: typeof ParaTiRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/feedback/$matchId': {
-      id: '/feedback/$matchId'
-      path: '/feedback/$matchId'
-      fullPath: '/feedback/$matchId'
-      preLoaderRoute: typeof FeedbackMatchIdRouteImport
+    '/onboarding': {
+      id: '/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof OnboardingRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/legal/privacy': {
-      id: '/legal/privacy'
-      path: '/legal/privacy'
-      fullPath: '/legal/privacy'
-      preLoaderRoute: typeof LegalPrivacyRouteImport
+    '/notifications': {
+      id: '/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof NotificationsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/legal/terms': {
-      id: '/legal/terms'
-      path: '/legal/terms'
-      fullPath: '/legal/terms'
-      preLoaderRoute: typeof LegalTermsRouteImport
+    '/matches': {
+      id: '/matches'
+      path: '/matches'
+      fullPath: '/matches'
+      preLoaderRoute: typeof MatchesRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/my-listings/': {
-      id: '/my-listings/'
-      path: '/my-listings'
-      fullPath: '/my-listings/'
-      preLoaderRoute: typeof MyListingsIndexRouteImport
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/my-listings/new': {
-      id: '/my-listings/new'
-      path: '/my-listings/new'
-      fullPath: '/my-listings/new'
-      preLoaderRoute: typeof MyListingsNewRouteImport
+    '/interests': {
+      id: '/interests'
+      path: '/interests'
+      fullPath: '/interests'
+      preLoaderRoute: typeof InterestsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/profile/': {
-      id: '/profile/'
-      path: '/profile'
-      fullPath: '/profile/'
-      preLoaderRoute: typeof ProfileIndexRouteImport
+    '/inbox': {
+      id: '/inbox'
+      path: '/inbox'
+      fullPath: '/inbox'
+      preLoaderRoute: typeof InboxRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/profile/edit': {
-      id: '/profile/edit'
-      path: '/profile/edit'
-      fullPath: '/profile/edit'
-      preLoaderRoute: typeof ProfileEditRouteImport
+    '/help': {
+      id: '/help'
+      path: '/help'
+      fullPath: '/help'
+      preLoaderRoute: typeof HelpRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/profile/score': {
-      id: '/profile/score'
-      path: '/profile/score'
-      fullPath: '/profile/score'
-      preLoaderRoute: typeof ProfileScoreRouteImport
+    '/favorites': {
+      id: '/favorites'
+      path: '/favorites'
+      fullPath: '/favorites'
+      preLoaderRoute: typeof FavoritesRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/rental-close/$chatId': {
-      id: '/rental-close/$chatId'
-      path: '/rental-close/$chatId'
-      fullPath: '/rental-close/$chatId'
-      preLoaderRoute: typeof RentalCloseChatIdRouteImport
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/account': {
+      id: '/account'
+      path: '/account'
+      fullPath: '/account'
+      preLoaderRoute: typeof AccountRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/settings/': {
@@ -857,18 +745,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/settings/account': {
-      id: '/settings/account'
-      path: '/settings/account'
-      fullPath: '/settings/account'
-      preLoaderRoute: typeof SettingsAccountRouteImport
+    '/profile/': {
+      id: '/profile/'
+      path: '/profile'
+      fullPath: '/profile/'
+      preLoaderRoute: typeof ProfileIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/settings/language': {
-      id: '/settings/language'
-      path: '/settings/language'
-      fullPath: '/settings/language'
-      preLoaderRoute: typeof SettingsLanguageRouteImport
+    '/my-listings/': {
+      id: '/my-listings/'
+      path: '/my-listings'
+      fullPath: '/my-listings/'
+      preLoaderRoute: typeof MyListingsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/explore/': {
+      id: '/explore/'
+      path: '/explore'
+      fullPath: '/explore/'
+      preLoaderRoute: typeof ExploreIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/chats/': {
+      id: '/chats/'
+      path: '/chats'
+      fullPath: '/chats/'
+      preLoaderRoute: typeof ChatsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/candidates/': {
+      id: '/candidates/'
+      path: '/candidates'
+      fullPath: '/candidates/'
+      preLoaderRoute: typeof CandidatesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings/privacy': {
+      id: '/settings/privacy'
+      path: '/settings/privacy'
+      fullPath: '/settings/privacy'
+      preLoaderRoute: typeof SettingsPrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/settings/notifications': {
@@ -878,11 +794,95 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsNotificationsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/settings/privacy': {
-      id: '/settings/privacy'
-      path: '/settings/privacy'
-      fullPath: '/settings/privacy'
-      preLoaderRoute: typeof SettingsPrivacyRouteImport
+    '/settings/language': {
+      id: '/settings/language'
+      path: '/settings/language'
+      fullPath: '/settings/language'
+      preLoaderRoute: typeof SettingsLanguageRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings/account': {
+      id: '/settings/account'
+      path: '/settings/account'
+      fullPath: '/settings/account'
+      preLoaderRoute: typeof SettingsAccountRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rental-close/$chatId': {
+      id: '/rental-close/$chatId'
+      path: '/rental-close/$chatId'
+      fullPath: '/rental-close/$chatId'
+      preLoaderRoute: typeof RentalCloseChatIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile/score': {
+      id: '/profile/score'
+      path: '/profile/score'
+      fullPath: '/profile/score'
+      preLoaderRoute: typeof ProfileScoreRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile/edit': {
+      id: '/profile/edit'
+      path: '/profile/edit'
+      fullPath: '/profile/edit'
+      preLoaderRoute: typeof ProfileEditRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/my-listings/new': {
+      id: '/my-listings/new'
+      path: '/my-listings/new'
+      fullPath: '/my-listings/new'
+      preLoaderRoute: typeof MyListingsNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/legal/terms': {
+      id: '/legal/terms'
+      path: '/legal/terms'
+      fullPath: '/legal/terms'
+      preLoaderRoute: typeof LegalTermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/legal/privacy': {
+      id: '/legal/privacy'
+      path: '/legal/privacy'
+      fullPath: '/legal/privacy'
+      preLoaderRoute: typeof LegalPrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/feedback/$matchId': {
+      id: '/feedback/$matchId'
+      path: '/feedback/$matchId'
+      fullPath: '/feedback/$matchId'
+      preLoaderRoute: typeof FeedbackMatchIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/explore/mapa': {
+      id: '/explore/mapa'
+      path: '/explore/mapa'
+      fullPath: '/explore/mapa'
+      preLoaderRoute: typeof ExploreMapaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/explore/$id': {
+      id: '/explore/$id'
+      path: '/explore/$id'
+      fullPath: '/explore/$id'
+      preLoaderRoute: typeof ExploreIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/chats/$id': {
+      id: '/chats/$id'
+      path: '/chats/$id'
+      fullPath: '/chats/$id'
+      preLoaderRoute: typeof ChatsIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/candidates/$requestId': {
+      id: '/candidates/$requestId'
+      path: '/candidates/$requestId'
+      fullPath: '/candidates/$requestId'
+      preLoaderRoute: typeof CandidatesRequestIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/my-listings/$id/edit': {
