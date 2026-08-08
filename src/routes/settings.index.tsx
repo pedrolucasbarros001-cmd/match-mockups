@@ -1,10 +1,9 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { PageHeader, PageShell } from "@/components/AppShell";
-import { Bell, Globe, Lock, FileText, Trash2, HelpCircle, ChevronRight, Sliders, Crown, UserCog, RefreshCcw } from "lucide-react";
-import { useRole, setRole, setSession } from "@/lib/user-state";
+import { Bell, Globe, Lock, FileText, Trash2, HelpCircle, ChevronRight, Sliders, Crown, UserCog } from "lucide-react";
+import { useRole } from "@/lib/user-state";
+import { signOut } from "@/lib/auth";
 import { useStore } from "@/lib/store";
-import { reseed } from "@/lib/seed";
-import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/settings/")({
   head: () => ({ meta: [{ title: "Definições — HomeMatch" }] }),
@@ -17,40 +16,10 @@ function SettingsPage() {
   const plan = useStore((s) => s.plan);
   const language = useStore((s) => s.language);
 
-  const resetData = () => {
-    if (confirm("Repor os dados de demonstração? (anúncios, matches, chats, visitas, notificações)")) {
-      reseed();
-      nav({ to: "/splash" });
-    }
-  };
-
   return (
     <PageShell width="list" className="pb-10">
       <PageHeader title="Definições" back="/profile" />
       <div className="px-4 pt-4">
-        <Group title="Utilizador (teste)">
-          <div className="p-3">
-            <div className="mb-2 flex items-center gap-2 text-xs text-muted-foreground">
-              <UserCog className="size-4" /> Troca entre inquilino e senhorio para testar cada fluxo.
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                onClick={() => { setRole("seeker"); nav({ to: "/explore" }); }}
-                className={cn("h-11 rounded-lg border text-sm font-semibold transition active:scale-95",
-                  role === "seeker" ? "border-primary bg-primary text-primary-foreground" : "border-border bg-surface")}
-              >Inquilino</button>
-              <button
-                onClick={() => { setRole("landlord"); nav({ to: "/dashboard" }); }}
-                className={cn("h-11 rounded-lg border text-sm font-semibold transition active:scale-95",
-                  role === "landlord" ? "border-primary bg-primary text-primary-foreground" : "border-border bg-surface")}
-              >Senhorio</button>
-            </div>
-            <Link to="/switch-user" className="mt-2 flex h-10 items-center justify-center rounded-lg border border-border text-xs font-semibold text-primary">
-              Ver ecrã de troca com o guia de teste →
-            </Link>
-          </div>
-        </Group>
-
         <Group title="Descoberta">
           <Item icon={<Sliders className="size-5" />} label="Preferências" onClick={() => nav({ to: "/preferences" })} />
         </Group>
@@ -69,9 +38,8 @@ function SettingsPage() {
           <Item icon={<HelpCircle className="size-5" />} label="Ajuda" onClick={() => nav({ to: "/help" })} />
         </Group>
         <Group title="Zona perigosa">
-          <Item icon={<RefreshCcw className="size-5" />} label="Repor dados de demonstração" onClick={resetData} />
           <Item icon={<Trash2 className="size-5" />} label="Terminar sessão" destructive
-            onClick={() => { setSession("out"); nav({ to: "/login" }); }} />
+            onClick={async () => { await signOut(); nav({ to: "/login" }); }} />
         </Group>
         <p className="mt-8 text-center text-xs text-muted-foreground">HomeMatch v1.0</p>
       </div>
