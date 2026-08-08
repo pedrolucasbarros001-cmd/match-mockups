@@ -125,10 +125,18 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
-  // Dados de demonstração em dev — sem isto todos os ecrãs ficam vazios.
+  // Sessão real: arranca o listener de auth e carrega os dados da conta.
   useEffect(() => {
-    if (import.meta.env.DEV) seedIfEmpty();
+    startAuthSync((session, role) => {
+      const id = getUserId();
+      if (session === "in" && id) {
+        hydrate(id, role).catch((e) => console.error("[hydrate]", e));
+      } else if (session === "out") {
+        store.reset();
+      }
+    });
   }, []);
+
 
   // A app inteira muda de cor conforme se está a arrendar ou a comprar.
   const kind = useStore((s) => s.preferences.kind);
