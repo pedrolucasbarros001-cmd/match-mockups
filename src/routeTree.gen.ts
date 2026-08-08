@@ -11,7 +11,6 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as VisitsManagerRouteImport } from './routes/visits-manager'
 import { Route as VisitsRouteImport } from './routes/visits'
-import { Route as SwitchUserRouteImport } from './routes/switch-user'
 import { Route as SplashRouteImport } from './routes/splash'
 import { Route as RoomsRouteImport } from './routes/rooms'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
@@ -61,11 +60,6 @@ const VisitsManagerRoute = VisitsManagerRouteImport.update({
 const VisitsRoute = VisitsRouteImport.update({
   id: '/visits',
   path: '/visits',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SwitchUserRoute = SwitchUserRouteImport.update({
-  id: '/switch-user',
-  path: '/switch-user',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SplashRoute = SplashRouteImport.update({
@@ -288,7 +282,6 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/rooms': typeof RoomsRoute
   '/splash': typeof SplashRoute
-  '/switch-user': typeof SwitchUserRoute
   '/visits': typeof VisitsRoute
   '/visits-manager': typeof VisitsManagerRoute
   '/candidates/$requestId': typeof CandidatesRequestIdRoute
@@ -333,7 +326,6 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/rooms': typeof RoomsRoute
   '/splash': typeof SplashRoute
-  '/switch-user': typeof SwitchUserRoute
   '/visits': typeof VisitsRoute
   '/visits-manager': typeof VisitsManagerRoute
   '/candidates/$requestId': typeof CandidatesRequestIdRoute
@@ -379,7 +371,6 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/rooms': typeof RoomsRoute
   '/splash': typeof SplashRoute
-  '/switch-user': typeof SwitchUserRoute
   '/visits': typeof VisitsRoute
   '/visits-manager': typeof VisitsManagerRoute
   '/candidates/$requestId': typeof CandidatesRequestIdRoute
@@ -426,7 +417,6 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/rooms'
     | '/splash'
-    | '/switch-user'
     | '/visits'
     | '/visits-manager'
     | '/candidates/$requestId'
@@ -471,7 +461,6 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/rooms'
     | '/splash'
-    | '/switch-user'
     | '/visits'
     | '/visits-manager'
     | '/candidates/$requestId'
@@ -516,7 +505,6 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/rooms'
     | '/splash'
-    | '/switch-user'
     | '/visits'
     | '/visits-manager'
     | '/candidates/$requestId'
@@ -562,7 +550,6 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   RoomsRoute: typeof RoomsRoute
   SplashRoute: typeof SplashRoute
-  SwitchUserRoute: typeof SwitchUserRoute
   VisitsRoute: typeof VisitsRoute
   VisitsManagerRoute: typeof VisitsManagerRoute
   CandidatesRequestIdRoute: typeof CandidatesRequestIdRoute
@@ -603,13 +590,6 @@ declare module '@tanstack/react-router' {
       path: '/visits'
       fullPath: '/visits'
       preLoaderRoute: typeof VisitsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/switch-user': {
-      id: '/switch-user'
-      path: '/switch-user'
-      fullPath: '/switch-user'
-      preLoaderRoute: typeof SwitchUserRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/splash': {
@@ -914,7 +894,6 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   RoomsRoute: RoomsRoute,
   SplashRoute: SplashRoute,
-  SwitchUserRoute: SwitchUserRoute,
   VisitsRoute: VisitsRoute,
   VisitsManagerRoute: VisitsManagerRoute,
   CandidatesRequestIdRoute: CandidatesRequestIdRoute,
@@ -943,13 +922,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
