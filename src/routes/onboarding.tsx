@@ -5,7 +5,7 @@ import { ChevronLeft, Search, Home, MapPin, Camera, ImagePlus, Info, Check, Spar
 import { ScoreBadge } from "@/components/AppShell";
 import { getState, trustScore, DOCUMENT_LABELS, type DocumentType } from "@/lib/store";
 import { api } from "@/lib/api";
-import { setRole as setRoleGlobal } from "@/lib/user-state";
+import { useRole } from "@/lib/user-state";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/onboarding")({
@@ -18,7 +18,8 @@ const TOTAL = 6;
 function Onboarding() {
   const nav = useNavigate();
   const [step, setStep] = useState(1);
-  const [role, setRole] = useState<"seeker" | "landlord" | null>(null);
+  // O papel vem da conta criada no registo e não muda depois disso.
+  const role = useRole();
   const [city, setCity] = useState("");
   const [radius, setRadius] = useState(10);
   const [name, setName] = useState("");
@@ -79,7 +80,6 @@ function Onboarding() {
 
   const finish = () => {
     persist();
-    if (role) setRoleGlobal(role);
     nav({ to: role === "landlord" ? "/dashboard" : "/explore" });
   };
 
@@ -100,15 +100,15 @@ function Onboarding() {
       </header>
 
       {step === 1 && (
-        <Section title="Bem-vindo ao HomeMatch 🏠" sub="O que precisas?">
+        <Section title="Bem-vindo ao HomeMatch 🏠" sub={role === "landlord" ? "A tua conta é de senhorio." : "A tua conta é de inquilino."}>
           <div className="mt-4 flex flex-col gap-3">
             {/* Escolher o papel é sê-lo já: fixa-se aqui e não no fim, senão
                 o resto do onboarding — e o destino final — podiam divergir
                 do que a pessoa escolheu. */}
-            <RoleCard active={role === "seeker"} onClick={() => { setRole("seeker"); setRoleGlobal("seeker"); setTimeout(next, 250); }}
+            <RoleCard active={role === "seeker"} onClick={() => role === "seeker" && next()}
               icon={<Search className="size-7" />} title="Procuro um sítio"
               sub="Quarto, apartamento ou casa para arrendar ou comprar." />
-            <RoleCard active={role === "landlord"} onClick={() => { setRole("landlord"); setRoleGlobal("landlord"); setTimeout(next, 250); }}
+            <RoleCard active={role === "landlord"} onClick={() => role === "landlord" && next()}
               icon={<Home className="size-7" />} title="Tenho um sítio para anunciar"
               sub="Arrenda ou vende, e fala com interessados." />
           </div>

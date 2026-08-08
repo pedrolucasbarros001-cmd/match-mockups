@@ -3,7 +3,7 @@ import { useState } from "react";
 import { PageHeader } from "@/components/AppShell";
 import { useStore } from "@/lib/store";
 import { api } from "@/lib/api";
-import { setSession } from "@/lib/user-state";
+import { signOut } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 import { Mail, Lock, Phone, Check, AlertTriangle, Trash2 } from "lucide-react";
 
@@ -106,7 +106,7 @@ function AccountSettings() {
         <section>
           <div className="mb-2 px-1 text-xs font-bold uppercase tracking-wide text-muted-foreground">Sessão</div>
           <button
-            onClick={() => { setSession("out"); nav({ to: "/login" }); }}
+            onClick={async () => { await signOut(); nav({ to: "/login" }); }}
             className="h-12 w-full rounded-2xl border border-border bg-surface text-sm font-semibold transition active:scale-[0.98]"
           >
             Terminar sessão
@@ -172,7 +172,7 @@ function DeleteAccount() {
               <button
                 disabled={!matches}
                 // TODO(backend): DELETE /api/me — apaga do servidor antes de sair.
-                onClick={() => { api.reset(); setSession("out"); nav({ to: "/login" }); }}
+                onClick={async () => { api.reset(); await signOut(); nav({ to: "/login" }); }}
                 className="inline-flex h-11 flex-1 items-center justify-center gap-1.5 rounded-xl bg-danger text-sm font-bold text-white disabled:opacity-40"
               >
                 <Trash2 className="size-4" /> Eliminar

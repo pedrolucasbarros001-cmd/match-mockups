@@ -3,7 +3,8 @@ import { useMemo } from "react";
 import { AppShell, PageHeader, ScoreBadge } from "@/components/AppShell";
 import { useStore, getState, trustScoreBreakdown } from "@/lib/store";
 import { ChevronRight, Settings, Shield, Heart, LogOut, Edit3, Calendar, Crown, Sliders, User, Building2, Users } from "lucide-react";
-import { useRole, setSession } from "@/lib/user-state";
+import { useRole } from "@/lib/user-state";
+import { signOut } from "@/lib/auth";
 
 export const Route = createFileRoute("/profile/")({
   head: () => ({ meta: [{ title: "Perfil — HomeMatch" }] }),
@@ -112,7 +113,7 @@ function ProfilePage() {
 
         <div className="mt-6 overflow-hidden rounded-2xl border border-border bg-surface">
           <Row icon={<Settings className="size-5" />} label="Definições" onClick={() => nav({ to: "/settings" })} />
-          <Row icon={<LogOut className="size-5" />} label="Terminar sessão" onClick={() => { setSession("out"); nav({ to: "/login" }); }} destructive last />
+          <Row icon={<LogOut className="size-5" />} label="Terminar sessão" onClick={async () => { await signOut(); nav({ to: "/login" }); }} destructive last />
         </div>
 
         <div className="mt-8 text-center text-xs text-muted-foreground">HomeMatch v1.0</div>

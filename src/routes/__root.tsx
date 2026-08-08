@@ -11,7 +11,9 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
-import { seedIfEmpty } from "../lib/seed";
+import { startAuthSync, getUserId } from "../lib/user-state";
+import { hydrate } from "../lib/sync";
+import { store } from "../lib/store";
 import { useStore } from "../lib/store";
 import { useMode } from "../lib/mode";
 
@@ -127,10 +129,10 @@ function RootComponent() {
 
   // Sessão real: arranca o listener de auth e carrega os dados da conta.
   useEffect(() => {
-    startAuthSync((session, role) => {
+    startAuthSync((session: "in" | "out" | "loading", role: "seeker" | "landlord") => {
       const id = getUserId();
       if (session === "in" && id) {
-        hydrate(id, role).catch((e) => console.error("[hydrate]", e));
+        hydrate(id, role).catch((e: unknown) => console.error("[hydrate]", e));
       } else if (session === "out") {
         store.reset();
       }
