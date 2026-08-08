@@ -252,6 +252,7 @@ export type Database = {
           min_months: number
           move_in_from: string
           neighborhood: string
+          owner_card: Json
           owner_id: string
           pets: boolean
           photos: string[]
@@ -279,6 +280,7 @@ export type Database = {
           min_months?: number
           move_in_from?: string
           neighborhood?: string
+          owner_card?: Json
           owner_id: string
           pets?: boolean
           photos?: string[]
@@ -306,6 +308,7 @@ export type Database = {
           min_months?: number
           move_in_from?: string
           neighborhood?: string
+          owner_card?: Json
           owner_id?: string
           pets?: boolean
           photos?: string[]
@@ -323,6 +326,8 @@ export type Database = {
       }
       matches: {
         Row: {
+          candidate: Json
+          chat_id: string | null
           created_at: string
           id: string
           landlord_id: string
@@ -334,6 +339,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          candidate?: Json
+          chat_id?: string | null
           created_at?: string
           id?: string
           landlord_id: string
@@ -345,6 +352,8 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          candidate?: Json
+          chat_id?: string | null
           created_at?: string
           id?: string
           landlord_id?: string
@@ -517,6 +526,36 @@ export type Database = {
           resident_in_portugal?: boolean
           terms_accepted?: boolean
           updated_at?: string
+        }
+        Relationships: []
+      }
+      reports: {
+        Row: {
+          created_at: string
+          detail: string
+          id: string
+          reason: string
+          reporter_id: string
+          target: string
+          target_id: string
+        }
+        Insert: {
+          created_at?: string
+          detail?: string
+          id?: string
+          reason: string
+          reporter_id: string
+          target: string
+          target_id: string
+        }
+        Update: {
+          created_at?: string
+          detail?: string
+          id?: string
+          reason?: string
+          reporter_id?: string
+          target?: string
+          target_id?: string
         }
         Relationships: []
       }
@@ -742,40 +781,64 @@ export type Database = {
       }
       visits: {
         Row: {
+          counter_of: string | null
           created_at: string
           id: string
+          landlord_confirmed_done: boolean
           listing_id: string
           match_id: string
           notes: string
           proposed_by: string | null
+          proposed_by_side: string
           scheduled_at: string | null
+          seeker_confirmed_done: boolean
           slot: string
           status: Database["public"]["Enums"]["visit_state"]
           updated_at: string
+          visit_date: string
+          visit_time: string
+          who: string
+          who_avatar: string
         }
         Insert: {
+          counter_of?: string | null
           created_at?: string
           id?: string
+          landlord_confirmed_done?: boolean
           listing_id: string
           match_id: string
           notes?: string
           proposed_by?: string | null
+          proposed_by_side?: string
           scheduled_at?: string | null
+          seeker_confirmed_done?: boolean
           slot?: string
           status?: Database["public"]["Enums"]["visit_state"]
           updated_at?: string
+          visit_date?: string
+          visit_time?: string
+          who?: string
+          who_avatar?: string
         }
         Update: {
+          counter_of?: string | null
           created_at?: string
           id?: string
+          landlord_confirmed_done?: boolean
           listing_id?: string
           match_id?: string
           notes?: string
           proposed_by?: string | null
+          proposed_by_side?: string
           scheduled_at?: string | null
+          seeker_confirmed_done?: boolean
           slot?: string
           status?: Database["public"]["Enums"]["visit_state"]
           updated_at?: string
+          visit_date?: string
+          visit_time?: string
+          who?: string
+          who_avatar?: string
         }
         Relationships: [
           {
@@ -862,6 +925,8 @@ export type Database = {
         | "confirmed"
         | "done"
         | "cancelled"
+        | "pending"
+        | "declined"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1028,6 +1093,8 @@ export const Constants = {
         "confirmed",
         "done",
         "cancelled",
+        "pending",
+        "declined",
       ],
     },
   },
