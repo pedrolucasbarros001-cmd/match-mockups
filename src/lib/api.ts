@@ -47,7 +47,8 @@ export const api = {
   acceptVisit: (id: string) => asAsync(store.acceptVisit(id)),
   declineVisit: (id: string, note?: string) => asAsync(store.declineVisit(id, note)),
   cancelVisit: (id: string, note?: string) => asAsync(store.cancelVisit(id, note)),
-  markVisitDone: (id: string) => asAsync(store.markVisitDone(id)),
+  // Dupla confirmação: devolve true quando ambos os lados confirmaram.
+  confirmVisitDone: (id: string, side: "seeker" | "landlord") => asAsync(store.confirmVisitDone(id, side)),
 
   // ---------- Ações da conversa ----------
   // TODO(backend): PATCH /api/chats/:id

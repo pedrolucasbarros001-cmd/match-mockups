@@ -1,5 +1,5 @@
-import { Calendar, Check, X, RefreshCw, Clock, CalendarCheck } from "lucide-react";
-import { formatVisitWhen, visitIsPast, type Visit } from "@/lib/mock-data";
+import { Calendar, Check, X, RefreshCw, Clock, CalendarCheck, Hourglass } from "lucide-react";
+import { formatVisitWhen, visitIsPast, hasConfirmedDone, awaitingOtherDone, type Visit } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 
 /**
@@ -10,11 +10,13 @@ import { cn } from "@/lib/utils";
  * verdade — quem propôs — decide o que cada um pode fazer.
  */
 export function VisitCard({
-  visit, mine, onAccept, onDecline, onCounter, onCancel, onMarkDone,
+  visit, mine, side, onAccept, onDecline, onCounter, onCancel, onMarkDone,
 }: {
   visit: Visit;
   /** A proposta foi feita por quem está a ver? */
   mine: boolean;
+  /** Lado de quem está a ver — decide de quem é a confirmação. */
+  side: "seeker" | "landlord";
   onAccept: () => void;
   onDecline: () => void;
   onCounter: () => void;
@@ -47,19 +49,34 @@ export function VisitCard({
   }
 
   if (visit.status === "accepted") {
+    const iConfirmed = hasConfirmedDone(visit, side);
+    const waiting = awaitingOtherDone(visit, side);
+
     return (
       <Shell tone="ok" icon={<CalendarCheck className="size-4" />} label="Visita combinada" when={when}>
-        {/* Só depois da hora marcada faz sentido dizer que aconteceu. */}
-        {past ? (
-          <div className="flex flex-wrap gap-2">
-            <Action onClick={onMarkDone} variant="primary"><Check className="size-3.5" /> A visita aconteceu</Action>
-            <Action onClick={onCancel} variant="ghost">Não aconteceu</Action>
-          </div>
-        ) : (
+        {/* Só depois da hora marcada faz sentido perguntar se aconteceu. */}
+        {!past ? (
           <div className="flex flex-wrap gap-2">
             <Action onClick={onCounter} variant="ghost"><RefreshCw className="size-3.5" /> Remarcar</Action>
             <Action onClick={onCancel} variant="danger"><X className="size-3.5" /> Cancelar</Action>
           </div>
+        ) : waiting ? (
+          // Já confirmei; falta o outro lado. Nada para fazer senão esperar.
+          <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
+            <Hourglass className="size-3.5" /> Confirmaste que aconteceu. Falta a confirmação do outro lado.
+          </div>
+        ) : (
+          <>
+            <p className="mb-2.5 text-xs text-muted-foreground">
+              A visita aconteceu? Os dois lados confirmam — só assim se avança para fechar o negócio.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <Action onClick={onMarkDone} variant="primary" disabled={iConfirmed}>
+                <Check className="size-3.5" /> Sim, aconteceu
+              </Action>
+              <Action onClick={onCancel} variant="ghost">Não aconteceu</Action>
+            </div>
+          </>
         )}
       </Shell>
     );
@@ -114,16 +131,18 @@ function Shell({ tone, icon, label, when, children }: {
   );
 }
 
-function Action({ children, onClick, variant }: {
+function Action({ children, onClick, variant, disabled }: {
   children: React.ReactNode;
   onClick: () => void;
   variant: "primary" | "ghost" | "danger";
+  disabled?: boolean;
 }) {
   return (
     <button
       onClick={onClick}
+      disabled={disabled}
       className={cn(
-        "inline-flex h-9 items-center gap-1.5 rounded-pill px-3.5 text-xs font-bold transition active:scale-95",
+        "inline-flex h-9 items-center gap-1.5 rounded-pill px-3.5 text-xs font-bold transition active:scale-95 disabled:opacity-40",
         variant === "primary" && "bg-primary text-primary-foreground shadow-sm",
         variant === "ghost" && "border border-border bg-surface text-foreground",
         variant === "danger" && "border border-danger/40 bg-surface text-danger",

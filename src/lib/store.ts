@@ -576,15 +576,51 @@ export const store = {
     }));
   },
 
-  /** A visita aconteceu — destrava o fecho do negócio. */
-  markVisitDone(id: string) {
+  /**
+   * Confirmar que a visita aconteceu. É um facto partilhado: guarda-se a
+   * confirmação deste lado e a visita só fica "done" — destravando o fecho do
+   * negócio — quando os DOIS confirmarem. Um lado sozinho não decide se o
+   * outro apareceu.
+   * Devolve true se esta confirmação fechou o ciclo.
+   */
+  confirmVisitDone(id: string, side: "seeker" | "landlord"): boolean {
     const v = state.visits.find((x) => x.id === id);
-    if (!v) return;
+    if (!v || v.status !== "accepted") return false;
+
+    const seeker = side === "seeker" ? true : !!v.seekerConfirmedDone;
+    const landlord = side === "landlord" ? true : !!v.landlordConfirmedDone;
+    const both = seeker && landlord;
+
+    const match = state.matches.find((m) => m.id === v.matchId);
+    const listing = state.listings.find((l) => l.id === v.listingId);
+    // Avisa o outro lado de que falta a confirmação dele.
+    const notif: Notification | null = both
+      ? null
+      : {
+          id: uid(),
+          category: "visit",
+          icon: "reminder",
+          title: "Confirma a visita",
+          body: `Falta a tua confirmação de que a visita a "${listing?.title ?? "o espaço"}" aconteceu.`,
+          ago: ago(),
+          unread: true,
+          to: match ? `/chats/${match.chatId}` : "/matches",
+        };
+
     set((s) => ({
       ...s,
-      visits: s.visits.map((x) => (x.id === id ? { ...x, status: "done" } : x)),
-      matches: s.matches.map((m) => (m.id === v.matchId ? { ...m, state: "visit_done", updatedAt: ago() } : m)),
+      visits: s.visits.map((x) =>
+        x.id === id
+          ? { ...x, seekerConfirmedDone: seeker, landlordConfirmedDone: landlord, status: both ? "done" : x.status }
+          : x,
+      ),
+      // O match só avança quando ambos confirmarem.
+      matches: both
+        ? s.matches.map((m) => (m.id === v.matchId ? { ...m, state: "visit_done", updatedAt: ago() } : m))
+        : s.matches,
+      notifications: notif ? [notif, ...s.notifications] : s.notifications,
     }));
+    return both;
   },
 
   // ---- Ações da conversa ----

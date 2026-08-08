@@ -112,8 +112,13 @@ function ChatRoom() {
   };
   const markVisitDone = () => {
     if (!visit) return;
-    api.markVisitDone(visit.id);
-    store.sendMessage(chat.id, "Visita marcada como realizada ✅", "them");
+    // Só fecha quando ambos confirmam — a mensagem no chat diz qual dos dois casos é.
+    const both = store.confirmVisitDone(visit.id, side);
+    store.sendMessage(
+      chat.id,
+      both ? "Visita confirmada pelos dois lados ✅" : "Confirmaste que a visita aconteceu. Falta o outro lado ✅",
+      "them",
+    );
   };
   const confirmAsSeeker = () => {
     if (!deal) return;
@@ -220,6 +225,7 @@ function ChatRoom() {
         <VisitCard
           visit={visit}
           mine={visit.proposedBy === side}
+          side={side}
           onAccept={acceptVisit}
           onDecline={declineVisit}
           onCounter={counterVisit}

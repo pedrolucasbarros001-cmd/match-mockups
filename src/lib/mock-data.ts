@@ -374,6 +374,13 @@ export type Visit = {
   /** Motivo dado ao recusar ou cancelar. */
   note?: string;
   createdAt: string;
+  /**
+   * "A visita aconteceu" é um facto partilhado: os dois estiveram lá ou não
+   * estiveram. Cada lado confirma o seu; só com ambos é que o estado passa a
+   * "done" e destrava o fecho do negócio — a mesma regra do arrendamento.
+   */
+  seekerConfirmedDone?: boolean;
+  landlordConfirmedDone?: boolean;
 };
 export const visits: Visit[] = [];
 
@@ -394,6 +401,16 @@ export function formatVisitWhen(v: Pick<Visit, "date" | "time">): string {
 export function visitIsPast(v: Pick<Visit, "date" | "time">): boolean {
   if (!v.date) return false;
   return new Date(`${v.date}T${v.time || "23:59"}`).getTime() < Date.now();
+}
+
+/** Este lado já confirmou que a visita aconteceu? */
+export function hasConfirmedDone(v: Visit, side: "seeker" | "landlord"): boolean {
+  return side === "landlord" ? !!v.landlordConfirmedDone : !!v.seekerConfirmedDone;
+}
+
+/** Estou à espera do outro lado confirmar? */
+export function awaitingOtherDone(v: Visit, side: "seeker" | "landlord"): boolean {
+  return hasConfirmedDone(v, side) && !hasConfirmedDone(v, side === "landlord" ? "seeker" : "landlord");
 }
 
 export const favoriteIds: string[] = [];

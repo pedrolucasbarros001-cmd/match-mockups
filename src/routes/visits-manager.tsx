@@ -104,12 +104,13 @@ function VisitsManager() {
                     >
                       <X className="size-4" /> Cancelar
                     </button>
+                    {/* Este ecrã é do senhorio: confirma o lado dele. */}
                     <button
-                      onClick={() => api.markVisitDone(v.id)}
-                      disabled={!visitIsPast(v)}
+                      onClick={() => api.confirmVisitDone(v.id, "landlord")}
+                      disabled={!visitIsPast(v) || !!v.landlordConfirmedDone}
                       className="flex h-10 items-center justify-center gap-1 rounded-pill bg-primary text-sm font-semibold text-white disabled:bg-muted disabled:text-muted-foreground"
                     >
-                      <Check className="size-4" /> Realizada
+                      <Check className="size-4" /> {v.landlordConfirmedDone ? "Aguarda o outro lado" : "Aconteceu"}
                     </button>
                   </div>
                 )}
