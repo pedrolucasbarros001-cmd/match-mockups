@@ -47,6 +47,8 @@ export type ListingKind = "rent" | "sale";
 
 export type Listing = {
   id: string;
+  /** Dono do anúncio (id da conta). Preenchido pelo backend. */
+  ownerId?: string;
   title: string;
   kind: ListingKind;
   /** Renda mensal se kind="rent"; valor total pedido se kind="sale". Ver priceLabel(). */

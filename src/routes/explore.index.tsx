@@ -395,7 +395,7 @@ function EmptyState({ hasAny, filtersHide, onOpenFilters, onClearFilters, onRese
         <h2 className="mt-4 font-display text-xl font-bold">{title}</h2>
         <p className="mt-1 text-sm text-muted-foreground">{body}</p>
         {!hasAny ? (
-          <Link to="/switch-user" className="mt-6 inline-flex h-12 items-center rounded-xl bg-primary px-6 font-display font-semibold text-primary-foreground shadow-lift">Trocar de utilizador</Link>
+          <Link to="/preferences" className="mt-6 inline-flex h-12 items-center rounded-xl bg-primary px-6 font-display font-semibold text-primary-foreground shadow-lift">Ajustar preferências</Link>
         ) : filtersHide ? (
           <div className="mt-6 flex flex-col gap-2">
             <button onClick={onClearFilters} className="h-12 rounded-xl bg-primary px-6 font-display font-semibold text-primary-foreground shadow-lift transition active:scale-95">Limpar filtros</button>

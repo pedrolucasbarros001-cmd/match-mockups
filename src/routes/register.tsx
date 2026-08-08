@@ -2,8 +2,8 @@ import { AuthLayout } from "@/components/AuthLayout";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Eye, EyeOff, ChevronLeft } from "lucide-react";
-import { Divider, GoogleIcon } from "./login";
-import { setSession } from "@/lib/user-state";
+import { signUp } from "@/lib/auth";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/register")({
   head: () => ({ meta: [{ title: "Criar conta — HomeMatch" }] }),
@@ -17,12 +17,18 @@ function RegisterPage() {
   const [show, setShow] = useState(false);
   const [terms, setTerms] = useState(false);
   const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
+  // O papel é escolhido aqui e fica gravado na conta — não se troca depois.
+  const [role, setRole] = useState<"seeker" | "landlord" | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [sent, setSent] = useState(false);
+  const [busy, setBusy] = useState(false);
 
   const validEmail = /.+@.+\..+/.test(email);
   const strength = pw.length >= 12 ? "Forte" : pw.length >= 8 ? "Média" : pw.length > 0 ? "Fraca" : "";
   const strengthColor = strength === "Forte" ? "bg-success" : strength === "Média" ? "bg-warning" : "bg-danger";
   const match = pw.length > 0 && pw === pw2;
-  const ok = validEmail && pw.length >= 8 && match && terms;
+  const ok = validEmail && pw.length >= 8 && match && terms && !!role && name.trim().length > 1;
 
   return (
     <AuthLayout className="px-6 pb-10">
@@ -36,9 +42,33 @@ function RegisterPage() {
       <p className="mt-1 text-sm text-muted-foreground">Demora 1 minuto.</p>
 
       <form
-        onSubmit={(e) => { e.preventDefault(); if (ok) { setSession("in"); nav({ to: "/onboarding" }); } }}
+        onSubmit={async (e) => {
+          e.preventDefault();
+          if (!ok || !role) return;
+          setBusy(true);
+          setError(null);
+          const res = await signUp(email.trim(), pw, role, name.trim());
+          setBusy(false);
+          if (res.error) { setError(res.error); return; }
+          if (res.needsConfirmation) { setSent(true); return; }
+          nav({ to: "/onboarding" });
+        }}
         className="mt-6 flex flex-col gap-3"
       >
+        <div className="grid grid-cols-2 gap-2">
+          {([["seeker", "Procuro casa"], ["landlord", "Tenho espaço"]] as const).map(([v, label]) => (
+            <button type="button" key={v} onClick={() => setRole(v)}
+              className={cn("h-12 rounded-lg border text-sm font-semibold transition active:scale-95",
+                role === v ? "border-primary bg-primary text-primary-foreground" : "border-border bg-surface")}>
+              {label}
+            </button>
+          ))}
+        </div>
+        <p className="-mt-1 text-xs text-muted-foreground">O tipo de conta é definitivo — escolhe com atenção.</p>
+
+        <input required placeholder="Nome" value={name} onChange={(e) => setName(e.target.value)}
+          className="h-14 rounded-md border border-border bg-surface px-4 outline-none focus:border-primary focus:ring-2 focus:ring-primary/15" />
+
         <input type="email" required placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value.toLowerCase())}
           className="h-14 rounded-md border border-border bg-surface px-4 outline-none focus:border-primary focus:ring-2 focus:ring-primary/15" />
 
@@ -78,17 +108,14 @@ function RegisterPage() {
           <span>Aceito os <a className="font-semibold text-primary">Termos de Uso</a> e a <a className="font-semibold text-primary">Política de Privacidade</a>.</span>
         </label>
 
-        <button type="submit" disabled={!ok}
+        {error && <p className="rounded-md bg-danger/10 px-3 py-2 text-sm text-danger">{error}</p>}
+        {sent && <p className="rounded-md bg-success/10 px-3 py-2 text-sm text-success">Conta criada. Confirma o email para entrares.</p>}
+
+        <button type="submit" disabled={!ok || busy}
           className="mt-2 h-14 rounded-lg bg-primary font-display text-base font-semibold text-primary-foreground shadow-lift transition active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground disabled:shadow-none">
-          Criar conta
+          {busy ? "A criar…" : "Criar conta"}
         </button>
       </form>
-
-      <Divider />
-
-      <button className="flex h-14 items-center justify-center gap-3 rounded-lg border border-border bg-surface text-sm font-semibold">
-        <GoogleIcon /> Continuar com Google
-      </button>
 
       <p className="mt-8 text-center text-sm text-muted-foreground">
         Já tens conta? <Link to="/login" className="font-semibold text-primary">Entrar →</Link>

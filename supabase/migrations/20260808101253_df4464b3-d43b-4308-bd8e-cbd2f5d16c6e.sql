@@ -1,0 +1,14 @@
+revoke execute on function public.has_role(uuid, public.app_role) from anon, public;
+revoke execute on function public.current_role_is(public.app_role) from anon, public;
+revoke execute on function public.is_match_party(uuid) from anon, public;
+revoke execute on function public.is_chat_party(uuid) from anon, public;
+revoke execute on function public.owns_ticket(uuid) from anon, public;
+revoke execute on function public.listing_owner_card(uuid) from anon, public;
+revoke execute on function public.update_updated_at_column() from anon, public, authenticated;
+revoke execute on function public.handle_new_user() from anon, public, authenticated;
+grant execute on function public.has_role(uuid, public.app_role) to authenticated;
+grant execute on function public.current_role_is(public.app_role) to authenticated;
+grant execute on function public.is_match_party(uuid) to authenticated;
+grant execute on function public.is_chat_party(uuid) to authenticated;
+grant execute on function public.owns_ticket(uuid) to authenticated;
+grant execute on function public.listing_owner_card(uuid) to authenticated;

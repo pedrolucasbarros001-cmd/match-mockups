@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
-import { getRole, getSession } from "@/lib/user-state";
+import { useRole, useSession } from "@/lib/user-state";
 
 export const Route = createFileRoute("/splash")({
   head: () => ({ meta: [{ title: "HomeMatch" }] }),
@@ -9,18 +9,15 @@ export const Route = createFileRoute("/splash")({
 
 function SplashPage() {
   const nav = useNavigate();
+  const session = useSession();
+  const role = useRole();
+  // Espera-se pela resposta real do Supabase: decidir antes disso mandava
+  // toda a gente para o login, mesmo com sessão válida.
   useEffect(() => {
-    const t = setTimeout(() => {
-      const session = getSession();
-      if (session !== "in") {
-        nav({ to: "/login" });
-        return;
-      }
-      const role = getRole();
-      nav({ to: role === "landlord" ? "/dashboard" : "/explore" });
-    }, 700);
-    return () => clearTimeout(t);
-  }, [nav]);
+    if (session === "loading") return;
+    if (session === "out") { nav({ to: "/login" }); return; }
+    nav({ to: role === "landlord" ? "/dashboard" : "/explore" });
+  }, [session, role, nav]);
   return (
     <div className="grid min-h-svh place-items-center bg-primary text-primary-foreground">
       <div className="flex flex-col items-center gap-3">

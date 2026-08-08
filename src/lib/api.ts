@@ -1,105 +1,203 @@
-// Fachada API: hoje usa store local; amanhã troca por fetch/Supabase sem
-// alterar componentes. Todas as funções são async por design.
-//
-// TODO(backend): substituir cada implementação pela chamada HTTP correspondente.
+// Fachada API: a store local continua a ser o que os ecrãs leem (rápido,
+// otimista), mas cada escrita é replicada para o Supabase por `remote`.
+// Se a rede falhar, o ecrã não parte — o erro fica em consola e a próxima
+// hidratação corrige o estado.
 
 import { store, getState } from "./store";
 import type { Preferences, Profile } from "./store";
+import { remote } from "./sync";
 import type { Listing, Match, MatchState, Chat, Visit, Notification } from "./mock-data";
 
 const asAsync = <T,>(v: T): Promise<T> => Promise.resolve(v);
+const fire = (p: Promise<unknown>) => { void p.catch((e) => console.error("[api]", e)); };
+
+const pushVisit = (id: string) => {
+  const v = getState().visits.find((x) => x.id === id);
+  if (v) fire(remote.updateVisit(v));
+};
 
 export const api = {
   // ---------- Listings ----------
-  // TODO(backend): GET /api/listings
   listListings: () => asAsync(getState().listings),
-  // TODO(backend): GET /api/listings/:id
   getListing: (id: string) => asAsync(getState().listings.find((l) => l.id === id) ?? null),
-  // TODO(backend): POST /api/listings
-  createListing: (data: Omit<Listing, "id">) => asAsync(store.createListing(data)),
-  // TODO(backend): PATCH /api/listings/:id
-  updateListing: (id: string, patch: Partial<Listing>) => asAsync(store.updateListing(id, patch)),
-  // TODO(backend): DELETE /api/listings/:id
-  deleteListing: (id: string) => asAsync(store.deleteListing(id)),
+  createListing: (data: Omit<Listing, "id">) => {
+    const l = store.createListing(data);
+    fire(remote.upsertListing(l));
+    return asAsync(l);
+  },
+  updateListing: (id: string, patch: Partial<Listing>) => {
+    store.updateListing(id, patch);
+    const l = getState().listings.find((x) => x.id === id);
+    if (l) fire(remote.upsertListing(l));
+    return asAsync(undefined);
+  },
+  deleteListing: (id: string) => {
+    store.deleteListing(id);
+    fire(remote.deleteListing(id));
+    return asAsync(undefined);
+  },
 
   // ---------- Favorites ----------
-  // TODO(backend): POST/DELETE /api/favorites/:listingId
-  toggleFavorite: (listingId: string) => asAsync(store.toggleFavorite(listingId)),
+  toggleFavorite: (listingId: string) => {
+    const wasFav = getState().favorites.includes(listingId);
+    store.toggleFavorite(listingId);
+    fire(remote.setFavorite(listingId, !wasFav));
+    return asAsync(undefined);
+  },
 
   // ---------- Matches / Interest ----------
-  // TODO(backend): POST /api/interests { listingId, message }
-  sendInterest: (listingId: string, message?: string) => asAsync(store.sendInterest(listingId, message)),
-  // TODO(backend): POST /api/interests/pass
-  passListing: (listingId: string) => asAsync(store.passListing(listingId)),
-  unpassListing: (listingId: string) => asAsync(store.unpassListing(listingId)),
-  resetPassed: () => asAsync(store.resetPassed()),
-  // TODO(backend): PATCH /api/matches/:id/state
-  setMatchState: (matchId: string, next: MatchState) => asAsync(store.setMatchState(matchId, next)),
+  sendInterest: (listingId: string, message = "") => {
+    const listing = getState().listings.find((l) => l.id === listingId);
+    const res = store.sendInterest(listingId, message);
+    if (listing) fire(remote.createInterest(res.match, res.chat, listing, message));
+    return asAsync(res);
+  },
+  passListing: (listingId: string) => {
+    store.passListing(listingId);
+    fire(remote.setPass(listingId, true));
+    return asAsync(undefined);
+  },
+  unpassListing: (listingId: string) => {
+    store.unpassListing(listingId);
+    fire(remote.setPass(listingId, false));
+    return asAsync(undefined);
+  },
+  resetPassed: () => {
+    store.resetPassed();
+    fire(remote.clearPasses());
+    return asAsync(undefined);
+  },
+  setMatchState: (matchId: string, next: MatchState) => {
+    store.setMatchState(matchId, next);
+    fire(remote.setMatchState(matchId, next));
+    return asAsync(undefined);
+  },
 
   // ---------- Chat ----------
-  // TODO(backend): POST /api/chats/:id/messages
-  sendMessage: (chatId: string, text: string) => asAsync(store.sendMessage(chatId, text, "me")),
+  sendMessage: (chatId: string, text: string) => {
+    store.sendMessage(chatId, text, "me");
+    fire(remote.sendMessage(chatId, text));
+    const m = getState().matches.find((x) => x.chatId === chatId);
+    if (m && m.state === "conversation") fire(remote.setMatchState(m.id, "conversation"));
+    return asAsync(undefined);
+  },
 
   // ---------- Visits ----------
-  // TODO(backend): POST /api/visits
-  proposeVisit: (matchId: string, when: { date: string; time: string }, by: "seeker" | "landlord", counterOf?: string) =>
-    asAsync(store.proposeVisit(matchId, when, by, counterOf)),
-  acceptVisit: (id: string) => asAsync(store.acceptVisit(id)),
-  declineVisit: (id: string, note?: string) => asAsync(store.declineVisit(id, note)),
-  cancelVisit: (id: string, note?: string) => asAsync(store.cancelVisit(id, note)),
-  // Dupla confirmação: devolve true quando ambos os lados confirmaram.
-  confirmVisitDone: (id: string, side: "seeker" | "landlord") => asAsync(store.confirmVisitDone(id, side)),
+  proposeVisit: (matchId: string, when: { date: string; time: string }, by: "seeker" | "landlord", counterOf?: string) => {
+    const v = store.proposeVisit(matchId, when, by, counterOf);
+    if (v) fire(remote.upsertVisit(v));
+    return asAsync(v);
+  },
+  acceptVisit: (id: string) => {
+    const r = store.acceptVisit(id);
+    pushVisit(id);
+    const v = getState().visits.find((x) => x.id === id);
+    if (v?.matchId) fire(remote.setMatchState(v.matchId, "visit_scheduled"));
+    return asAsync(r);
+  },
+  declineVisit: (id: string, note?: string) => {
+    const r = store.declineVisit(id, note);
+    pushVisit(id);
+    return asAsync(r);
+  },
+  cancelVisit: (id: string, note?: string) => {
+    const r = store.cancelVisit(id, note);
+    pushVisit(id);
+    return asAsync(r);
+  },
+  confirmVisitDone: (id: string, side: "seeker" | "landlord") => {
+    const r = store.confirmVisitDone(id, side);
+    pushVisit(id);
+    return asAsync(r);
+  },
 
   // ---------- Ações da conversa ----------
-  // TODO(backend): PATCH /api/chats/:id
   setChatFlag: (chatId: string, patch: { muted?: boolean; archived?: boolean; blocked?: boolean }) =>
     asAsync(store.setChatFlag(chatId, patch)),
-  // TODO(backend): POST /api/reports
-  submitReport: (target: "chat" | "listing" | "user", targetId: string, reason: import("./mock-data").ReportReason, detail?: string) =>
-    asAsync(store.submitReport(target, targetId, reason, detail)),
+  submitReport: (target: "chat" | "listing" | "user", targetId: string, reason: import("./mock-data").ReportReason, detail = "") => {
+    const r = store.submitReport(target, targetId, reason, detail);
+    fire(remote.submitReport(target, targetId, reason, detail));
+    return asAsync(r);
+  },
 
   // ---------- Notifications ----------
-  // TODO(backend): PATCH /api/notifications/:id
-  markNotificationRead: (id: string) => asAsync(store.markNotificationRead(id)),
-  // TODO(backend): PATCH /api/notifications/read-all
-  markAllNotificationsRead: () => asAsync(store.markAllNotificationsRead()),
+  markNotificationRead: (id: string) => {
+    store.markNotificationRead(id);
+    fire(remote.markNotifications([id], false));
+    return asAsync(undefined);
+  },
+  markAllNotificationsRead: () => {
+    const ids = getState().notifications.filter((n) => n.unread).map((n) => n.id);
+    store.markAllNotificationsRead();
+    fire(remote.markNotifications(ids, false));
+    return asAsync(undefined);
+  },
 
   // ---------- Reviews (duplo-cego) ----------
-  // TODO(backend): POST /api/matches/:id/reviews
-  submitReview: (matchId: string, by: "seeker" | "landlord", rating: number, tags: string[], comment: string) =>
-    asAsync(store.submitReview(matchId, by, rating, tags, comment)),
+  submitReview: (matchId: string, by: "seeker" | "landlord", rating: number, tags: string[], comment: string) => {
+    const r = store.submitReview(matchId, by, rating, tags, comment);
+    fire(remote.submitReview(matchId, by, rating, tags, comment));
+    return asAsync(r);
+  },
 
   // ---------- Fecho de negócio (arrendamento ou venda) ----------
-  // TODO(backend): POST /api/matches/:id/close
-  closeListing: (matchId: string, reason: import("./mock-data").CloseReason, details?: { moveIn: string; months: number | null; amount: number }) =>
-    asAsync(store.closeListing(matchId, reason, details)),
-  // TODO(backend): POST /api/deals/:id/confirm
-  confirmDealSeeker: (dealId: string) => asAsync(store.confirmDealSeeker(dealId)),
+  closeListing: (matchId: string, reason: import("./mock-data").CloseReason, details?: { moveIn: string; months: number | null; amount: number }) => {
+    const r = store.closeListing(matchId, reason, details);
+    const s = getState();
+    const match = s.matches.find((m) => m.id === matchId);
+    if (match) {
+      fire(remote.setMatchState(matchId, match.state));
+      const listing = s.listings.find((l) => l.id === match.listingId);
+      if (listing) fire(remote.upsertListing(listing));
+    }
+    return asAsync(r);
+  },
+  confirmDealSeeker: (dealId: string) => {
+    const r = store.confirmDealSeeker(dealId);
+    return asAsync(r);
+  },
 
   // ---------- Plano / subscrição ----------
-  // TODO(stripe): createCheckoutSession(plan, period) → redirect; o plano só
-  // muda quando o webhook `customer.subscription.updated` confirmar.
-  // Devolve false se o plano de destino não comportar os anúncios ativos.
-  setPlan: (plan: import("./store").PlanId, period?: import("./store").BillingPeriod) =>
-    asAsync(store.setPlan(plan, period)),
-  // TODO(stripe): alterar o price da subscrição existente.
-  setBillingPeriod: (period: import("./store").BillingPeriod) => asAsync(store.setBillingPeriod(period)),
+  setPlan: (plan: import("./store").PlanId, period?: import("./store").BillingPeriod) => {
+    const ok = store.setPlan(plan, period);
+    if (ok !== false) fire(remote.saveAccountFields({ plan, ...(period ? { billing_period: period } : {}) }));
+    return asAsync(ok);
+  },
+  setBillingPeriod: (period: import("./store").BillingPeriod) => {
+    const r = store.setBillingPeriod(period);
+    fire(remote.saveAccountFields({ billing_period: period }));
+    return asAsync(r);
+  },
 
   // ---------- Definições ----------
-  // TODO(backend): PATCH /api/me/notification-prefs
-  updateNotificationPrefs: (patch: Partial<import("./store").NotificationPrefs>) =>
-    asAsync(store.updateNotificationPrefs(patch)),
-  // TODO(backend): PATCH /api/me/privacy
-  updatePrivacy: (patch: Partial<import("./store").PrivacyPrefs>) => asAsync(store.updatePrivacy(patch)),
-  setLanguage: (l: "pt" | "en") => asAsync(store.setLanguage(l)),
+  updateNotificationPrefs: (patch: Partial<import("./store").NotificationPrefs>) => {
+    store.updateNotificationPrefs(patch);
+    fire(remote.saveSettings({ notificationPrefs: patch }));
+    return asAsync(undefined);
+  },
+  updatePrivacy: (patch: Partial<import("./store").PrivacyPrefs>) => {
+    store.updatePrivacy(patch);
+    fire(remote.saveSettings({ privacy: patch }));
+    return asAsync(undefined);
+  },
+  setLanguage: (l: "pt" | "en") => {
+    store.setLanguage(l);
+    fire(remote.saveAccountFields({ language: l }));
+    return asAsync(undefined);
+  },
 
   // ---------- Profile / Preferences ----------
-  // TODO(backend): PATCH /api/me
-  updateProfile: (patch: Partial<Profile>) => asAsync(store.updateProfile(patch)),
-  // TODO(backend): PATCH /api/me/preferences
-  updatePreferences: (patch: Partial<Preferences>) => asAsync(store.updatePreferences(patch)),
+  updateProfile: (patch: Partial<Profile>) => {
+    store.updateProfile(patch);
+    fire(remote.saveProfile(patch));
+    return asAsync(undefined);
+  },
+  updatePreferences: (patch: Partial<Preferences>) => {
+    store.updatePreferences(patch);
+    fire(remote.savePreferences());
+    return asAsync(undefined);
+  },
 
-  // ---------- Reset (dev) ----------
   reset: () => asAsync(store.reset()),
 };
 

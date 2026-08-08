@@ -1,39 +1,52 @@
-import { useSyncExternalStore, useEffect } from "react";
+// Sessão e papel do utilizador — agora vindos do Supabase, não de um seletor
+// de teste. O papel é imutável: é o que foi escolhido no registo.
+
+import { useSyncExternalStore, useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
+import { supabase } from "@/integrations/supabase/client";
+import { cachedRole, cacheRole, type Role } from "./auth";
 
-export type Role = "seeker" | "landlord";
-export type SessionState = "in" | "out";
+export type { Role };
+export type SessionState = "in" | "out" | "loading";
 
-const ROLE_KEY = "hm.role";
-const SESSION_KEY = "hm.session";
 const EVENT = "hm.userstate";
 
-function read<T extends string>(key: string, fallback: T): T {
-  if (typeof window === "undefined") return fallback;
-  const v = window.localStorage.getItem(key);
-  return (v as T | null) ?? fallback;
+let session: SessionState = "loading";
+let role: Role = "seeker";
+let userId: string | null = null;
+let started = false;
+
+function emit() {
+  if (typeof window !== "undefined") window.dispatchEvent(new Event(EVENT));
 }
 
-function write(key: string, value: string) {
-  if (typeof window === "undefined") return;
-  window.localStorage.setItem(key, value);
-  window.dispatchEvent(new Event(EVENT));
-}
+/** Arranca o listener de sessão uma única vez (chamado no __root). */
+export function startAuthSync(onChange?: (s: SessionState, r: Role) => void) {
+  if (started || typeof window === "undefined") return;
+  started = true;
+  role = cachedRole();
 
-export function setRole(r: Role) {
-  write(ROLE_KEY, r);
-}
+  const apply = async (uid: string | null) => {
+    userId = uid;
+    if (!uid) {
+      session = "out";
+      emit();
+      onChange?.(session, role);
+      return;
+    }
+    session = "in";
+    const { data } = await supabase.from("user_roles").select("role").eq("user_id", uid).maybeSingle();
+    role = ((data?.role as Role | undefined) ?? cachedRole()) as Role;
+    cacheRole(role);
+    emit();
+    onChange?.(session, role);
+  };
 
-export function setSession(s: SessionState) {
-  write(SESSION_KEY, s);
-}
-
-export function getRole(): Role {
-  return read<Role>(ROLE_KEY, "seeker");
-}
-
-export function getSession(): SessionState {
-  return read<SessionState>(SESSION_KEY, "out");
+  supabase.auth.getSession().then(({ data }) => apply(data.session?.user.id ?? null));
+  supabase.auth.onAuthStateChange((event, s) => {
+    if (event === "TOKEN_REFRESHED") return;
+    apply(s?.user.id ?? null);
+  });
 }
 
 function subscribe(cb: () => void) {
@@ -46,29 +59,60 @@ function subscribe(cb: () => void) {
   };
 }
 
+export function getRole(): Role {
+  return typeof window === "undefined" ? "seeker" : role;
+}
+export function getSession(): SessionState {
+  return typeof window === "undefined" ? "loading" : session;
+}
+export function getUserId(): string | null {
+  return userId;
+}
+
 export function useRole(): Role {
   return useSyncExternalStore(subscribe, getRole, () => "seeker");
 }
 
 export function useSession(): SessionState {
-  return useSyncExternalStore(subscribe, getSession, () => "out");
+  return useSyncExternalStore(subscribe, getSession, () => "loading");
+}
+
+/** Home de cada papel — usado por splash, login e guardas. */
+export function homeFor(r: Role): "/dashboard" | "/explore" {
+  return r === "landlord" ? "/dashboard" : "/explore";
 }
 
 /**
- * Guarda de papel: se o utilizador estiver no papel errado para a rota,
- * redireciona para o "home" do papel atual. Usa-se dentro de componentes de rota.
+ * Guarda de papel: uma conta de hóspede não abre ecrãs de senhorio e
+ * vice-versa. Espera pela sessão antes de decidir, para não redirecionar
+ * durante o carregamento.
  */
 export function useRoleGuard(expected: Role) {
-  const role = useRole();
+  const r = useRole();
+  const s = useSession();
   const nav = useNavigate();
+  const [ok, setOk] = useState(false);
   useEffect(() => {
-    // Lê o role real no momento do efeito — o valor do hook no primeiro render
-    // pós-SSR ainda é o snapshot do servidor ("seeker") e redirecionava mal.
-    const actual = getRole();
-    if (actual !== expected) {
-      nav({ to: actual === "landlord" ? "/dashboard" : "/explore", replace: true });
+    if (s === "loading") return;
+    if (s === "out") {
+      nav({ to: "/login", replace: true });
+      return;
     }
-  }, [role, expected, nav]);
-  return role === expected;
+    if (r !== expected) {
+      nav({ to: homeFor(r), replace: true });
+      return;
+    }
+    setOk(true);
+  }, [r, s, expected, nav]);
+  return ok;
 }
 
+/** Exige apenas sessão iniciada (qualquer papel). */
+export function useAuthGuard() {
+  const s = useSession();
+  const nav = useNavigate();
+  useEffect(() => {
+    if (s === "out") nav({ to: "/login", replace: true });
+  }, [s, nav]);
+  return s === "in";
+}
